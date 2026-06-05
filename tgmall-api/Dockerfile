@@ -9,7 +9,8 @@ COPY prisma/ prisma/
 RUN npx prisma generate
 
 COPY src/ src/
-COPY .env .env
+
+# .env is mounted at runtime via docker-compose — never COPY into image
 
 EXPOSE 3000
 
