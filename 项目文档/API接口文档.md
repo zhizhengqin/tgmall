@@ -1572,6 +1572,7 @@ GET /payments/status/{orderId}
 | `PUT` | `/merchants/products/{id}` | 编辑商品 | JWT (merchant) |
 | `POST` | `/merchants/products/{id}/toggle` | 上架/下架商品 | JWT (merchant) |
 | `GET` | `/merchants/orders` | 商家订单列表 | JWT (merchant) |
+| `GET` | `/merchants/orders/{id}` | 商家订单详情 | JWT (merchant) |
 | `POST` | `/merchants/orders/{id}/ship` | 确认发货 | JWT (merchant) |
 
 ---
@@ -1894,7 +1895,75 @@ GET /merchants/orders
 
 ---
 
-### 接口 34：确认发货
+### 接口 34：商家订单详情
+
+```
+GET /merchants/orders/{id}
+```
+
+**说明**：返回单个订单的完整详情，含商品明细、收货地址、客户信息和全时间戳。商家只能查看归属自己店铺的订单。
+
+**路径参数**：
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `id` | `string` (UUID) | 订单 ID |
+
+**成功响应** `200`：
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "order-uuid-001",
+    "order_number": "ORD-20260605-A1B2C3",
+    "status": "paid",
+    "payment_method": "khqr",
+    "payment_status": "success",
+    "total_usd": 54.99,
+    "total_khr": 220000,
+    "shipping_address": {
+      "recipient_name": "Sopheap Kong",
+      "phone": "+85512345678",
+      "address": "Phnom Penh, Chamkarmon",
+      "notes": "Leave at reception"
+    },
+    "items": [
+      {
+        "id": "item-uuid-001",
+        "product_name": "ទឹកក្រូចដូង",
+        "product_name_en": "Coconut Water",
+        "thumbnail": "https://cdn.example.com/thumb1.jpg",
+        "quantity": 2,
+        "unit_price_usd": 2.50,
+        "unit_price_khr": 10000,
+        "total_price_usd": 5.00,
+        "total_price_khr": 20000
+      }
+    ],
+    "customer": {
+      "name": "Sopheap Kong",
+      "phone": "+85512345678",
+      "telegram_id": "12345678"
+    },
+    "created_at": "2026-06-05T08:30:00.000Z",
+    "paid_at": "2026-06-05T08:32:15.000Z",
+    "shipped_at": null,
+    "completed_at": null,
+    "cancelled_at": null
+  }
+}
+```
+
+**错误响应**：
+
+| HTTP | error.code | 说明 |
+|------|------------|------|
+| `404` | `NOT_FOUND` | 订单不存在或不属于当前商家 |
+
+---
+
+### 接口 35：确认发货
 
 ```
 POST /merchants/orders/{id}/ship
@@ -1961,7 +2030,7 @@ POST /merchants/orders/{id}/ship
 
 ---
 
-### 接口 35：可领取优惠券列表
+### 接口 36：可领取优惠券列表
 
 ```
 GET /coupons
@@ -2007,7 +2076,7 @@ GET /coupons
 
 ---
 
-### 接口 36：领取优惠券
+### 接口 37：领取优惠券
 
 ```
 POST /coupons/{id}/claim
@@ -2048,7 +2117,7 @@ POST /coupons/{id}/claim
 
 ---
 
-### 接口 37：我的优惠券
+### 接口 38：我的优惠券
 
 ```
 GET /users/me/coupons
@@ -2087,7 +2156,7 @@ GET /users/me/coupons
 
 ## 十、文件上传模块
 
-### 接口 38：上传图片
+### 接口 39：上传图片
 
 ```
 POST /upload/image
@@ -2152,7 +2221,7 @@ POST /upload/image
 
 ---
 
-### 接口 39：审核通过商家
+### 接口 40：审核通过商家
 
 ```
 POST /admin/merchants/{id}/approve
@@ -2196,7 +2265,7 @@ POST /admin/merchants/{id}/approve
 
 ---
 
-### 接口 40：审核驳回商家
+### 接口 41：审核驳回商家
 
 ```
 POST /admin/merchants/{id}/reject
@@ -2240,7 +2309,7 @@ POST /admin/merchants/{id}/reject
 
 ---
 
-### 接口 41：平台数据大盘
+### 接口 42：平台数据大盘
 
 ```
 GET /admin/dashboard
@@ -2291,7 +2360,7 @@ GET /admin/dashboard
 
 ---
 
-### 接口 42：商家列表（管理员）
+### 接口 43：商家列表（管理员）
 
 ```
 GET /admin/merchants
@@ -2334,7 +2403,7 @@ GET /admin/merchants
 
 ---
 
-### 接口 43：用户列表（管理员）
+### 接口 44：用户列表（管理员）
 
 ```
 GET /admin/users
@@ -2379,7 +2448,7 @@ GET /admin/users
 
 ## 十二、Webhook 回调
 
-### 接口 44：支付回调（统一入口）
+### 接口 45：支付回调（统一入口）
 
 ```
 POST /webhooks/payment
@@ -2421,7 +2490,7 @@ POST /webhooks/payment
 
 ## 十三、公共接口
 
-### 接口 45：健康检查
+### 接口 46：健康检查
 
 ```
 GET /health
@@ -2446,7 +2515,7 @@ GET /health
 
 ---
 
-### 接口 46：汇率查询
+### 接口 47：汇率查询
 
 ```
 GET /utils/exchange-rate
@@ -2468,7 +2537,7 @@ GET /utils/exchange-rate
 
 ---
 
-### 接口 47：柬埔寨省市列表
+### 接口 48：柬埔寨省市列表
 
 ```
 GET /utils/provinces
@@ -2536,6 +2605,7 @@ GET /utils/provinces
 | `400` | `COUPON_ALREADY_CLAIMED` | 已领取过此券 |
 | `400` | `COUPON_SOLD_OUT` | 优惠券已被领完 |
 | `400` | `COUPON_MIN_SPEND` | 未达到最低消费门槛 |
+| `400` | `ORDER_NOT_PAYABLE` | 订单状态不支持支付 |
 | `400` | `ORDER_CANNOT_CANCEL` | 订单状态不允许取消 |
 | `400` | `ORDER_CANNOT_CONFIRM` | 订单状态不允许确认收货 |
 | `400` | `ORDER_CANNOT_SHIP` | 订单状态不允许发货 |
