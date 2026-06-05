@@ -2,10 +2,10 @@
   <div class="page"><TopBar /><Sidebar />
     <div class="main"><h1>របាយការណ៍</h1>
       <el-row :gutter="20" style="margin-bottom:20px">
-        <el-col :span="6"><StatCard title="ចំណូលថ្ងៃនេះ" :value="'$'+(data.todayRevenue||0)" color="#c4932a" /></el-col>
-        <el-col :span="6"><StatCard title="កម្មងថ្ងៃនេះ" :value="String(data.todayOrders||0)" color="#409eff" /></el-col>
-        <el-col :span="6"><StatCard title="ត្រូវដឹក" :value="String(data.pendingShip||0)" color="#e6a23c" /></el-col>
-        <el-col :span="6"><StatCard title="ទំនិញសរុប" :value="String(data.totalProducts||0)" color="#67c23a" /></el-col>
+        <el-col :span="6"><StatCard title="ចំណូលថ្ងៃនេះ" :value="'$'+(data.todayRevenueUsd||0)" color="#c4932a" /></el-col>
+        <el-col :span="6"><StatCard title="ត្រូវដឹក" :value="String(data.pendingOrders||0)" color="#409eff" /></el-col>
+        <el-col :span="6"><StatCard title="កំពុងដឹក" :value="String(data.shippedOrders||0)" color="#e6a23c" /></el-col>
+        <el-col :span="6"><StatCard title="ទំនិញសរុប" :value="String(data.productCount||0)" color="#67c23a" /></el-col>
       </el-row>
       <el-card><template #header>ចំណូល ៧ ថ្ងៃចុងក្រោយ</template>
         <v-chart :option="chartOption" style="height:300px" autoresize />
