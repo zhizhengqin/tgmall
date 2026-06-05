@@ -12,6 +12,7 @@ import {
 } from '../validators/merchant.schema.js';
 import { telegramLoginSchema } from '../validators/auth.schema.js';
 import * as ctrl from '../controllers/merchant.controller.js';
+import * as adminCtrl from '../controllers/admin.controller.js';
 
 // ============ 商家路由（需 merchant JWT） ============
 const merchantRouter = Router();
@@ -48,4 +49,9 @@ adminRouter.use(adminAuth);    // 再校验管理员身份
 adminRouter.post('/merchants/:id/approve', ctrl.approve);
 adminRouter.post('/merchants/:id/reject', validate(rejectMerchantSchema), ctrl.reject);
 
+adminRouter.get('/dashboard', adminCtrl.dashboard);
+adminRouter.get('/merchants', adminCtrl.listMerchants);
+adminRouter.get('/users', adminCtrl.listUsers);
+
 export { merchantRouter, adminRouter };
+

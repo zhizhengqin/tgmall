@@ -162,6 +162,14 @@ export async function getDashboard(merchantId) {
     }),
   ]);
 
+  const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7); sevenDaysAgo.setHours(0, 0, 0, 0);
+  const recentOrders = await prisma.order.findMany({ where: { merchantId, status: { in: ['paid', 'shipped', 'completed'] }, paidAt: { gte: sevenDaysAgo } }, select: { totalUsd: true, paidAt: true } });
+  const dailyMap = {};
+  for (let i = 0; i < 7; i++) { const d = new Date(sevenDaysAgo); d.setDate(d.getDate() + i); const key = d.toISOString().split('T')[0]; dailyMap[key] = { date: key, revenue: 0, orders: 0 }; }
+  for (const o of recentOrders) { const key = o.paidAt.toISOString().split('T')[0]; if (dailyMap[key]) { dailyMap[key].revenue += Number(o.totalUsd); dailyMap[key].orders += 1; } }
+  const recent7DaysRevenue = Object.values(dailyMap);
+  const lowStock = await prisma.product.findMany({ where: { merchantId, stock: { lte: 5, gt: 0 }, status: 'active' }, select: { id: true, nameKm: true, stock: true }, take: 10, orderBy: { stock: 'asc' } });
+
   return {
     productCount,
     pendingOrders,
@@ -169,6 +177,8 @@ export async function getDashboard(merchantId) {
     completedOrdersThisMonth: completedOrders,
     todayRevenueUsd: Number(todayRevenue._sum?.totalUsd || 0),
     totalRevenueUsd: Number(totalRevenue._sum?.totalUsd || 0),
+    recent7DaysRevenue,
+    lowStockAlerts: lowStock,
   };
 }
 
