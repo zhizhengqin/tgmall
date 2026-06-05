@@ -30,6 +30,7 @@ export const getDashboard = () => api.get('/merchants/dashboard');
 
 // ── 商品 ──
 export const getProducts = (params) => api.get('/merchants/products', { params });
+export const getProductById = (id) => api.get(`/merchants/products/${id}`);
 export const createProduct = (data) => api.post('/merchants/products', data);
 export const updateProduct = (id, data) => api.put(`/merchants/products/${id}`, data);
 export const toggleProduct = (id) => api.post(`/merchants/products/${id}/toggle`);

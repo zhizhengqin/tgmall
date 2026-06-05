@@ -20,11 +20,11 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProducts, createProduct, updateProduct } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
 const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref('');
 const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, category:'', images:[], specs:[] });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
 async function save() { saving.value = true; isEdit ? await updateProduct(route.params.id, f) : await createProduct(f); router.push('/products'); }
-onMounted(async () => { if (isEdit) { const r = await getProducts(); const p = r.data.find(p=>p.id===route.params.id); if(p) Object.assign(f,p); } });
+onMounted(async () => { if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); } });
 </script>
 <style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; }</style>
