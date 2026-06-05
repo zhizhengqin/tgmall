@@ -31,6 +31,7 @@ merchantRouter.get('/dashboard', ctrl.dashboard);
 
 // 商家商品管理
 merchantRouter.get('/products', ctrl.listProducts);
+merchantRouter.get('/products/:id', ctrl.getProduct);
 merchantRouter.post('/products', validate(merchantProductSchema), ctrl.createProduct);
 merchantRouter.put('/products/:id', validate(merchantProductSchema), ctrl.updateProduct);
 merchantRouter.post('/products/:id/toggle', ctrl.toggleProduct);

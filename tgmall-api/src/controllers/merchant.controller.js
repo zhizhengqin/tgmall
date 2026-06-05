@@ -46,6 +46,14 @@ export async function listProducts(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// GET /merchants/products/:id — 单个商品详情
+export async function getProduct(req, res, next) {
+  try {
+    const product = await merchantService.getProductById(req.merchant.id, req.params.id);
+    res.json({ success: true, data: product });
+  } catch (err) { next(err); }
+}
+
 // POST /merchants/products — 上架商品
 export async function createProduct(req, res, next) {
   try {

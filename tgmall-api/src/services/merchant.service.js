@@ -237,6 +237,17 @@ export async function getProducts(merchantId, { q, category, status, page, limit
 }
 
 // ============================================================
+// 获取单个商品（商家归属校验）
+// ============================================================
+export async function getProductById(merchantId, productId) {
+  const product = await prisma.product.findFirst({
+    where: { id: productId, merchantId },
+  });
+  if (!product) throw new AppError('商品不存在或不属于您的店铺', 404, 'NOT_FOUND');
+  return product;
+}
+
+// ============================================================
 // 上架商品
 // ============================================================
 export async function createProduct(merchantId, body) {
