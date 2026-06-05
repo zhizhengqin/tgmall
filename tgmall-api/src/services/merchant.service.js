@@ -1,6 +1,7 @@
 // 商家服务 — 入驻申请、登录、看板、商品管理、订单处理、审核
 import prisma from '../config/database.js';
 import { config } from '../config/index.js';
+import { sendShippedNotification, sendApprovalNotification, sendAuditNotification } from '../integrations/telegram.js';
 import { signToken } from '../utils/jwt.js';
 import { verifyInitData } from '../integrations/telegram.js';
 import { AppError } from '../utils/AppError.js';
@@ -502,7 +503,7 @@ export async function approveMerchant(merchantId) {
 
   // Bot 通知商家审核通过
   if (merchant.telegramId) {
-    sendApprovalNotification(merchant.telegramId, merchant.nameKm, true)
+    sendAuditNotification({ telegramId: merchant.telegramId, languageCode: 'km' }, 'approved')
       .catch((err) => console.error('[Bot] 审核通知失败:', err.message));
   }
 
@@ -527,54 +528,11 @@ export async function rejectMerchant(merchantId, reason) {
 
   // Bot 通知商家审核被驳回
   if (merchant.telegramId) {
-    sendApprovalNotification(merchant.telegramId, merchant.nameKm, false, reason)
-      .catch((err) => console.error('[Bot] 审核通知失败:', err.message));
+    sendAuditNotification(
+      { telegramId: merchant.telegramId, languageCode: 'km' },
+      'rejected', reason,
+    ).catch((err) => console.error('[Bot] 审核通知失败:', err.message));
   }
 
   return updated;
-}
-
-// ============================================================
-// Telegram Bot 通知辅助函数
-// ============================================================
-
-/** 发送发货通知给消费者 */
-async function sendShippedNotification(telegramId, orderNumber, language) {
-  const messages = {
-    km: `📦 ការបញ្ជាទិញ #${orderNumber} ត្រូវបានដឹកជញ្ជូនហើយ!\nសូមតាមដានស្ថានភាពដឹកជញ្ជូននៅក្នុងកម្មវិធី។`,
-    en: `📦 Order #${orderNumber} has been shipped!\nTrack your delivery status in the app.`,
-    zh: `📦 订单 #${orderNumber} 已发货！\n请在应用中跟踪物流状态。`,
-  };
-  const text = messages[language] || messages.km;
-  await sendTelegramMessage(telegramId, text);
-}
-
-/** 发送审核结果通知给商家 */
-async function sendApprovalNotification(telegramId, merchantName, approved, reason) {
-  let text;
-  if (approved) {
-    text = `✅ ហាង "${merchantName}" ត្រូវបានអនុម័ត!\nឥឡូវអ្នកអាចប្រើប្រាស់ផ្ទាំងគ្រប់គ្រងរបស់អ្នកបាន។`;
-  } else {
-    text = `❌ ហាង "${merchantName}" មិនត្រូវបានអនុម័ត។\nមូលហេតុ: ${reason}`;
-  }
-  await sendTelegramMessage(telegramId, text);
-}
-
-/** 底层 Telegram Bot API 消息发送 */
-async function sendTelegramMessage(telegramId, text) {
-  const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: telegramId,
-      text,
-      parse_mode: 'HTML',
-    }),
-  });
-
-  if (!response.ok) {
-    const errBody = await response.text();
-    throw new Error(`Telegram API 返回 ${response.status}: ${errBody}`);
-  }
 }

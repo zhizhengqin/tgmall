@@ -3,6 +3,7 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import * as bakong from '../integrations/bakong.js';
+import { sendOrderNotification, sendMerchantOrderNotification } from '../integrations/telegram.js';
 
 /**
  * 生成 KHQR 支付二维码
@@ -223,6 +224,34 @@ export async function handlePaymentCallback(payload) {
       });
 
       console.log(`支付成功: order=${orderNumber}, txn=${transactionId}, amount=${amount}`);
+
+      // 5. Bot 通知（fire and forget，不阻塞回调响应）
+      try {
+        // 通知消费者支付成功
+        const user = await prisma.user.findUnique({
+          where: { id: order.userId },
+          select: { telegramId: true, language: true },
+        });
+        if (user?.telegramId) {
+          sendOrderNotification(
+            { telegramId: user.telegramId, languageCode: user.language },
+            order, 'paid',
+          ).catch((e) => console.error('[Bot] 支付成功通知失败:', e.message));
+        }
+        // 通知商家买家已付款
+        const merchantUser = await prisma.user.findFirst({
+          where: { merchant: { id: order.merchantId } },
+          select: { telegramId: true, language: true },
+        });
+        if (merchantUser?.telegramId) {
+          sendMerchantOrderNotification(
+            { telegramId: merchantUser.telegramId, languageCode: merchantUser.language },
+            order, 'paid',
+          ).catch((e) => console.error('[Bot] 商家付款通知失败:', e.message));
+        }
+      } catch (e) {
+        console.error('[Bot] 支付通知查询失败:', e.message);
+      }
     } catch (err) {
       console.error(`支付成功处理异常: ${err.message}`, err);
       // 幂等标记已设置，不会重复处理；抛出异常让调用方感知

@@ -26,6 +26,7 @@ model User {
   addresses   Address[]
   orders      Order[]
   userCoupons UserCoupon[]
+  notifications Notification[]
 
   @@index([telegramId])
   @@index([phone])
@@ -194,4 +195,25 @@ model Address {
 
   @@index([userId])
   @@map("addresses")
+}
+
+model Notification {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String    @db.VarChar(50)  // order_created, order_paid, order_shipped, merchant_approved, merchant_rejected
+  templateId  String    @map("template_id") @db.VarChar(50)
+  params      Json      @db.JsonB         // 模板变量 JSON
+  content     String?   @db.Text          // 渲染后的消息文本（可选，用于审计）
+  status      String    @default("pending") @db.VarChar(20)  // pending, sent, failed, retrying
+  retryCount  Int       @default(0) @map("retry_count")
+  sentAt      DateTime? @map("sent_at") @db.Timestamptz()
+  failedAt    DateTime? @map("failed_at") @db.Timestamptz()
+  error       String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId, status])
+  @@index([type, createdAt])
+  @@index([status, retryCount])
+  @@map("notifications")
 }

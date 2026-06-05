@@ -1,8 +1,10 @@
-import crypto from 'crypto'; — 创建、查询、取消、确认
+// 订单服务 — 创建、查询、取消、确认
+import crypto from 'crypto';
 import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
+import { sendOrderNotification, sendMerchantOrderNotification } from '../integrations/telegram.js';
 
 export async function createOrder(userId, body) {
   const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
@@ -168,6 +170,35 @@ export async function createOrder(userId, body) {
 
     // 4. 清除购物车
     await redis.del(`cart:${userId}`);
+
+    // 5. Bot 通知（fire and forget，不阻塞业务）
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { telegramId: true, language: true },
+      });
+      if (user?.telegramId) {
+        sendOrderNotification(
+          { telegramId: user.telegramId, languageCode: user.language },
+          order,
+          'created',
+        ).catch((e) => console.error('[Bot] 下单通知失败:', e.message));
+      }
+      // 通知商家新订单
+      const merchantUser = await prisma.user.findFirst({
+        where: { merchant: { id: order.merchantId } },
+        select: { telegramId: true, language: true },
+      });
+      if (merchantUser?.telegramId) {
+        sendMerchantOrderNotification(
+          { telegramId: merchantUser.telegramId, languageCode: merchantUser.language },
+          order,
+          'new',
+        ).catch((e) => console.error('[Bot] 商家新单通知失败:', e.message));
+      }
+    } catch (e) {
+      console.error('[Bot] 通知查询失败:', e.message);
+    }
 
     return order;
   } finally {
