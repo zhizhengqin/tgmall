@@ -1,0 +1,22 @@
+<template>
+  <div class="page"><TopBar /><Sidebar />
+    <div class="main"><h1>របាយការណ៍ប្រព័ន្ធ</h1>
+      <el-row :gutter="20" style="margin-bottom:20px">
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV ថ្ងៃនេះ</div><div style="font-size:28px;font-weight:800;color:#c4932a">${{ (data.gmvToday||0).toFixed(0) }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV ខែនេះ</div><div style="font-size:28px;font-weight:800;color:#409eff">${{ (data.gmvThisMonth||0).toFixed(0) }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">ហាង / អ្នកប្រើ</div><div style="font-size:28px;font-weight:800;color:#67c23a">{{ data.totalMerchants||0 }} / {{ data.totalUsers||0 }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">កម្មង / រង់ចាំ</div><div style="font-size:28px;font-weight:800" :style="{color:data.pendingAudit?'#e6a23c':'#67c23a'}">{{ data.totalOrders||0 }} / {{ data.pendingAudit||0 }}</div></div></el-card></el-col>
+      </el-row>
+      <el-card><template #header>និន្នាការ ៧ ថ្ងៃ</template>
+        <v-chart :option="opt" style="height:300px" autoresize />
+      </el-card>
+    </div>
+  </div>
+</template>
+<script setup>
+import { ref, computed, onMounted } from 'vue'; import { getAdminDashboard } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue'; import VChart from 'vue-echarts'; import 'echarts';
+const data = ref({});
+const opt = computed(() => ({ xAxis: { type: 'category', data: (data.value.recent7DaysTrend||[]).map(d=>d.date.slice(5)) }, yAxis: { type: 'value' }, series: [{ name: 'GMV', data: (data.value.recent7DaysTrend||[]).map(d=>d.gmv), type: 'line', smooth: true }, { name: 'អ្នកប្រើ', data: (data.value.recent7DaysTrend||[]).map(d=>d.newUsers), type: 'bar' }] }));
+onMounted(async () => { data.value = (await getAdminDashboard()).data; });
+</script>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; }</style>
