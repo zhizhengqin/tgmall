@@ -162,14 +162,13 @@ export async function handlePaymentCallback(payload) {
   }
 
   // ---- 2. 幂等检查（Redis 分布式防重） ----
+  // 注意：幂等标记在事务成功后设置（见第 224 行），避免事务失败导致订单 stuck
   const idempotencyKey = `payment:callback:${provider}:${transactionId}`;
   const isDuplicate = await redis.get(idempotencyKey);
   if (isDuplicate) {
     console.warn(`重复支付回调已忽略: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     return { status: 'duplicate', message: '回调已处理过' };
   }
-  // 设置幂等标记，24 小时过期
-  await redis.set(idempotencyKey, '1', 'EX', 86400);
 
   // ---- 3. 查询订单 ----
   const order = await prisma.order.findUnique({
@@ -219,6 +218,8 @@ export async function handlePaymentCallback(payload) {
             data: { salesCount: { increment: item.quantity } },
           });
         }
+        // 4d. 事务成功后才设置幂等标记，防止事务失败导致订单 stuck
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
       });
 
       console.log(`支付成功: order=${orderNumber}, txn=${transactionId}, amount=${amount}`);

@@ -1,4 +1,4 @@
-// 订单服务 — 创建、查询、取消、确认
+import crypto from 'crypto'; — 创建、查询、取消、确认
 import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
@@ -18,7 +18,8 @@ export async function createOrder(userId, body) {
 
   // 2. 分布式锁（防同用户并发下单）
   const lockKey = `lock:order:${userId}`;
-  const locked = await redis.set(lockKey, '1', 'NX', 'EX', 30);
+  const lockToken = crypto.randomUUID();
+  const locked = await redis.set(lockKey, lockToken, 'NX', 'EX', 30);
   if (!locked) throw new AppError('请勿重复提交订单', 409, 'DUPLICATE_ORDER');
 
   try {
@@ -28,6 +29,7 @@ export async function createOrder(userId, body) {
       let totalUsd = 0;
       let totalKhr = 0;
       let merchantId = null;
+      const itemDetails = []; // 记录每个商品的单价快照
 
       for (const item of items) {
         const product = await tx.product.findUnique({ where: { id: item.productId } });
@@ -37,8 +39,11 @@ export async function createOrder(userId, body) {
           throw new AppError(`"${product.nameKm}"库存不足，仅剩${product.stock}件`, 400, 'INSUFFICIENT_STOCK');
         }
 
-        totalUsd += Number(product.priceUsd) * item.quantity;
-        totalKhr += product.priceKhr * item.quantity;
+        const unitPriceUsd = Number(product.priceUsd);
+        const unitPriceKhr = product.priceKhr;
+        totalUsd += unitPriceUsd * item.quantity;
+        totalKhr += unitPriceKhr * item.quantity;
+        itemDetails.push({ ...item, unitPriceUsd, unitPriceKhr });
 
         if (!merchantId) merchantId = product.merchantId;
         else if (merchantId !== product.merchantId) {
@@ -79,15 +84,60 @@ export async function createOrder(userId, body) {
         });
       }
 
-      // 3d. 创建订单
+      // 3d. 创建订单 — 折扣按原价比例分摊，确保总额精确
       const orderNumber = generateOrderNumber();
+      const finalTotalUsd = Math.round((totalUsd - discountUsd) * 100) / 100;
+      const finalTotalKhr = Math.round(totalKhr - (discountUsd * 4000));
+
+      // 按原价比例分摊折扣金额
+      const discountPerUsd = totalUsd > 0 ? discountUsd / totalUsd : 0;
+
+      // 先计算各 item 分摊后的价格
+      const itemPrices = itemDetails.map((item) => {
+        const unitPriceUsd = Number(item.unitPriceUsd || 0);
+        const unitPriceKhr = item.unitPriceKhr || 0;
+        const itemTotalUsd = unitPriceUsd * item.quantity;
+        const itemDiscountUsd = itemTotalUsd * discountPerUsd;
+        return {
+          ...item,
+          unitPriceUsd,
+          unitPriceKhr,
+          itemTotalUsd,
+          itemDiscountUsd,
+        };
+      });
+
+      // 计算分摊后的 USD 总价（用于最大余数法调整）
+      let distributedUsd = itemPrices.map((ip) =>
+        Math.round((ip.itemTotalUsd - ip.itemDiscountUsd) * 100) / 100
+      );
+      const distributedTotalUsd = distributedUsd.reduce((s, v) => s + v, 0);
+      const usdDiff = Math.round((finalTotalUsd - distributedTotalUsd) * 100) / 100;
+
+      // 最大余数法：将差额加到最大 item 上
+      if (usdDiff !== 0) {
+        const maxIdx = distributedUsd.indexOf(Math.max(...distributedUsd));
+        distributedUsd[maxIdx] = Math.round((distributedUsd[maxIdx] + usdDiff) * 100) / 100;
+      }
+
+      // KHR 同理
+      let distributedKhr = itemPrices.map((ip) =>
+        Math.round((ip.unitPriceKhr * ip.quantity) - (ip.itemDiscountUsd * 4000))
+      );
+      const distributedTotalKhr = distributedKhr.reduce((s, v) => s + v, 0);
+      const khrDiff = finalTotalKhr - distributedTotalKhr;
+      if (khrDiff !== 0) {
+        const maxIdx = distributedKhr.indexOf(Math.max(...distributedKhr));
+        distributedKhr[maxIdx] += khrDiff;
+      }
+
       const order = await tx.order.create({
         data: {
           orderNumber,
           userId,
           merchantId,
-          totalUsd: Math.round((totalUsd - discountUsd) * 100) / 100,
-          totalKhr: Math.round(totalKhr - (discountUsd * 4000)), // 汇率快照
+          totalUsd: finalTotalUsd,
+          totalKhr: finalTotalKhr,
           discountUsd,
           status: paymentMethod === 'cod' ? 'paid' : 'pending_payment',
           paymentMethod,
@@ -102,11 +152,11 @@ export async function createOrder(userId, body) {
           },
           notes,
           items: {
-            create: items.map((item) => ({
+            create: itemDetails.map((item, idx) => ({
               productId: item.productId,
               quantity: item.quantity,
-              priceUsd: totalUsd / items.reduce((s, i) => s + i.quantity, 0) * item.quantity, // 简化：按数量均分
-              priceKhr: Math.round(totalKhr / items.reduce((s, i) => s + i.quantity, 0) * item.quantity),
+              priceUsd: distributedUsd[idx],
+              priceKhr: distributedKhr[idx],
               spec: item.spec || {},
             })),
           },
@@ -121,7 +171,11 @@ export async function createOrder(userId, body) {
 
     return order;
   } finally {
-    await redis.del(lockKey);
+    // 安全释放锁：只有持有自己 token 时才删除
+    const currentToken = await redis.get(lockKey);
+    if (currentToken === lockToken) {
+      await redis.del(lockKey);
+    }
   }
 }
 
