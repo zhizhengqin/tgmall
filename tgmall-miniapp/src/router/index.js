@@ -56,6 +56,12 @@ const routes = [
     component: () => import('@/views/ProfilePage.vue'),
     meta: { title: 'profile' },
   },
+  {
+    path: '/coupons',
+    name: 'Coupons',
+    component: () => import('@/views/CouponCenter.vue'),
+    meta: { title: 'coupons' },
+  },
 ];
 
 const router = createRouter({

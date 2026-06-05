@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes.js';
 import productRoutes from './product.routes.js';
+import cartRoutes from './cart.routes.js';
+import orderRoutes from './order.routes.js';
+import addressRoutes from './address.routes.js';
+import couponRoutes from './coupon.routes.js';
 
 const router = Router();
 
@@ -11,7 +15,11 @@ router.get('/health', (_req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
+router.use('/cart', cartRoutes);
+router.use('/orders', orderRoutes);
+router.use('/users/me/addresses', addressRoutes);
+router.use('/coupons', couponRoutes);
 
-// 后续 Sprint 逐步挂载: cart, orders, payments, merchants, coupons, upload, admin
+// 后续 Sprint: payments, merchants, upload, admin
 
 export default router;

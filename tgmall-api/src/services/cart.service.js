@@ -1,0 +1,119 @@
+// 购物车服务（Redis 存储）
+import redis from '../config/redis.js';
+import prisma from '../config/database.js';
+import { AppError } from '../utils/AppError.js';
+
+function cartKey(userId) { return `cart:${userId}`; }
+
+export async function getCart(userId) {
+  const raw = await redis.get(cartKey(userId));
+  if (!raw) return { groups: [], summary: { totalItems: 0, totalUsd: 0, totalKhr: 0 } };
+
+  const items = JSON.parse(raw);
+  // 实时校验库存和价格
+  const enriched = await Promise.all(items.map(enrichCartItem));
+  return groupCartItems(enriched);
+}
+
+export async function addCartItem(userId, { productId, quantity, spec = {} }) {
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
+  if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
+
+  // 获取现有购物车
+  const raw = await redis.get(cartKey(userId));
+  const items = raw ? JSON.parse(raw) : [];
+
+  // 查重：同商品+同规格 → 累加数量
+  const index = items.findIndex(
+    (i) => i.productId === productId && JSON.stringify(i.spec) === JSON.stringify(spec),
+  );
+  if (index >= 0) {
+    items[index].quantity += quantity;
+  } else {
+    items.push({ productId, quantity, spec });
+  }
+
+  await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
+  return { cartTotalItems: items.reduce((s, i) => s + i.quantity, 0) };
+}
+
+export async function updateCartItem(userId, itemId, { quantity }) {
+  const raw = await redis.get(cartKey(userId));
+  const items = raw ? JSON.parse(raw) : [];
+  // itemId = productId（简化处理，实际用 productId+spec 定位）
+  const item = items.find((i) => i.productId === itemId);
+  if (!item) throw new AppError('购物车商品不存在', 404, 'NOT_FOUND');
+  item.quantity = quantity;
+  await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
+  return item;
+}
+
+export async function removeCartItem(userId, itemId) {
+  const raw = await redis.get(cartKey(userId));
+  const items = raw ? JSON.parse(raw) : [];
+  const filtered = items.filter((i) => i.productId !== itemId);
+  await redis.set(cartKey(userId), JSON.stringify(filtered), 'EX', 7 * 86400);
+}
+
+export async function clearCart(userId) {
+  await redis.del(cartKey(userId));
+}
+
+// --- 内部工具 ---
+
+async function enrichCartItem(item) {
+  const product = await prisma.product.findUnique({
+    where: { id: item.productId },
+    select: {
+      id: true, nameKm: true, nameEn: true, priceUsd: true, priceKhr: true,
+      stock: true, images: true, status: true, merchantId: true,
+      merchant: { select: { id: true, nameKm: true, nameEn: true } },
+    },
+  });
+
+  const stockStatus = product
+    ? product.status !== 'active' ? 'inactive'
+      : product.stock === 0 ? 'out_of_stock'
+      : product.stock < item.quantity ? 'insufficient'
+      : product.stock <= 5 ? 'low_stock'
+      : 'ok'
+    : 'not_found';
+
+  return {
+    id: item.productId,
+    productId: item.productId,
+    productName: product?.nameKm || '',
+    thumbnail: product?.images?.[0]?.thumb_url || '',
+    spec: item.spec,
+    priceUsd: Number(product?.priceUsd || 0),
+    priceKhr: product?.priceKhr || 0,
+    quantity: Math.min(item.quantity, product?.stock || 0),
+    maxQuantity: product?.stock || 0,
+    stockStatus,
+    merchantId: product?.merchantId,
+    merchantName: product?.merchant?.nameKm || '',
+    subtotalUsd: Number(product?.priceUsd || 0) * Math.min(item.quantity, product?.stock || 0),
+  };
+}
+
+function groupCartItems(items) {
+  // 清除无效商品
+  const valid = items.filter((i) => i.stockStatus !== 'not_found' && i.stockStatus !== 'inactive');
+  // 按商家分组
+  const groupMap = {};
+  for (const item of valid) {
+    if (!groupMap[item.merchantId]) {
+      groupMap[item.merchantId] = { merchantId: item.merchantId, merchantName: item.merchantName, items: [] };
+    }
+    groupMap[item.merchantId].items.push(item);
+  }
+
+  const groups = Object.values(groupMap);
+  const totalItems = valid.reduce((s, i) => s + i.quantity, 0);
+  const totalUsd = valid.reduce((s, i) => s + i.subtotalUsd, 0);
+  // KHR 简化估算
+  const totalKhr = valid.reduce((s, i) => s + i.priceKhr * i.quantity, 0);
+
+  return { groups, summary: { totalItems, totalUsd: Math.round(totalUsd * 100) / 100, totalKhr } };
+}
