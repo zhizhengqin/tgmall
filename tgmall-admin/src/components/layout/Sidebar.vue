@@ -6,7 +6,7 @@
     <el-menu-item index="/users"><el-icon><User /></el-icon><span>អ្នកប្រើ</span></el-menu-item>
   </el-menu>
 </template>
-<script setup>import { useRoute } from 'vue-router'; const route = useRoute();</script>
+<script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, Shop, User } from '@element-plus/icons-vue'; const route = useRoute();</script>
 <style scoped>
 .sidebar { width: 220px; min-height: 100vh; position: fixed; left: 0; top: 0; border-right: none; }
 .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.1); }
