@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TG Mall — Cambodia Telegram Mini App Marketplace</title>
+  <style>
+    :root {
+      --bg:      oklch(98.5% 0.003 95);
+      --surface: oklch(100% 0 0);
+      --fg:      oklch(20% 0.015 80);
+      --muted:   oklch(50% 0.012 80);
+      --border:  oklch(90% 0.005 95);
+      --accent:  oklch(64% 0.16 82);
+      --accent-red: oklch(52% 0.20 24);
+      --font-khmer: 'Noto Sans Khmer', 'Khmer OS', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 48px 24px 36px;
+    }
+    .hero .logo {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+    }
+    .hero .tagline {
+      font-size: 16px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+    .hero .meta {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .hero .meta span {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Design tokens card */
+    .tokens-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .tokens-card h2 {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .token-swatches {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .token-swatch {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    .token-swatch::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .token-swatch.bg  { background: oklch(98.5% 0.003 95);   border-color: var(--border); }
+    .token-swatch.srf { background: oklch(100% 0 0);          border-color: var(--border); }
+    .token-swatch.fg  { background: oklch(20% 0.015 80); }
+    .token-swatch.mut { background: oklch(50% 0.012 80); }
+    .token-swatch.bdr { background: oklch(90% 0.005 95);     border-color: var(--border); }
+    .token-swatch.acc { background: oklch(64% 0.16 82); }
+    .token-swatch.red { background: oklch(52% 0.20 24); }
+
+    .token-info {
+      font-size: 12px; color: var(--muted);
+      line-height: 1.8; margin-top: 28px;
+    }
+    .token-info code {
+      font-family: ui-monospace, monospace;
+      background: var(--bg);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    /* Screen grid */
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .screen-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px oklch(0% 0 0 / 0.08);
+      border-color: var(--accent);
+    }
+    .screen-card .preview {
+      background: oklch(96% 0.003 90);
+      aspect-ratio: 3/4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      border-bottom: 1px solid var(--border);
+    }
+    .screen-card .card-body {
+      padding: 14px 16px 18px;
+      flex: 1;
+    }
+    .screen-card .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .screen-card .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+    .screen-card .card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .screen-card .card-features {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .screen-card .card-features span {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--muted);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      margin-top: 32px;
+    }
+    .footer p { font-size: 12px; color: var(--muted); }
+    .footer .pipeline {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .footer .pipeline span {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+    }
+    .footer .pipeline span.arrow { background: transparent; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="logo">TG Mall</div>
+      <div class="tagline">
+        🇰🇭 Cambodia Telegram Mini App Marketplace<br>
+        <small>Trilingual (ភាសាខ្មែរ · 中文 · English) | USD/KHR 双币种</small>
+      </div>
+      <div class="meta">
+        <span>🏷️ Telegram Mini App</span>
+        <span>🛒 对标 JD / Taobao</span>
+        <span>📱 iOS + Android</span>
+        <span>💳 KHQR / ABA / COD</span>
+        <span>📦 4 品类 12+ 商品</span>
+      </div>
+    </div>
+
+    <!-- Design tokens -->
+    <div class="tokens-card">
+      <h2>🎨 Design System — Modern Minimal + Cambodia Gold/Red</h2>
+      <div class="token-swatches">
+        <div class="token-swatch bg"  data-label="--bg"></div>
+        <div class="token-swatch srf" data-label="--surface"></div>
+        <div class="token-swatch fg"  data-label="--fg"></div>
+        <div class="token-swatch mut" data-label="--muted"></div>
+        <div class="token-swatch bdr" data-label="--border"></div>
+        <div class="token-swatch acc" data-label="--accent"></div>
+        <div class="token-swatch red" data-label="--accent-red"></div>
+      </div>
+      <div class="token-info">
+        <strong>基底:</strong> Modern minimal (Linear / Vercel) — 精确、软件原生<br>
+        <strong>主 accent:</strong> <code>oklch(64% 0.16 82)</code> — 柬埔寨金色 🇰🇭<br>
+        <strong>辅 accent:</strong> <code>oklch(52% 0.20 24)</code> — 柬埔寨红（促销/重要操作）<br>
+        <strong>高棉文:</strong> Noto Sans Khmer · <strong>正文字体:</strong> system-ui · <strong>标题:</strong> SF Pro Display<br>
+        <strong>布局:</strong> 390-430px Telegram Mini App viewport · 底部导航 · 卡片式商品网格
+      </div>
+    </div>
+
+    <!-- Screen gallery -->
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:16px">📱 消费者端页面 · Consumer Screens</h2>
+    <div class="screen-grid">
+      <a class="screen-card" href="screens/01-home.html">
+        <div class="preview">🏠</div>
+        <div class="card-body">
+          <div class="card-label">01 · Home</div>
+          <div class="card-title">ទំព័រដើម · 首页</div>
+          <div class="card-desc">搜索栏 · Banner轮播 · 品类横滑 · 双列商品瀑布流 · 底部导航</div>
+          <div class="card-features">
+            <span>三语切换</span><span>双币种</span><span>骨架屏</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/02-product-detail.html">
+        <div class="preview">🔍</div>
+        <div class="card-body">
+          <div class="card-label">02 · Product Detail</div>
+          <div class="card-title">ព័ត៌មានទំនិញ · 商品详情</div>
+          <div class="card-desc">图片轮播(可放大) · SKU规格选择 · 数量调节 · 三语描述切换</div>
+          <div class="card-features">
+            <span>图片缩放</span><span>规格联动</span><span>库存校验</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/03-cart.html">
+        <div class="preview">🛒</div>
+        <div class="card-body">
+          <div class="card-label">03 · Cart</div>
+          <div class="card-title">កន្ត្រក · 购物车</div>
+          <div class="card-desc">商家分组 · 全选/单选 · 数量+/- · 库存提醒 · 合计结算</div>
+          <div class="card-features">
+            <span>商家分组</span><span>库存校验</span><span>localStorage</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/04-checkout.html">
+        <div class="preview">💳</div>
+        <div class="card-body">
+          <div class="card-label">04 · Checkout</div>
+          <div class="card-title">បញ្ជាក់ការទូទាត់ · 结算</div>
+          <div class="card-desc">收货地址 · 商品清单 · 优惠券 · KHQR/ABA/COD · 价格明细</div>
+          <div class="card-features">
+            <span>4种支付</span><span>优惠券</span><span>免运费</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/05-payment.html">
+        <div class="preview">📱</div>
+        <div class="card-body">
+          <div class="card-label">05 · Payment</div>
+          <div class="card-title">ការទូទាត់ · 支付</div>
+          <div class="card-desc">KHQR二维码 · 15分钟倒计时 · 银行App扫码 · 成功/超时状态</div>
+          <div class="card-features">
+            <span>QR码</span><span>倒计时</span><span>模拟支付</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/06-orders.html">
+        <div class="preview">📋</div>
+        <div class="card-body">
+          <div class="card-label">06 · Orders</div>
+          <div class="card-title">ការបញ្ជាទិញ · 订单</div>
+          <div class="card-desc">5状态Tab · 订单卡片 · 取消/支付/确认收货 · 物流追踪</div>
+          <div class="card-features">
+            <span>状态流转</span><span>取消订单</span><span>确认收货</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="screen-card" href="screens/07-profile.html">
+        <div class="preview">👤</div>
+        <div class="card-body">
+          <div class="card-label">07 · Profile</div>
+          <div class="card-title">គណនី · 个人中心</div>
+          <div class="card-desc">头像昵称 · 订单入口 · 收货地址 · 优惠券 · 三语切换 · 退出</div>
+          <div class="card-features">
+            <span>三语卡片</span><span>地址管理</span><span>优惠券</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Product flow -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px">
+      <h2 style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:16px">🔄 用户购物流程 · User Journey</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:13px;font-weight:600">
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">🏠 首页浏览</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">🔍 商品详情</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">🛒 加入购物车</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">💳 下单结算</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">📱 KHQR支付</span>
+        <span style="color:var(--muted)">→</span>
+        <span style="padding:8px 16px;background:var(--bg);border-radius:999px">📋 订单追踪</span>
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="footer">
+      <p>TG Mall · Cambodia Telegram Mini App Marketplace Prototype</p>
+      <p style="margin-top:4px">基于产品需求文档 (PRD V1.0) · 7个核心消费者端页面 · 三语 + 双币种</p>
+      <div class="pipeline">
+        <span>ui-ux-pro-max</span><span class="arrow">→</span>
+        <span>design-consultation</span><span class="arrow">→</span>
+        <span>frontend-design</span><span class="arrow">→</span>
+        <span>design-review</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

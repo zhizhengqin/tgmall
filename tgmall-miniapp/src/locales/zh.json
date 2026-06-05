@@ -1,0 +1,8 @@
+{
+  "app": { "name": "TG Mall" },
+  "nav": { "home": "首页", "categories": "分类", "cart": "购物车", "orders": "订单", "profile": "我的" },
+  "home": { "searchPlaceholder": "搜索商品...", "all": "全部", "fashion": "时尚", "beauty": "美妆", "electronics": "电子", "home_living": "家居" },
+  "product": { "addToCart": "加入购物车", "buyNow": "立即购买", "soldOut": "售罄", "stockLeft": "仅剩 {count} 件", "description": "商品描述" },
+  "cart": { "title": "购物车", "empty": "购物车是空的", "goShopping": "去逛逛", "total": "合计", "checkout": "去结算", "selectAll": "全选", "remove": "删除" },
+  "common": { "loading": "加载中...", "error": "出错了", "retry": "重试", "noMore": "— 已经到底了 —", "confirm": "确定", "cancel": "取消" }
+}

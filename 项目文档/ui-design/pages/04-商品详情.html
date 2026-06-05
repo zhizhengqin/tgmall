@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>TG Mall — ព័ត៌មានទំនិញ</title>
+  <style>
+    :root {
+      --bg:        oklch(98.5% 0.003 95);
+      --surface:   oklch(100% 0 0);
+      --fg:        oklch(20% 0.015 80);
+      --muted:     oklch(50% 0.012 80);
+      --border:    oklch(90% 0.005 95);
+      --accent:    oklch(64% 0.16 82);
+      --accent-red: oklch(52% 0.20 24);
+      --accent-green: oklch(58% 0.16 155);
+      --font-khmer: 'Noto Sans Khmer', 'Khmer OS', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-card: 0 1px 3px oklch(0% 0 0 / 0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+    body.lang-km { font-family: var(--font-khmer); }
+    body.lang-km .price-usd { font-family: var(--font-body); }
+
+    /* Top bar */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border: none;
+      background: var(--bg);
+      border-radius: 50%;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      color: var(--fg);
+      flex-shrink: 0;
+    }
+    .top-bar h1 {
+      font-size: 15px;
+      font-weight: 600;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .lang-switch {
+      display: flex; gap: 2px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .lang-switch button {
+      width: 32px; height: 26px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: var(--font-body);
+    }
+    .lang-switch button.active { background: var(--accent); color: #fff; }
+
+    /* Image gallery */
+    .img-stage {
+      background: oklch(97% 0.003 90);
+      aspect-ratio: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .img-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.3s;
+    }
+    .img-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 100px;
+    }
+    .img-dots {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 5px;
+    }
+    .img-dots span {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.25);
+      transition: all 0.3s;
+    }
+    .img-dots span.active { background: var(--accent); width: 16px; border-radius: 3px; }
+
+    /* Lightbox overlay */
+    .lightbox {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .lightbox.show { opacity: 1; pointer-events: auto; }
+    .lightbox .lb-img { font-size: 160px; }
+
+    /* Info section */
+    .info-section {
+      background: var(--surface);
+      padding: 16px;
+      border-bottom: 8px solid var(--bg);
+    }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .price-usd {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent-red);
+      letter-spacing: -0.03em;
+    }
+    .price-khr {
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .product-title {
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+    .shop-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .shop-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: oklch(94% 0.003 88);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    /* Specs */
+    .specs-section {
+      background: var(--surface);
+      padding: 16px;
+      border-bottom: 8px solid var(--bg);
+    }
+    .specs-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .spec-group { margin-bottom: 12px; }
+    .spec-group:last-child { margin-bottom: 0; }
+    .spec-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .spec-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .spec-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--fg);
+    }
+    .spec-btn.selected {
+      border-color: var(--accent);
+      background: oklch(64% 0.16 82 / 0.1);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .spec-btn.soldout {
+      opacity: 0.4;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+
+    /* Quantity */
+    .qty-section {
+      background: var(--surface);
+      padding: 16px;
+      border-bottom: 8px solid var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .qty-label { font-size: 14px; font-weight: 600; }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .qty-control button {
+      width: 38px; height: 34px;
+      border: none;
+      background: var(--bg);
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--fg);
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .qty-control button:active { background: var(--border); }
+    .qty-control button:disabled { opacity: 0.3; cursor: default; }
+    .qty-control .qty-val {
+      width: 44px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Description */
+    .desc-section {
+      background: var(--surface);
+      padding: 16px;
+      border-bottom: 8px solid var(--bg);
+    }
+    .desc-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .desc-tab {
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .desc-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .desc-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+    .desc-panel { display: none; }
+    .desc-panel.active { display: block; }
+
+    /* Bottom actions */
+    .bottom-actions {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(430px, 100%);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px));
+      z-index: 200;
+    }
+    .btn {
+      padding: 14px 0;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-cart {
+      flex: 1;
+      background: var(--bg);
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn-buy {
+      flex: 1.6;
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(20% 0.02 80);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="lang-km">
+  <div class="toast" id="toast"></div>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1 data-i18n="title">ព័ត៌មានទំនិញ</h1>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="km" class="active">ប្រ</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </div>
+
+  <!-- Image gallery -->
+  <div class="img-stage" id="imgStage">
+    <div class="img-track" id="imgTrack">
+      <div class="img-slide" style="background:oklch(92% 0.01 85)">👕</div>
+      <div class="img-slide" style="background:oklch(92% 0.01 180)">👕</div>
+      <div class="img-slide" style="background:oklch(92% 0.01 260)">👕</div>
+    </div>
+    <div class="img-dots" id="imgDots">
+      <span class="active"></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+    <div class="lb-img">👕</div>
+  </div>
+
+  <!-- Product info -->
+  <div class="info-section">
+    <div class="price-row">
+      <span class="price-usd">$12.99</span>
+      <span class="price-khr">៛52,000</span>
+    </div>
+    <div class="product-title" data-i18n="prodName">អាវយឺតកប្បាសសុទ្ធ</div>
+    <div class="shop-row">
+      <div class="shop-avatar">P</div>
+      <span>Phnom Penh Style</span>
+      <span style="color:var(--accent-green);font-size:12px">✓ បានផ្ទៀងផ្ទាត់</span>
+    </div>
+  </div>
+
+  <!-- Specs -->
+  <div class="specs-section">
+    <h3 data-i18n="specTitle">ជ្រើសរើសទំហំ និងពណ៌</h3>
+
+    <div class="spec-group">
+      <div class="spec-label" data-i18n="color">ពណ៌</div>
+      <div class="spec-options" id="colorOpts">
+        <button class="spec-btn selected" data-spec="color" data-val="white" data-i18n="colorWhite">⚪ ស</button>
+        <button class="spec-btn" data-spec="color" data-val="black" data-i18n="colorBlack">⚫ ខ្មៅ</button>
+        <button class="spec-btn soldout" data-spec="color" data-val="blue" data-i18n="colorBlue">🔵 ខៀវ</button>
+      </div>
+    </div>
+
+    <div class="spec-group">
+      <div class="spec-label" data-i18n="size">ទំហំ</div>
+      <div class="spec-options" id="sizeOpts">
+        <button class="spec-btn" data-spec="size" data-val="s">S</button>
+        <button class="spec-btn selected" data-spec="size" data-val="m">M</button>
+        <button class="spec-btn" data-spec="size" data-val="l">L</button>
+        <button class="spec-btn" data-spec="size" data-val="xl">XL</button>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+      <span data-i18n="stock">ស្តុក</span>: <strong id="stockDisplay">28</strong>
+    </div>
+  </div>
+
+  <!-- Quantity -->
+  <div class="qty-section">
+    <span class="qty-label" data-i18n="qty">បរិមាណ</span>
+    <div class="qty-control">
+      <button id="qtyMinus">−</button>
+      <span class="qty-val" id="qtyVal">1</span>
+      <button id="qtyPlus">+</button>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="desc-section">
+    <div class="desc-tabs" id="descTabs">
+      <button class="desc-tab active" data-desc="km">ភាសាខ្មែរ</button>
+      <button class="desc-tab" data-desc="zh">中文</button>
+      <button class="desc-tab" data-desc="en">English</button>
+    </div>
+    <div class="desc-content">
+      <div class="desc-panel active" data-desc="km">
+        អាវយឺតកប្បាសសុទ្ធ 100% ផលិតពីកប្បាសធម្មជាតិគុណភាពខ្ពស់។ សាកសមសម្រាប់ពាក់ប្រចាំថ្ងៃ មានភាពទន់ផូរផង់ និងប្រើប្រាស់បានយូរ។ អាចបោកដោយម៉ាស៊ីនបោកគក់បាន។
+      </div>
+      <div class="desc-panel" data-desc="zh">
+        100%纯棉面料，天然舒适透气。适合日常穿着，柔软亲肤，耐洗耐用。可机洗，不易变形。多色可选，满足不同搭配需求。
+      </div>
+      <div class="desc-panel" data-desc="en">
+        100% pure cotton fabric, natural and breathable. Perfect for daily wear — soft, comfortable, and durable. Machine washable, resists shrinking. Available in multiple colors.
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom actions -->
+  <div class="bottom-actions">
+    <button class="btn btn-cart" id="btnAddCart" data-i18n="addCart">បញ្ចូលកន្ត្រក</button>
+    <button class="btn btn-buy" id="btnBuy" data-i18n="buyNow">ទិញឥឡូវ</button>
+  </div>
+
+  <script>
+    // Language
+    let currentLang = 'km';
+    const I18N = {
+      title: { km: 'ព័ត៌មានទំនិញ', zh: '商品详情', en: 'Product Detail' },
+      specTitle: { km: 'ជ្រើសរើសទំហំ និងពណ៌', zh: '选择颜色和尺码', en: 'Select Color & Size' },
+      prodName: { km: 'អាវយឺតកប្បាសសុទ្ធ', zh: '纯棉短袖T恤', en: 'Pure Cotton T-Shirt' },
+      color: { km: 'ពណ៌', zh: '颜色', en: 'Color' },
+      colorWhite: { km: '⚪ ស', zh: '⚪ 白色', en: '⚪ White' },
+      colorBlack: { km: '⚫ ខ្មៅ', zh: '⚫ 黑色', en: '⚫ Black' },
+      colorBlue: { km: '🔵 ខៀវ', zh: '🔵 蓝色', en: '🔵 Blue' },
+      size: { km: 'ទំហំ', zh: '尺码', en: 'Size' },
+      stock: { km: 'ស្តុក', zh: '库存', en: 'Stock' },
+      qty: { km: 'បរិមាណ', zh: '数量', en: 'Quantity' },
+      addCart: { km: 'បញ្ចូលកន្ត្រក', zh: '加入购物车', en: 'Add to Cart' },
+      buyNow: { km: 'ទិញឥឡូវ', zh: '立即购买', en: 'Buy Now' },
+      addedMsg: { km: '✓ បានដាក់ចូលកន្ត្រក', zh: '✓ 已加入购物车', en: '✓ Added to cart' },
+    };
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.body.className = '';
+      if (lang === 'km') document.body.classList.add('lang-km');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[key] && I18N[key][lang]) {
+          el.textContent = I18N[key][lang];
+        }
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+    }
+
+    document.getElementById('langSwitch').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      switchLang(btn.dataset.lang);
+    });
+
+    // Image gallery
+    let imgIdx = 0;
+    const imgTrack = document.getElementById('imgTrack');
+    const imgDots = document.getElementById('imgDots');
+
+    function goImg(i) {
+      imgIdx = i;
+      imgTrack.style.transform = `translateX(-${imgIdx * 100}%)`;
+      imgDots.querySelectorAll('span').forEach((d, j) => d.classList.toggle('active', j === imgIdx));
+    }
+
+    let touchStartX = 0;
+    imgTrack.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+    imgTrack.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (dx < -30) goImg(Math.min(imgIdx + 1, 2));
+      if (dx > 30) goImg(Math.max(imgIdx - 1, 0));
+    });
+
+    imgDots.querySelectorAll('span').forEach((d, i) => d.addEventListener('click', () => goImg(i)));
+
+    // Lightbox
+    document.getElementById('imgStage').addEventListener('click', () => {
+      document.getElementById('lightbox').classList.add('show');
+    });
+
+    // Spec selection
+    const selected = { color: 'white', size: 'm' };
+
+    document.querySelectorAll('.spec-btn:not(.soldout)').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const group = this.dataset.spec;
+        document.querySelectorAll(`.spec-btn[data-spec="${group}"]`).forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        selected[group] = this.dataset.val;
+        updateAddToCartState();
+      });
+    });
+
+    function updateAddToCartState() {
+      const hasSoldOut = document.querySelector('.spec-btn.selected.soldout');
+      document.getElementById('btnAddCart').disabled = !!hasSoldOut;
+      document.getElementById('btnBuy').disabled = !!hasSoldOut;
+    }
+
+    // Quantity
+    let qty = 1;
+    const qtyVal = document.getElementById('qtyVal');
+    document.getElementById('qtyMinus').addEventListener('click', () => {
+      if (qty > 1) { qty--; qtyVal.textContent = qty; }
+    });
+    document.getElementById('qtyPlus').addEventListener('click', () => {
+      if (qty < 99) { qty++; qtyVal.textContent = qty; }
+    });
+
+    // Description tabs
+    document.getElementById('descTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.desc-tab');
+      if (!tab) return;
+      document.querySelectorAll('.desc-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const lang = tab.dataset.desc;
+      document.querySelectorAll('.desc-panel').forEach(p => p.classList.toggle('active', p.dataset.desc === lang));
+    });
+
+    // Add to cart
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    document.getElementById('btnAddCart').addEventListener('click', () => {
+      const cart = JSON.parse(localStorage.getItem('tgm_cart') || '[]');
+      const existing = cart.find(i => i.id === 1);
+      if (existing) { existing.qty += qty; }
+      else { cart.push({ id: 1, name: 'Pure Cotton T-Shirt', price: 12.99, qty }); }
+      localStorage.setItem('tgm_cart', JSON.stringify(cart));
+      showToast(I18N.addedMsg[currentLang]);
+    });
+
+    document.getElementById('btnBuy').addEventListener('click', () => {
+      const cart = JSON.parse(localStorage.getItem('tgm_cart') || '[]');
+      const existing = cart.find(i => i.id === 1);
+      if (existing) { existing.qty += qty; }
+      else { cart.push({ id: 1, name: 'Pure Cotton T-Shirt', price: 12.99, qty }); }
+      localStorage.setItem('tgm_cart', JSON.stringify(cart));
+      window.location = '04-checkout.html';
+    });
+  </script>
+</body>
+</html>

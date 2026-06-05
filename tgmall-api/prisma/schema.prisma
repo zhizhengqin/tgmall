@@ -1,0 +1,197 @@
+// Prisma Schema — TG Mall 数据库模型
+// 基于 项目文档/数据库设计说明书.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(uuid()) @db.Uuid
+  telegramId  BigInt      @unique @map("telegram_id")
+  phone       String?     @db.VarChar(20)
+  firstName   String?     @map("first_name") @db.VarChar(100)
+  lastName    String?     @map("last_name") @db.VarChar(100)
+  username    String?     @db.VarChar(100)
+  language    String      @default("km") @db.VarChar(5)
+  avatarUrl   String?     @map("avatar_url") @db.Text
+  status      String      @default("active") @db.VarChar(20)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+
+  addresses   Address[]
+  orders      Order[]
+  userCoupons UserCoupon[]
+
+  @@index([telegramId])
+  @@index([phone])
+  @@map("users")
+}
+
+model Merchant {
+  id             String    @id @default(uuid()) @db.Uuid
+  nameKm         String    @map("name_km") @db.VarChar(200)
+  nameEn         String?   @map("name_en") @db.VarChar(200)
+  ownerName      String    @map("owner_name") @db.VarChar(100)
+  phone          String    @unique @db.VarChar(20)
+  address        String    @db.Text
+  category       String    @db.VarChar(50)
+  description    String?   @db.Text
+  status         String    @default("pending") @db.VarChar(20)
+  commissionRate Decimal   @default(3.0) @map("commission_rate") @db.Decimal(3,1)
+  rejectReason   String?   @map("reject_reason") @db.Text
+  telegramId     BigInt?   @map("telegram_id")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  products Product[]
+  orders   Order[]
+  coupons  Coupon[]
+
+  @@index([status])
+  @@index([category])
+  @@map("merchants")
+}
+
+model Product {
+  id            String   @id @default(uuid()) @db.Uuid
+  merchantId    String   @map("merchant_id") @db.Uuid
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+  nameKm        String   @map("name_km") @db.VarChar(300)
+  nameEn        String?  @map("name_en") @db.VarChar(300)
+  nameZh        String?  @map("name_zh") @db.VarChar(300)
+  descriptionKm String?  @map("description_km") @db.Text
+  descriptionEn String?  @map("description_en") @db.Text
+  descriptionZh String?  @map("description_zh") @db.Text
+  priceUsd      Decimal  @map("price_usd") @db.Decimal(10,2)
+  priceKhr      Int      @map("price_khr")
+  stock         Int      @default(0)
+  images        Json     @default("[]") @db.JsonB
+  specs         Json     @default("[]") @db.JsonB
+  category      String   @db.VarChar(50)
+  status        String   @default("active") @db.VarChar(20)
+  salesCount    Int      @default(0) @map("sales_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  orderItems OrderItem[]
+
+  @@index([merchantId])
+  @@index([category, status, createdAt(sort: Desc)])
+  @@index([priceUsd])
+  @@index([salesCount(sort: Desc)])
+  @@map("products")
+}
+
+model Order {
+  id              String    @id @default(uuid()) @db.Uuid
+  orderNumber     String    @unique @map("order_number") @db.VarChar(30)
+  userId          String    @map("user_id") @db.Uuid
+  user            User      @relation(fields: [userId], references: [id])
+  merchantId      String    @map("merchant_id") @db.Uuid
+  merchant        Merchant  @relation(fields: [merchantId], references: [id])
+  totalUsd        Decimal   @map("total_usd") @db.Decimal(10,2)
+  totalKhr        Int       @map("total_khr")
+  discountUsd     Decimal   @default(0) @map("discount_usd") @db.Decimal(10,2)
+  shippingFeeUsd  Decimal   @default(0) @map("shipping_fee_usd") @db.Decimal(10,2)
+  status          String    @default("pending_payment") @db.VarChar(20)
+  paymentMethod   String    @map("payment_method") @db.VarChar(20)
+  paymentStatus   String    @default("pending") @map("payment_status") @db.VarChar(20)
+  paymentTimeout  DateTime? @map("payment_timeout") @db.Timestamptz()
+  couponId        String?   @map("coupon_id") @db.Uuid
+  coupon          Coupon?   @relation(fields: [couponId], references: [id])
+  shippingAddress Json      @map("shipping_address") @db.JsonB
+  logisticsInfo   Json?     @map("logistics_info") @db.JsonB
+  notes           String?   @db.Text
+  paidAt          DateTime? @map("paid_at") @db.Timestamptz()
+  shippedAt       DateTime? @map("shipped_at") @db.Timestamptz()
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz()
+  cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz()
+  cancelReason    String?   @map("cancel_reason") @db.VarChar(100)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  items OrderItem[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([merchantId, createdAt(sort: Desc)])
+  @@index([status])
+  @@index([paymentTimeout])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @map("order_id") @db.Uuid
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String   @map("product_id") @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Int
+  priceUsd   Decimal  @map("price_usd") @db.Decimal(10,2)
+  priceKhr   Int      @map("price_khr")
+  spec       Json     @default("{}") @db.JsonB
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Coupon {
+  id         String       @id @default(uuid()) @db.Uuid
+  merchantId String?      @map("merchant_id") @db.Uuid
+  merchant   Merchant?    @relation(fields: [merchantId], references: [id])
+  titleKm    String       @map("title_km") @db.VarChar(200)
+  titleEn    String?      @map("title_en") @db.VarChar(200)
+  titleZh    String?      @map("title_zh") @db.VarChar(200)
+  type       String       @db.VarChar(20)
+  value      Decimal      @db.Decimal(10,2)
+  minSpend   Decimal      @default(0) @map("min_spend") @db.Decimal(10,2)
+  totalQty   Int          @map("total_qty")
+  usedCount  Int          @default(0) @map("used_count")
+  startDate  DateTime     @map("start_date") @db.Timestamptz()
+  endDate    DateTime     @map("end_date") @db.Timestamptz()
+  status     String       @default("active") @db.VarChar(20)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+
+  orders       Order[]
+  userCoupons  UserCoupon[]
+
+  @@index([status, startDate, endDate])
+  @@map("coupons")
+}
+
+model UserCoupon {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id])
+  couponId   String   @map("coupon_id") @db.Uuid
+  coupon     Coupon   @relation(fields: [couponId], references: [id])
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz()
+  usedAt     DateTime? @map("used_at") @db.Timestamptz()
+  status     String   @default("unused") @db.VarChar(20)
+
+  @@unique([userId, couponId])
+  @@index([userId, status])
+  @@map("user_coupons")
+}
+
+model Address {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName String    @map("recipient_name") @db.VarChar(100)
+  phone         String    @db.VarChar(20)
+  province      String    @db.VarChar(50)
+  district      String    @db.VarChar(50)
+  detail        String    @db.VarChar(200)
+  isDefault     Boolean   @default(false) @map("is_default")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@map("addresses")
+}

@@ -1,0 +1,66 @@
+// Vue Router 配置 — 路由懒加载
+import { createRouter, createWebHistory } from 'vue-router';
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/HomePage.vue'),
+    meta: { title: 'home' },
+  },
+  {
+    path: '/category',
+    name: 'Category',
+    component: () => import('@/views/CategoryPage.vue'),
+    meta: { title: 'categories' },
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('@/views/SearchPage.vue'),
+    meta: { title: 'search' },
+  },
+  {
+    path: '/product/:id',
+    name: 'ProductDetail',
+    component: () => import('@/views/ProductDetail.vue'),
+    meta: { title: 'product' },
+  },
+  {
+    path: '/cart',
+    name: 'Cart',
+    component: () => import('@/views/CartPage.vue'),
+    meta: { title: 'cart' },
+  },
+  {
+    path: '/checkout',
+    name: 'Checkout',
+    component: () => import('@/views/CheckoutPage.vue'),
+    meta: { title: 'checkout', requiresAuth: true },
+  },
+  {
+    path: '/orders',
+    name: 'Orders',
+    component: () => import('@/views/OrderList.vue'),
+    meta: { title: 'orders', requiresAuth: true },
+  },
+  {
+    path: '/orders/:id',
+    name: 'OrderDetail',
+    component: () => import('@/views/OrderDetail.vue'),
+    meta: { title: 'order' },
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/ProfilePage.vue'),
+    meta: { title: 'profile' },
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+export default router;

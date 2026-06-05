@@ -1,0 +1,132 @@
+# CLAUDE.md — TG Mall 柬埔寨 Telegram 电商平台
+
+## 项目概述
+- **名称**：TG Mall — 柬埔寨 Telegram Mini App 社交电商平台
+- **技术栈**：Vue.js 3 + Vite（前端）· Node.js + Express + Prisma（后端）· PostgreSQL 15 + Redis 7（数据层）
+- **部署**：AWS 新加坡区域 · Docker Compose · CloudFlare CDN
+- **目标用户**：柬埔寨消费者（550 万 Telegram 用户）+ 本地中小商家 + 平台运营
+- **MVP 目标**：核心交易闭环（浏览→加购→下单→KHQR/ABA Pay/Wing Pay/COD 支付→Bot 通知）
+
+## 双框架开发模式：gstack + Superpowers
+
+本项目同时使用 gstack（流程引擎）和 Superpowers（编码纪律）。**gstack 管"做什么"，Superpowers 管"怎么做"。**
+
+详细对比参见：`项目文档/Claude_Code_框架对比报告_Superpowers_vs_gstack.md` 第六章"双框架结合使用方案"。
+
+### gstack 命令（流程层，手动触发）
+| 阶段 | 命令 | 用途 |
+|------|------|------|
+| 思考 | `/office-hours` | 产品方向拷问，大功能前必用 |
+| 规划 | `/autoplan`、`/plan-eng-review` | 一键规划流水线、架构审查 |
+| 构建 | `/design-html` | 设计稿→生产级 HTML/CSS（已有设计稿时） |
+| 审查 | `/review`、`/cso` | 代码审查、安全审计（支付相关必用） |
+| 测试 | `/qa`、`/qa-only` | 真实浏览器端到端测试 |
+| 发布 | `/ship`、`/land-and-deploy` | 发布 PR、部署验证 |
+| 维护 | `/retro`、`/learn`、`/document-release` | 每周复盘、知识积累、文档更新 |
+
+### Superpowers 纪律（编码层，自动触发）
+- **brainstorming**：编码前需求细化
+- **test-driven-development**：强制 RED-GREEN-REFACTOR
+- **subagent-driven-development**：大任务拆分子代理隔离执行
+- **verification-before-completion**：完成前自检验证
+
+## 项目文档索引
+
+所有文档在 `项目文档/` 目录下，编码前先查阅对应文档：
+
+| 文档 | 路径 | 何时查阅 |
+|------|------|----------|
+| 产品需求文档 (PRD) | `项目文档/产品需求文档_PRD.md` | 理解功能需求、验收标准 |
+| 用户故事清单 (Backlog) | `项目文档/用户故事清单_Backlog.md` | Sprint 计划、估点参考 |
+| 需求优先级矩阵 | `项目文档/需求优先级矩阵_MoSCoW.md` | 需求裁剪、优先级决策 |
+| 系统架构设计说明书 | `项目文档/系统架构设计说明书.md` | 技术选型、架构图、部署方案 |
+| 数据库设计说明书 | `项目文档/数据库设计说明书.md` | ER 图、DDL、索引设计 |
+| API 接口文档 | `项目文档/API接口文档.md` | 接口定义、请求响应格式、错误码 |
+| 开发规范 | `项目文档/开发规范.md` | 代码风格、Git 规范、Code Review |
+| 商业计划书 | `项目文档/柬埔寨 telegram 小程序商城商业计划书.docx` | 市场数据、商业模式、财务预测 |
+| UI 设计稿 | `项目文档/ui-design/` | 页面 HTML + Design Tokens |
+| 框架对比报告 | `项目文档/Claude_Code_框架对比报告_Superpowers_vs_gstack.md` | 双框架使用策略 |
+
+## UI 设计系统速览
+
+设计方向：**Modern Minimal (Linear/Vercel) × 柬埔寨金红文化配色**
+
+```
+--bg:      oklch(98.5% 0.003 95)   // 页面背景 #fafaf8
+--surface: oklch(100% 0 0)          // 卡片 #ffffff
+--fg:      oklch(20% 0.015 80)     // 主文字 #2d2b28
+--muted:   oklch(50% 0.012 80)     // 辅助文字 #7a7670
+--accent:  oklch(64% 0.16 82)      // 柬埔寨金 #c4932a
+--accent-red: oklch(52% 0.20 24)   // 价格/促销 #c43a30
+--font-khmer: 'Noto Sans Khmer'
+--font-body: system-ui
+布局: max-width 430px · 底部导航 64px · 商品双列网格 gap:12px · 最小触摸目标 44px
+```
+
+完整 Token 见 `项目文档/ui-design/design-tokens.md`。
+
+## 编码纪律（Superpowers 风格，强制）
+
+### 1. 测试驱动开发
+- **RED**：先写失败测试 → **GREEN**：最小实现 → **REFACTOR**：优化
+- 严禁在测试之前写实现代码。核心交易链路（订单/支付）覆盖率 ≥ 80%。
+
+### 2. YAGNI + 任务粒度
+- 不实现当前 Sprint 未规划的功能。重复出现 3 次才抽象。
+- 每个微任务 2-5 分钟可完成，明确文件路径和验证方法。
+
+### 3. 安全红线（和钱相关，绝对禁止触碰）
+- 支付回调必须验签 + 幂等处理。库存必须 SELECT FOR UPDATE + 事务。
+- 用户输入永不做 SQL/HTML 拼接。所有敏感数据（手机号）加密存储。
+- 涉及支付/用户数据的代码变更 → 必须运行 `/cso`。
+
+### 4. 柬埔寨本地化
+- 所有用户界面必须三语支持（高棉语/英语/中文），默认高棉语。
+- 所有价格必须 USD/KHR 双币种同时显示。手机号 +855 格式校验。
+- 弱网环境适配：图片 WebP + CDN + 懒加载，首屏 < 3 秒（4G），< 5 秒（3G）。
+
+## 项目初始化命令
+
+```bash
+# 安装 gstack
+git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack && ./setup
+
+# 安装 Superpowers（通过 Claude Code 插件市场）
+
+# 初始化前端项目
+npm create vite@latest tgmall-miniapp -- --template vue
+cd tgmall-miniapp && npm install
+
+# 初始化后端项目
+mkdir tgmall-api && cd tgmall-api && npm init -y
+npm install express prisma @prisma/client jsonwebtoken bullmq ioredis sharp helmet cors express-rate-limit winston zod
+
+# 数据库 Migration
+npx prisma migrate dev --name init
+
+# 启动开发环境
+docker compose up -d postgres redis   # 数据库 + 缓存
+npm run dev                           # 前端 (Vite)
+npm run dev                           # 后端 (Nodemon)
+```
+
+## 常用命令
+
+```bash
+# 前端
+npm run dev          # 开发服务器
+npm run build        # 生产构建（验证包体积 < 2MB）
+npm run test:unit    # 单元测试 (Vitest)
+npm run lint         # ESLint + Prettier
+
+# 后端
+npm run dev          # 开发服务器 (Nodemon)
+npm test             # 单元测试 (Jest) + 覆盖率
+npx prisma studio    # 数据库可视化管理
+
+# 数据库
+npx prisma migrate dev   # 生成 Migration
+npx prisma db seed       # 填充测试数据
+docker compose up -d     # 启动 PostgreSQL + Redis
+```

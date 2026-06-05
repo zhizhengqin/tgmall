@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>TG Mall — កន្ត្រកទំនិញ</title>
+  <style>
+    :root {
+      --bg:        oklch(98.5% 0.003 95);
+      --surface:   oklch(100% 0 0);
+      --fg:        oklch(20% 0.015 80);
+      --muted:     oklch(50% 0.012 80);
+      --border:    oklch(90% 0.005 95);
+      --accent:    oklch(64% 0.16 82);
+      --accent-red: oklch(52% 0.20 24);
+      --accent-green: oklch(58% 0.16 155);
+      --font-khmer: 'Noto Sans Khmer', 'Khmer OS', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 100px;
+      -webkit-font-smoothing: antialiased;
+    }
+    body.lang-km { font-family: var(--font-khmer); }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border: none; background: var(--bg);
+      border-radius: 50%; cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 18px; color: var(--fg);
+    }
+    .top-bar h1 { font-size: 15px; font-weight: 600; flex: 1; }
+    .lang-switch {
+      display: flex; gap: 2px;
+      background: var(--bg);
+      border-radius: var(--radius-sm); padding: 2px;
+      border: 1px solid var(--border);
+    }
+    .lang-switch button {
+      width: 32px; height: 26px;
+      border: none; background: transparent;
+      border-radius: 6px; font-size: 11px; font-weight: 600;
+      cursor: pointer; color: var(--muted);
+    }
+    .lang-switch button.active { background: var(--accent); color: #fff; }
+
+    /* Cart items */
+    .cart-list { padding: 0 16px; }
+    .shop-group {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      margin-top: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .shop-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 600;
+    }
+    .shop-header input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+    .cart-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+    .item-img {
+      width: 72px; height: 72px;
+      border-radius: var(--radius-sm);
+      background: oklch(95% 0.003 90);
+      display: grid; place-items: center;
+      font-size: 32px; flex-shrink: 0;
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name {
+      font-size: 13px; font-weight: 500;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .item-spec { font-size: 11px; color: var(--muted); margin: 2px 0; }
+    .item-price { font-weight: 700; font-size: 14px; color: var(--accent-red); }
+    .item-price-khr { font-size: 11px; color: var(--muted); margin-left: 4px; }
+    .item-qty {
+      display: flex; align-items: center; gap: 0;
+      border: 1px solid var(--border); border-radius: 6px;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .item-qty button {
+      width: 28px; height: 28px;
+      border: none; background: var(--bg);
+      font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+    .item-qty button:active { background: var(--border); }
+    .item-qty span {
+      width: 30px; text-align: center;
+      font-size: 13px; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .stock-warn {
+      font-size: 11px; color: var(--accent-red);
+      margin-top: 2px;
+    }
+
+    /* Empty state */
+    .empty-cart {
+      text-align: center; padding: 80px 20px;
+    }
+    .empty-cart .icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-cart p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+    .empty-cart a {
+      display: inline-block;
+      padding: 12px 32px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Bottom bar */
+    .bottom-bar {
+      position: fixed; bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: min(430px, 100%);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px));
+      z-index: 200; gap: 10px;
+    }
+    .bottom-bar input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    .bottom-bar .select-all { font-size: 13px; white-space: nowrap; }
+    .total-block { flex: 1; text-align: right; }
+    .total-usd { font-size: 18px; font-weight: 800; color: var(--accent-red); }
+    .total-khr { font-size: 11px; color: var(--muted); display: block; }
+    .btn-checkout {
+      padding: 13px 24px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn-checkout:active { transform: scale(0.97); }
+    .btn-checkout:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(20% 0.02 80); color: #fff;
+      padding: 10px 20px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="lang-km">
+  <div class="toast" id="toast"></div>
+
+  <div class="top-bar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1 data-i18n="title">កន្ត្រកទំនិញ</h1>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="km" class="active">ប្រ</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </div>
+
+  <div class="cart-list" id="cartList"></div>
+
+  <div class="empty-cart hidden" id="emptyCart">
+    <div class="icon">🛒</div>
+    <p data-i18n="empty">កន្ត្រកទំនេរ</p>
+    <a href="01-home.html" data-i18n="goShop">ទៅទិញឥវ៉ាន់</a>
+  </div>
+
+  <div class="bottom-bar hidden" id="bottomBar">
+    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+    <span class="select-all" data-i18n="all">ទាំងអស់</span>
+    <div class="total-block">
+      <span class="total-usd" id="totalUsd">$0.00</span>
+      <span class="total-khr" id="totalKhr">៛0</span>
+    </div>
+    <button class="btn-checkout" id="btnCheckout" onclick="checkout()" data-i18n="checkout">
+      ទូទាត់
+    </button>
+  </div>
+
+  <script>
+    let currentLang = 'km';
+    const I18N = {
+      title: { km: 'កន្ត្រកទំនិញ', zh: '购物车', en: 'Shopping Cart' },
+      empty: { km: 'កន្ត្រកទំនេរ', zh: '购物车是空的', en: 'Cart is empty' },
+      goShop: { km: 'ទៅទិញឥវ៉ាន់', zh: '去逛逛', en: 'Go Shopping' },
+      all: { km: 'ទាំងអស់', zh: '全选', en: 'All' },
+      checkout: { km: 'ទូទាត់', zh: '结算', en: 'Checkout' },
+      removed: { km: 'បានលុប', zh: '已删除', en: 'Removed' },
+    };
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.body.className = '';
+      if (lang === 'km') document.body.classList.add('lang-km');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[key] && I18N[key][lang]) el.textContent = I18N[key][lang];
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      // Re-update checkout button with count
+      updateCheckoutBtn();
+    }
+
+    document.getElementById('langSwitch').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      switchLang(btn.dataset.lang);
+    });
+
+    // Cart data — demo items
+    let cartItems = [
+      { id: 1, shop: 'Phnom Penh Style', img: '👕', nameKm: 'អាវយឺតកប្បាសសុទ្ធ', nameZh: '纯棉短袖T恤', nameEn: 'Pure Cotton T-Shirt', spec: 'White / M', price: 12.99, qty: 2, stock: 28, checked: true },
+      { id: 3, shop: 'Tech Zone KH', img: '🎧', nameKm: 'កាសឥតខ្សែប៊្លូធូស', nameZh: '蓝牙无线耳机', nameEn: 'Bluetooth Earbuds', spec: 'Black', price: 18.99, qty: 1, stock: 15, checked: true },
+      { id: 5, shop: 'Phnom Penh Style', img: '👟', nameKm: 'ស្បែកជើងប៉ាតាស្ត្រី', nameZh: '女士运动休闲鞋', nameEn: "Women's Sneakers", spec: 'Size 38', price: 32.00, qty: 1, stock: 5, checked: false },
+    ];
+
+    function loadCart() {
+      const saved = JSON.parse(localStorage.getItem('tgm_cart') || '[]');
+      if (saved.length > 0 && cartItems.length === 3) {
+        // Merge: just use localStorage as source of truth for qty updates
+        saved.forEach(s => {
+          const item = cartItems.find(i => i.id === s.id);
+          if (item) item.qty = Math.max(item.qty, s.qty);
+        });
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const list = document.getElementById('cartList');
+      const empty = document.getElementById('emptyCart');
+      const bar = document.getElementById('bottomBar');
+
+      if (cartItems.length === 0 || cartItems.every(i => i.qty === 0)) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        bar.classList.add('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      bar.classList.remove('hidden');
+
+      // Group by shop
+      const shops = {};
+      cartItems.forEach(item => {
+        if (!shops[item.shop]) shops[item.shop] = [];
+        shops[item.shop].push(item);
+      });
+
+      list.innerHTML = Object.entries(shops).map(([shop, items]) => `
+        <div class="shop-group">
+          <div class="shop-header">
+            <input type="checkbox" onchange="toggleShop('${shop}', this.checked)" ${items.every(i => i.checked) ? 'checked' : ''}>
+            <span>${shop}</span>
+          </div>
+          ${items.map(item => `
+            <div class="cart-item">
+              <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id}, this.checked)">
+              <div class="item-img">${item.img}</div>
+              <div class="item-info">
+                <div class="item-name">${item['name' + (currentLang === 'km' ? 'Km' : currentLang === 'zh' ? 'Zh' : 'En')]}</div>
+                <div class="item-spec">${item.spec}</div>
+                <span class="item-price">$${item.price.toFixed(2)}</span>
+                <span class="item-price-khr">៛${Math.round(item.price * 4000).toLocaleString()}</span>
+                ${item.qty >= item.stock ? `<div class="stock-warn">⚠️ ${currentLang === 'km' ? 'ស្តុកមិនគ្រប់' : currentLang === 'zh' ? '库存不足' : 'Low stock'} — ${item.stock} ${currentLang === 'km' ? 'គ្រឿង' : currentLang === 'zh' ? '件' : 'left'}</div>` : ''}
+              </div>
+              <div class="item-qty">
+                <button onclick="changeQty(${item.id}, -1)">−</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty(${item.id}, 1)">+</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+
+      updateTotals();
+      updateCheckoutBtn();
+    }
+
+    function changeQty(id, delta) {
+      const item = cartItems.find(i => i.id === id);
+      if (!item) return;
+      const newQty = item.qty + delta;
+      if (newQty < 1) {
+        // Remove item
+        cartItems = cartItems.filter(i => i.id !== id);
+        showToast(I18N.removed[currentLang]);
+      } else if (newQty > item.stock) {
+        item.qty = item.stock;
+      } else {
+        item.qty = newQty;
+      }
+      saveCart();
+      renderCart();
+    }
+
+    function toggleItem(id, checked) {
+      const item = cartItems.find(i => i.id === id);
+      if (item) item.checked = checked;
+      updateTotals();
+      updateCheckoutBtn();
+      document.getElementById('selectAll').checked = cartItems.every(i => i.checked);
+    }
+
+    function toggleShop(shop, checked) {
+      cartItems.forEach(i => { if (i.shop === shop) i.checked = checked; });
+      renderCart();
+    }
+
+    function toggleSelectAll() {
+      const checked = document.getElementById('selectAll').checked;
+      cartItems.forEach(i => i.checked = checked);
+      renderCart();
+    }
+
+    function updateTotals() {
+      const checked = cartItems.filter(i => i.checked);
+      const total = checked.reduce((sum, i) => sum + i.price * i.qty, 0);
+      document.getElementById('totalUsd').textContent = '$' + total.toFixed(2);
+      document.getElementById('totalKhr').textContent = '៛' + Math.round(total * 4000).toLocaleString();
+    }
+
+    function updateCheckoutBtn() {
+      const checked = cartItems.filter(i => i.checked);
+      const btn = document.getElementById('btnCheckout');
+      const count = checked.reduce((sum, i) => sum + i.qty, 0);
+      btn.disabled = count === 0;
+      const word = currentLang === 'km' ? 'ទូទាត់' : currentLang === 'zh' ? '结算' : 'Checkout';
+      btn.textContent = count > 0 ? `${word}(${count})` : word;
+    }
+
+    function checkout() {
+      const checked = cartItems.filter(i => i.checked);
+      if (checked.length === 0) return;
+      const order = checked.map(i => ({ id: i.id, name: i.nameEn, price: i.price, qty: i.qty, spec: i.spec }));
+      localStorage.setItem('tgm_checkout', JSON.stringify(order));
+      window.location = '04-checkout.html';
+    }
+
+    function saveCart() {
+      localStorage.setItem('tgm_cart', JSON.stringify(cartItems.map(i => ({ id: i.id, qty: i.qty, checked: i.checked }))));
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

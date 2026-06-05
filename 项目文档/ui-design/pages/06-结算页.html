@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>TG Mall — បញ្ជាក់ការទូទាត់</title>
+  <style>
+    :root {
+      --bg:        oklch(98.5% 0.003 95);
+      --surface:   oklch(100% 0 0);
+      --fg:        oklch(20% 0.015 80);
+      --muted:     oklch(50% 0.012 80);
+      --border:    oklch(90% 0.005 95);
+      --accent:    oklch(64% 0.16 82);
+      --accent-red: oklch(52% 0.20 24);
+      --accent-green: oklch(58% 0.16 155);
+      --accent-blue: oklch(58% 0.16 255);
+      --font-khmer: 'Noto Sans Khmer', 'Khmer OS', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --shadow-card: 0 1px 3px oklch(0% 0 0 / 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      max-width: 430px; margin: 0 auto;
+      min-height: 100vh; padding-bottom: 100px;
+      -webkit-font-smoothing: antialiased;
+    }
+    body.lang-km { font-family: var(--font-khmer); }
+
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border: none; background: var(--bg);
+      border-radius: 50%; cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 18px; color: var(--fg);
+    }
+    .top-bar h1 { font-size: 15px; font-weight: 600; flex: 1; }
+    .lang-switch {
+      display: flex; gap: 2px;
+      background: var(--bg); border-radius: var(--radius-sm);
+      padding: 2px; border: 1px solid var(--border);
+    }
+    .lang-switch button {
+      width: 32px; height: 26px;
+      border: none; background: transparent;
+      border-radius: 6px; font-size: 11px; font-weight: 600;
+      cursor: pointer; color: var(--muted);
+    }
+    .lang-switch button.active { background: var(--accent); color: #fff; }
+
+    /* Section */
+    .section {
+      background: var(--surface);
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+    .section-head h3 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .section-head .arrow { font-size: 12px; color: var(--muted); }
+
+    /* Address */
+    .address-card {
+      padding: 14px 16px;
+    }
+    .address-card .recipient {
+      font-weight: 600; font-size: 14px; margin-bottom: 4px;
+    }
+    .address-card .phone { color: var(--muted); font-size: 13px; margin-left: 8px; }
+    .address-card .addr-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .address-card .default-badge {
+      display: inline-block;
+      background: oklch(64% 0.16 82 / 0.12);
+      color: var(--accent);
+      font-size: 10px; font-weight: 600;
+      padding: 2px 7px; border-radius: 4px;
+      margin-left: 6px;
+    }
+    .no-address {
+      padding: 20px 16px; text-align: center;
+      color: var(--accent); font-size: 14px; font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Product list */
+    .product-row {
+      display: flex; gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .product-row:last-child { border-bottom: none; }
+    .product-row .p-img {
+      width: 60px; height: 60px;
+      border-radius: var(--radius-sm);
+      background: oklch(95% 0.003 90);
+      display: grid; place-items: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .product-row .p-info { flex: 1; min-width: 0; }
+    .product-row .p-name { font-size: 13px; line-height: 1.4; }
+    .product-row .p-spec { font-size: 11px; color: var(--muted); }
+    .product-row .p-qty { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .product-row .p-price { font-weight: 700; font-size: 14px; color: var(--accent-red); text-align: right; flex-shrink: 0; }
+
+    /* Payment methods */
+    .pay-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .pay-option:last-child { border-bottom: none; }
+    .pay-option:active { background: var(--bg); }
+    .pay-radio {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: grid; place-items: center;
+      transition: all 0.2s;
+    }
+    .pay-option.selected .pay-radio {
+      border-color: var(--accent);
+    }
+    .pay-option.selected .pay-radio::after {
+      content: '';
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .pay-icon { font-size: 26px; flex-shrink: 0; }
+    .pay-info { flex: 1; }
+    .pay-name { font-size: 14px; font-weight: 600; }
+    .pay-desc { font-size: 11px; color: var(--muted); }
+    .pay-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px;
+      background: var(--accent-red); color: #fff;
+    }
+
+    /* Coupon */
+    .coupon-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+    }
+    .coupon-tag {
+      font-size: 12px; font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: oklch(52% 0.20 24 / 0.1);
+      color: var(--accent-red);
+    }
+
+    /* Price summary */
+    .price-summary { padding: 14px 16px; }
+    .price-line {
+      display: flex; justify-content: space-between;
+      font-size: 13px; padding: 4px 0;
+      color: var(--muted);
+    }
+    .price-line.total {
+      font-size: 16px; font-weight: 800;
+      color: var(--fg);
+      border-top: 1px solid var(--border);
+      padding-top: 10px; margin-top: 6px;
+    }
+    .price-line.total .usd { color: var(--accent-red); }
+    .price-line .discount { color: var(--accent-green); }
+
+    /* Submit button */
+    .submit-bar {
+      position: fixed; bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: min(430px, 100%);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px));
+      z-index: 200;
+      display: flex; gap: 12px; align-items: center;
+    }
+    .submit-total { flex: 1; }
+    .submit-usd { font-size: 20px; font-weight: 800; color: var(--accent-red); }
+    .submit-khr { font-size: 11px; color: var(--muted); display: block; }
+    .btn-submit {
+      padding: 14px 32px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-submit:active { transform: scale(0.97); }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(20% 0.02 80); color: #fff;
+      padding: 10px 20px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="lang-km">
+  <div class="toast" id="toast"></div>
+
+  <div class="top-bar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1 data-i18n="title">បញ្ជាក់ការទូទាត់</h1>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="km" class="active">ប្រ</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </div>
+
+  <!-- Address -->
+  <div class="section">
+    <div class="address-card" id="addressDisplay">
+      <div>
+        <span class="recipient">Sopheap</span>
+        <span class="phone">+855 12 345 678</span>
+        <span class="default-badge" data-i18n="default">លំនាំដើម</span>
+      </div>
+      <div class="addr-text">#12, St 310, Sangkat Boeung Keng Kang 1, Khan Chamkarmon, Phnom Penh</div>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <div class="section">
+    <div class="section-head">
+      <h3 data-i18n="products">ទំនិញ</h3>
+    </div>
+    <div id="productList"></div>
+  </div>
+
+  <!-- Coupon -->
+  <div class="section">
+    <div class="coupon-row" onclick="toggleCoupon()" style="cursor:pointer">
+      <span style="font-size:14px">🎫</span>
+      <span style="flex:1;font-size:14px;font-weight:500" data-i18n="coupon">ប័ណ្ណបញ្ចុះតម្លៃ</span>
+      <span class="coupon-tag" id="couponTag" data-i18n="noCoupon">មិនប្រើ</span>
+      <span class="arrow">›</span>
+    </div>
+    <div class="hidden" id="couponPanel" style="padding:0 16px 12px">
+      <label style="display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer;border-top:1px solid var(--border)">
+        <input type="radio" name="coupon" value="" checked onchange="updateTotals()">
+        <span data-i18n="noUse">មិនប្រើ</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer">
+        <input type="radio" name="coupon" value="5" onchange="updateTotals()">
+        <span>$5 OFF</span>
+        <span class="coupon-tag" data-i18n="minSpend">យ៉ាងតិច $30</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Payment method -->
+  <div class="section">
+    <div class="section-head">
+      <h3 data-i18n="payment">វិធីទូទាត់</h3>
+    </div>
+    <div id="payMethods">
+      <div class="pay-option selected" data-pay="khqr" onclick="selectPay('khqr')">
+        <div class="pay-radio"></div>
+        <div class="pay-icon">📱</div>
+        <div class="pay-info">
+          <div class="pay-name">KHQR</div>
+          <div class="pay-desc" data-i18n="khqrDesc">ស្កេន QR ជាមួយ App ធនាគារ</div>
+        </div>
+        <span class="pay-badge" data-i18n="recommend">ណែនាំ</span>
+      </div>
+      <div class="pay-option" data-pay="aba" onclick="selectPay('aba')">
+        <div class="pay-radio"></div>
+        <div class="pay-icon">🏦</div>
+        <div class="pay-info">
+          <div class="pay-name">ABA Pay</div>
+          <div class="pay-desc">ABA Mobile · ត្រឹមតែ 1 វិនាទី</div>
+        </div>
+      </div>
+      <div class="pay-option" data-pay="wing" onclick="selectPay('wing')">
+        <div class="pay-radio"></div>
+        <div class="pay-icon">💳</div>
+        <div class="pay-info">
+          <div class="pay-name">Wing Pay</div>
+          <div class="pay-desc">Wing Bank App</div>
+        </div>
+      </div>
+      <div class="pay-option" data-pay="cod" onclick="selectPay('cod')">
+        <div class="pay-radio"></div>
+        <div class="pay-icon">💵</div>
+        <div class="pay-info">
+          <div class="pay-name" data-i18n="cod">បង់ពេលទទួល</div>
+          <div class="pay-desc" data-i18n="codDesc">បង់ជាសាច់ប្រាក់ពេលទទួលទំនិញ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Price summary -->
+  <div class="section">
+    <div class="price-summary">
+      <div class="price-line">
+        <span data-i18n="subtotal">សរុបទំនិញ</span>
+        <span id="subtotalUsd">$63.98</span>
+      </div>
+      <div class="price-line">
+        <span data-i18n="discount">បញ្ចុះតម្លៃ</span>
+        <span class="discount" id="discountUsd">-$0.00</span>
+      </div>
+      <div class="price-line">
+        <span data-i18n="shipping">ថ្លៃដឹកជញ្ជូន</span>
+        <span id="shippingUsd">$2.00</span>
+      </div>
+      <div class="price-line total">
+        <span data-i18n="total">សរុបត្រូវបង់</span>
+        <span class="usd" id="finalUsd">$65.98</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="submit-bar">
+    <div class="submit-total">
+      <span class="submit-usd" id="submitUsd">$65.98</span>
+      <span class="submit-khr" id="submitKhr">៛263,920</span>
+    </div>
+    <button class="btn-submit" onclick="submitOrder()" data-i18n="submit">ដាក់បញ្ជាទិញ</button>
+  </div>
+
+  <script>
+    let currentLang = 'km';
+    let selectedPay = 'khqr';
+
+    const I18N = {
+      title: { km: 'បញ្ជាក់ការទូទាត់', zh: '确认订单', en: 'Checkout' },
+      default: { km: 'លំនាំដើម', zh: '默认', en: 'Default' },
+      products: { km: 'ទំនិញ', zh: '商品', en: 'Items' },
+      coupon: { km: 'ប័ណ្ណបញ្ចុះតម្លៃ', zh: '优惠券', en: 'Coupon' },
+      noCoupon: { km: 'មិនប្រើ', zh: '未使用', en: 'None' },
+      noUse: { km: 'មិនប្រើ', zh: '不使用', en: 'None' },
+      minSpend: { km: 'យ៉ាងតិច $30', zh: '满$30可用', en: 'Min $30' },
+      payment: { km: 'វិធីទូទាត់', zh: '支付方式', en: 'Payment' },
+      khqrDesc: { km: 'ស្កេន QR ជាមួយ App ធនាគារ', zh: '银行App扫码支付', en: 'Scan with banking app' },
+      recommend: { km: 'ណែនាំ', zh: '推荐', en: 'Recommended' },
+      cod: { km: 'បង់ពេលទទួល', zh: '货到付款', en: 'Cash on Delivery' },
+      codDesc: { km: 'បង់ជាសាច់ប្រាក់ពេលទទួលទំនិញ', zh: '收货时付现金', en: 'Pay cash on delivery' },
+      subtotal: { km: 'សរុបទំនិញ', zh: '商品小计', en: 'Subtotal' },
+      discount: { km: 'បញ្ចុះតម្លៃ', zh: '优惠', en: 'Discount' },
+      shipping: { km: 'ថ្លៃដឹកជញ្ជូន', zh: '运费', en: 'Shipping' },
+      total: { km: 'សរុបត្រូវបង់', zh: '合计', en: 'Total' },
+      submit: { km: 'ដាក់បញ្ជាទិញ', zh: '提交订单', en: 'Place Order' },
+    };
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.body.className = '';
+      if (lang === 'km') document.body.classList.add('lang-km');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[key] && I18N[key][lang]) el.textContent = I18N[key][lang];
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+    }
+
+    document.getElementById('langSwitch').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      switchLang(btn.dataset.lang);
+    });
+
+    function selectPay(method) {
+      selectedPay = method;
+      document.querySelectorAll('.pay-option').forEach(o => o.classList.toggle('selected', o.dataset.pay === method));
+    }
+
+    function toggleCoupon() {
+      document.getElementById('couponPanel').classList.toggle('hidden');
+    }
+
+    // Load checkout items
+    const checkoutItems = JSON.parse(localStorage.getItem('tgm_checkout') || '[]');
+    const DEMO_ITEMS = checkoutItems.length > 0 ? checkoutItems : [
+      { id: 1, name: 'Pure Cotton T-Shirt', price: 12.99, qty: 2, spec: 'White / M', img: '👕' },
+      { id: 3, name: 'Bluetooth Earbuds', price: 18.99, qty: 1, spec: 'Black', img: '🎧' },
+      { id: 5, name: "Women's Sneakers", price: 32.00, qty: 1, spec: 'Size 38', img: '👟' },
+    ];
+
+    function renderProducts() {
+      document.getElementById('productList').innerHTML = DEMO_ITEMS.map(item => `
+        <div class="product-row">
+          <div class="p-img">${item.img || '📦'}</div>
+          <div class="p-info">
+            <div class="p-name">${item.name}</div>
+            <div class="p-spec">${item.spec || ''}</div>
+            <div class="p-qty">× ${item.qty}</div>
+          </div>
+          <div class="p-price">$${(item.price * item.qty).toFixed(2)}</div>
+        </div>
+      `).join('');
+      updateTotals();
+    }
+
+    function updateTotals() {
+      const subtotal = DEMO_ITEMS.reduce((s, i) => s + i.price * i.qty, 0);
+      const couponVal = parseFloat(document.querySelector('input[name="coupon"]:checked')?.value || '0');
+      const shipping = subtotal >= 30 ? 0 : 2.00;
+      const discount = subtotal >= 30 ? couponVal : 0;
+      const final = subtotal - discount + shipping;
+
+      document.getElementById('subtotalUsd').textContent = '$' + subtotal.toFixed(2);
+      document.getElementById('discountUsd').textContent = '-$' + discount.toFixed(2);
+      document.getElementById('shippingUsd').textContent = shipping === 0 ? (currentLang === 'km' ? 'ឥតគិតថ្លៃ' : currentLang === 'zh' ? '免运费' : 'Free') : '$' + shipping.toFixed(2);
+      document.getElementById('finalUsd').textContent = '$' + final.toFixed(2);
+      document.getElementById('submitUsd').textContent = '$' + final.toFixed(2);
+      document.getElementById('submitKhr').textContent = '៛' + Math.round(final * 4000).toLocaleString();
+    }
+
+    function submitOrder() {
+      const final = parseFloat(document.getElementById('finalUsd').textContent.replace('$', ''));
+      const orderData = {
+        id: 'ORD-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+        items: DEMO_ITEMS,
+        total: final,
+        payment: selectedPay,
+        createdAt: new Date().toISOString(),
+        status: 'pending_payment',
+      };
+      // Save order
+      const orders = JSON.parse(localStorage.getItem('tgm_orders') || '[]');
+      orders.unshift(orderData);
+      localStorage.setItem('tgm_orders', JSON.stringify(orders));
+      localStorage.setItem('tgm_current_order', JSON.stringify(orderData));
+      // Clear cart
+      localStorage.removeItem('tgm_cart');
+      localStorage.removeItem('tgm_checkout');
+      // Go to payment
+      window.location = '05-payment.html';
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>

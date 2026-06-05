@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>TG Mall — ទំព័រដើម</title>
+  <style>
+    /* ============================================================
+       Design tokens — Modern minimal + Cambodia gold/red
+       ============================================================ */
+    :root {
+      --bg:        oklch(98.5% 0.003 95);
+      --surface:   oklch(100% 0 0);
+      --fg:        oklch(20% 0.015 80);
+      --muted:     oklch(50% 0.012 80);
+      --border:    oklch(90% 0.005 95);
+      --accent:    oklch(64% 0.16 82);
+      --accent-red: oklch(52% 0.20 24);
+      --accent-green: oklch(58% 0.16 155);
+      --accent-blue: oklch(58% 0.16 255);
+      --font-khmer: 'Noto Sans Khmer', 'Khmer OS', system-ui, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-card: 0 1px 3px oklch(0% 0 0 / 0.06);
+      --shadow-float: 0 4px 16px oklch(0% 0 0 / 0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: 72px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* When Khmer is active, switch body font */
+    body.lang-km { font-family: var(--font-khmer); }
+    body.lang-km .price-usd { font-family: var(--font-body); }
+
+    /* ============================================================
+       Top header — search + language
+       ============================================================ */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-header .logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 19px;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .search-bar {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: border-color 0.15s;
+    }
+    .search-bar:hover { border-color: var(--accent); }
+    .search-bar svg { flex-shrink: 0; opacity: 0.4; }
+    .search-bar span {
+      font-size: 14px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lang-switch {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .lang-switch button {
+      width: 34px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .lang-switch button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ============================================================
+       Banner carousel
+       ============================================================ */
+    .banner-wrap {
+      margin: 12px 16px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 16/7;
+      background: oklch(95% 0.008 85);
+    }
+    .banner-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    }
+    .banner-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      color: #fff;
+    }
+    .banner-slide:nth-child(1) {
+      background: linear-gradient(135deg, oklch(64% 0.16 82), oklch(52% 0.20 24));
+    }
+    .banner-slide:nth-child(2) {
+      background: linear-gradient(135deg, oklch(55% 0.15 240), oklch(45% 0.18 260));
+    }
+    .banner-slide:nth-child(3) {
+      background: linear-gradient(135deg, oklch(58% 0.16 155), oklch(48% 0.14 170));
+    }
+    .banner-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+    .banner-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      transition: all 0.3s;
+    }
+    .banner-dots span.active { background: #fff; width: 18px; border-radius: 3px; }
+
+    /* ============================================================
+       Category chips
+       ============================================================ */
+    .category-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px 16px 12px;
+    }
+
+    .cat-chip {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      color: var(--muted);
+    }
+    .cat-chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .cat-chip:active { transform: scale(0.96); }
+
+    /* ============================================================
+       Section header
+       ============================================================ */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0 16px 10px;
+    }
+    .section-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .section-header a {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       Product grid (2 columns)
+       ============================================================ */
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 0.15s;
+      border: 1px solid var(--border);
+    }
+    .product-card:active { transform: scale(0.98); }
+    .product-card .img-wrap {
+      aspect-ratio: 1;
+      background: oklch(96% 0.003 90);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-card .img-wrap .badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.02em;
+    }
+    .product-card .info {
+      padding: 10px 10px 12px;
+    }
+    .product-card .name {
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 500;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .product-card .prices {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .product-card .price-usd {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent-red);
+      letter-spacing: -0.02em;
+    }
+    .product-card .price-khr {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .product-card .shop {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ============================================================
+       Skeleton loading
+       ============================================================ */
+    .skeleton-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .skeleton-img {
+      aspect-ratio: 1;
+      background: oklch(94% 0.002 90);
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-text {
+      height: 14px;
+      background: oklch(94% 0.002 90);
+      border-radius: 4px;
+      margin: 10px 10px 4px;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-text.short { width: 60%; }
+    @keyframes shimmer {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    /* ============================================================
+       Bottom navigation
+       ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(430px, 100%);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 6px 0 env(safe-area-inset-bottom, 8px);
+      z-index: 200;
+    }
+    .bottom-nav .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 0;
+      cursor: pointer;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 500;
+      transition: color 0.15s;
+      position: relative;
+    }
+    .bottom-nav .nav-item.active { color: var(--accent); }
+    .bottom-nav .nav-item svg { width: 22px; height: 22px; }
+    .bottom-nav .nav-item .badge-dot {
+      position: absolute;
+      top: 2px;
+      right: calc(50% - 18px);
+      min-width: 17px;
+      height: 17px;
+      border-radius: 999px;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    /* ============================================================
+       Toast
+       ============================================================ */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: oklch(20% 0.02 80);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Utility */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="lang-km">
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Top header -->
+  <header class="top-header">
+    <span class="logo">TG Mall</span>
+    <div class="search-bar" onclick="window.location='01-home.html'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span data-i18n="searchPlaceholder">ស្វែងរកទំនិញ...</span>
+    </div>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="km" class="active">ប្រ</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <!-- Banner -->
+  <div class="banner-wrap" id="banner">
+    <div class="banner-track" id="bannerTrack">
+      <div class="banner-slide" data-i18n="banner1">🛍️ បញ្ចុះតម្លៃធំ</div>
+      <div class="banner-slide" data-i18n="banner2">📦 ដឹកជញ្ជូនឥតគិតថ្លៃ</div>
+      <div class="banner-slide" data-i18n="banner3">🆕 ម៉ាកថ្មីមកដល់</div>
+    </div>
+    <div class="banner-dots" id="bannerDots">
+      <span class="active"></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Category row -->
+  <div class="category-row" id="categoryRow">
+    <button class="cat-chip active" data-cat="all"><span data-i18n="catAll">ទាំងអស់</span></button>
+    <button class="cat-chip" data-cat="fashion">👗 <span data-i18n="catFashion">ម៉ូត</span></button>
+    <button class="cat-chip" data-cat="beauty">💄 <span data-i18n="catBeauty">សម្រស់</span></button>
+    <button class="cat-chip" data-cat="electronics">📱 <span data-i18n="catElectronics">អេឡិចត្រូនិច</span></button>
+    <button class="cat-chip" data-cat="home">🏠 <span data-i18n="catHome">គ្រឿងសង្ហារឹម</span></button>
+  </div>
+
+  <!-- Section header -->
+  <div class="section-header">
+    <h2 data-i18n="recommended">បានណែនាំ</h2>
+    <a href="01-home.html" data-i18n="viewAll">មើលទាំងអស់</a>
+  </div>
+
+  <!-- Product grid -->
+  <div class="product-grid" id="productGrid">
+    <!-- Products rendered by JS -->
+  </div>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <a class="nav-item active" href="01-home.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span data-i18n="navHome">ទំព័រដើម</span>
+    </a>
+    <a class="nav-item" href="01-home.html#category">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span data-i18n="navCategory">ប្រភេទ</span>
+    </a>
+    <a class="nav-item" href="03-cart.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+      <span data-i18n="navCart">កន្ត្រក</span>
+      <span class="badge-dot hidden" id="cartBadge">0</span>
+    </a>
+    <a class="nav-item" href="06-orders.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="18" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <span data-i18n="navOrders">ការបញ្ជាទិញ</span>
+    </a>
+    <a class="nav-item" href="07-profile.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span data-i18n="navProfile">ខ្ញុំ</span>
+    </a>
+  </nav>
+
+  <script>
+    // ============================================================
+    // Product data — realistic Cambodia marketplace items
+    // ============================================================
+    const PRODUCTS = [
+      { id: 1, cat: 'fashion', name: { km: 'អាវយឺតកប្បាសសុទ្ធ', zh: '纯棉短袖T恤', en: 'Pure Cotton T-Shirt' }, priceUsd: 12.99, priceKhr: '៛52,000', img: '👕', shop: 'Phnom Penh Style', badge: 'Hot' },
+      { id: 2, cat: 'beauty', name: { km: 'ក្រែមលាបមុខវីតាមីន C', zh: 'VC亮肤精华面霜', en: 'Vitamin C Brightening Cream' }, priceUsd: 24.50, priceKhr: '៛98,000', img: '✨', shop: 'Khmer Beauty', badge: null },
+      { id: 3, cat: 'electronics', name: { km: 'កាសឥតខ្សែប៊្លូធូស', zh: '蓝牙无线耳机', en: 'Bluetooth Wireless Earbuds' }, priceUsd: 18.99, priceKhr: '៛76,000', img: '🎧', shop: 'Tech Zone KH', badge: 'New' },
+      { id: 4, cat: 'home', name: { km: 'ខ្នើយតុបតែងបែបបុរាណ', zh: '高棉传统装饰抱枕', en: 'Khmer Traditional Cushion' }, priceUsd: 15.00, priceKhr: '៛60,000', img: '🛋️', shop: 'Angkor Home', badge: null },
+      { id: 5, cat: 'fashion', name: { km: 'ស្បែកជើងប៉ាតាស្ត្រី', zh: '女士运动休闲鞋', en: "Women's Casual Sneakers" }, priceUsd: 32.00, priceKhr: '៛128,000', img: '👟', shop: 'Phnom Penh Style', badge: 'Sale' },
+      { id: 6, cat: 'beauty', name: { km: 'ក្រែមការពារកម្តៅថ្ងៃ SPF50', zh: 'SPF50 防晒霜', en: 'SPF50 Sunscreen Lotion' }, priceUsd: 9.99, priceKhr: '៛40,000', img: '☀️', shop: 'Khmer Beauty', badge: 'Hot' },
+      { id: 7, cat: 'electronics', name: { km: 'ឆ្នាំងសាកថ្មចល័ត 20000mAh', zh: '20000毫安充电宝', en: '20000mAh Power Bank' }, priceUsd: 22.00, priceKhr: '៛88,000', img: '🔋', shop: 'Tech Zone KH', badge: null },
+      { id: 8, cat: 'home', name: { km: 'ចានសេរ៉ាមិចធ្វើដោយដៃ', zh: '手工陶瓷餐具套装', en: 'Handmade Ceramic Dinner Set' }, priceUsd: 28.50, priceKhr: '៛114,000', img: '🍽️', shop: 'Angkor Home', badge: 'New' },
+      { id: 9, cat: 'fashion', name: { km: 'កាបូបស្ពាយស្បែក', zh: '真皮双肩背包', en: 'Leather Backpack' }, priceUsd: 45.00, priceKhr: '៛180,000', img: '🎒', shop: 'Phnom Penh Style', badge: 'Sale' },
+      { id: 10, cat: 'beauty', name: { km: 'ក្រែមលាបមាត់ពណ៌ធម្មជាតិ', zh: '天然植物口红', en: 'Natural Lipstick Set' }, priceUsd: 16.99, priceKhr: '៛68,000', img: '💄', shop: 'Khmer Beauty', badge: null },
+      { id: 11, cat: 'electronics', name: { km: 'ទូរស័ព្ទស្មាតហ្វូនស៊េរីថ្មី', zh: '新款智能手机', en: 'Latest Smartphone' }, priceUsd: 199.00, priceKhr: '៛796,000', img: '📱', shop: 'Tech Zone KH', badge: 'Hot' },
+      { id: 12, cat: 'home', name: { km: 'ចង្កៀងតុធ្វើពីឫស្សី', zh: '手工竹编台灯', en: 'Handwoven Bamboo Lamp' }, priceUsd: 19.99, priceKhr: '៛80,000', img: '💡', shop: 'Angkor Home', badge: null },
+    ];
+
+    // ============================================================
+    // Language state
+    // ============================================================
+    let currentLang = 'km';
+    const I18N = {
+      searchPlaceholder: { km: 'ស្វែងរកទំនិញ...', zh: '搜索商品...', en: 'Search products...' },
+      recommended: { km: 'បានណែនាំ', zh: '为你推荐', en: 'Recommended' },
+      viewAll: { km: 'មើលទាំងអស់', zh: '查看全部', en: 'View all' },
+      navHome: { km: 'ទំព័រដើម', zh: '首页', en: 'Home' },
+      navCategory: { km: 'ប្រភេទ', zh: '分类', en: 'Category' },
+      navCart: { km: 'កន្ត្រក', zh: '购物车', en: 'Cart' },
+      navOrders: { km: 'ការបញ្ជាទិញ', zh: '订单', en: 'Orders' },
+      navProfile: { km: 'ខ្ញុំ', zh: '我的', en: 'Me' },
+      addToCart: { km: '✓ បានដាក់ចូលកន្ត្រក', zh: '✓ 已加入购物车', en: '✓ Added to cart' },
+      banner1: { km: '🛍️ បញ្ចុះតម្លៃធំ', zh: '🛍️ 大促', en: '🛍️ Mega Sale' },
+      banner2: { km: '📦 ដឹកជញ្ជូនឥតគិតថ្លៃ', zh: '📦 免运费', en: '📦 Free Shipping' },
+      banner3: { km: '🆕 ម៉ាកថ្មីមកដល់', zh: '🆕 新品牌入驻', en: '🆕 New Brands' },
+      catAll: { km: 'ទាំងអស់', zh: '全部', en: 'All' },
+      catFashion: { km: 'ម៉ូត', zh: '时尚', en: 'Fashion' },
+      catBeauty: { km: 'សម្រស់', zh: '美妆', en: 'Beauty' },
+      catElectronics: { km: 'អេឡិចត្រូនិច', zh: '电子', en: 'Electronics' },
+      catHome: { km: 'គ្រឿងសង្ហារឹម', zh: '家居', en: 'Home' },
+    };
+
+    let cartCount = 3; // Demo cart count
+
+    function t(key) {
+      return (I18N[key] && I18N[key][currentLang]) || key;
+    }
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.body.className = '';
+      if (lang === 'km') document.body.classList.add('lang-km');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[key] && I18N[key][lang]) {
+          el.textContent = I18N[key][lang];
+        }
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      renderProducts(currentCat);
+    }
+
+    // Language switch buttons
+    document.getElementById('langSwitch').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      switchLang(btn.dataset.lang);
+    });
+
+    // ============================================================
+    // Banner carousel
+    // ============================================================
+    let bannerIdx = 0;
+    const bannerTrack = document.getElementById('bannerTrack');
+    const bannerDots = document.getElementById('bannerDots');
+    const totalBanners = 3;
+
+    function goBanner(i) {
+      bannerIdx = i;
+      bannerTrack.style.transform = `translateX(-${bannerIdx * 100}%)`;
+      bannerDots.querySelectorAll('span').forEach((d, j) => d.classList.toggle('active', j === bannerIdx));
+    }
+
+    setInterval(() => goBanner((bannerIdx + 1) % totalBanners), 4000);
+    bannerDots.querySelectorAll('span').forEach((d, i) => {
+      d.addEventListener('click', () => goBanner(i));
+    });
+
+    // Swipe support for banner
+    let touchStartX = 0;
+    bannerTrack.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+    bannerTrack.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (dx < -40) goBanner((bannerIdx + 1) % totalBanners);
+      if (dx > 40) goBanner((bannerIdx - 1 + totalBanners) % totalBanners);
+    });
+
+    // ============================================================
+    // Category filter
+    // ============================================================
+    let currentCat = 'all';
+
+    document.getElementById('categoryRow').addEventListener('click', (e) => {
+      const chip = e.target.closest('.cat-chip');
+      if (!chip) return;
+      currentCat = chip.dataset.cat;
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('active', c === chip));
+      renderProducts(currentCat);
+    });
+
+    // ============================================================
+    // Render products
+    // ============================================================
+    function renderProducts(cat) {
+      const grid = document.getElementById('productGrid');
+      const filtered = cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === cat);
+      const lang = currentLang;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">— ${lang === 'km' ? 'គ្មានទំនិញ' : lang === 'zh' ? '暂无商品' : 'No products'} —</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card" onclick="addToCart(${p.id}, '${p.name[currentLang].replace(/'/g, "\\'")}')">
+          <div class="img-wrap">
+            <span style="font-size:44px">${p.img}</span>
+            ${p.badge ? `<span class="badge">${p.badge}</span>` : ''}
+          </div>
+          <div class="info">
+            <div class="name">${p.name[lang]}</div>
+            <div class="prices">
+              <span class="price-usd">$${p.priceUsd.toFixed(2)}</span>
+              <span class="price-khr">${p.priceKhr}</span>
+            </div>
+            <div class="shop">${p.shop}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // Cart
+    // ============================================================
+    function addToCart(id, name) {
+      cartCount++;
+      updateCartBadge();
+      showToast(t('addToCart'));
+      // Persist to localStorage
+      const cart = JSON.parse(localStorage.getItem('tgm_cart') || '[]');
+      const existing = cart.find(i => i.id === id);
+      if (existing) { existing.qty++; }
+      else { cart.push({ id, qty: 1 }); }
+      localStorage.setItem('tgm_cart', JSON.stringify(cart));
+    }
+
+    function updateCartBadge() {
+      const badge = document.getElementById('cartBadge');
+      if (cartCount > 0) {
+        badge.classList.remove('hidden');
+        badge.textContent = cartCount;
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    // Initialize
+    renderProducts('all');
+    updateCartBadge();
+
+    // Restore cart from localStorage
+    const savedCart = JSON.parse(localStorage.getItem('tgm_cart') || '[]');
+    cartCount = savedCart.reduce((sum, i) => sum + i.qty, 0);
+    updateCartBadge();
+  </script>
+</body>
+</html>
