@@ -1,15 +1,69 @@
-FROM node:20-alpine
+# Railway 多阶段构建：前端构建 → Nginx + API 一体化镜像
+# ================================================================
 
+# ── Stage 1: 后端 API 构建 ──
+FROM node:20-alpine AS api-build
 WORKDIR /app
-
 COPY tgmall-api/package*.json ./
 RUN npm ci --only=production
-
 COPY tgmall-api/prisma/ prisma/
 RUN npx prisma generate
-
 COPY tgmall-api/src/ src/
 
-EXPOSE 3000
 
-CMD ["node", "src/index.js"]
+# ── Stage 2: Mini App 前端构建 ──
+FROM node:20-alpine AS miniapp-build
+WORKDIR /app
+COPY tgmall-miniapp/package*.json ./
+RUN npm ci
+COPY tgmall-miniapp/ ./
+# 生产构建时将 API 请求指向同域名的 /api/ 路径
+ENV VITE_API_URL=
+RUN npx vite build --mode production
+
+
+# ── Stage 3: 商家后台构建 ──
+FROM node:20-alpine AS merchant-build
+WORKDIR /app
+COPY tgmall-merchant/package*.json ./
+RUN npm ci
+COPY tgmall-merchant/ ./
+RUN npx vite build
+
+
+# ── Stage 4: 运营后台构建 ──
+FROM node:20-alpine AS admin-build
+WORKDIR /app
+COPY tgmall-admin/package*.json ./
+RUN npm ci
+COPY tgmall-admin/ ./
+RUN npx vite build
+
+
+# ── Stage 5: Nginx + Node.js 最终镜像 ──
+FROM node:20-alpine
+
+# 安装 Nginx + 进程管理
+RUN apk add --no-cache nginx supervisor
+
+# 配置 Nginx
+COPY nginx/railway-nginx.conf /etc/nginx/http.d/default.conf
+RUN mkdir -p /run/nginx
+
+# 后端 API
+COPY --from=api-build /app /app
+WORKDIR /app
+
+# 前端静态文件
+COPY --from=miniapp-build /app/dist /usr/share/nginx/html/miniapp
+COPY --from=merchant-build /app/dist /usr/share/nginx/html/merchant
+COPY --from=admin-build /app/dist /usr/share/nginx/html/admin
+
+# 启动脚本 + Supervisor 配置
+COPY bin/railway-start.sh /start.sh
+COPY bin/supervisord.conf /etc/supervisord.conf
+RUN chmod +x /start.sh
+
+EXPOSE 8080
+
+CMD ["/start.sh"]
