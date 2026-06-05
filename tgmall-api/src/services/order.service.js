@@ -55,14 +55,28 @@ export async function createOrder(userId, body) {
 
       // 3b. 校验优惠券
       let discountUsd = 0;
-      if (couponId) {
+      let selectedCouponId = couponId;
+
+      // 未指定优惠券时，自动匹配最优可用券
+      if (!selectedCouponId) {
+        const autoCoupon = await findBestCoupon(tx, userId, merchantId, totalUsd);
+        if (autoCoupon) {
+          selectedCouponId = autoCoupon.id;
+        }
+      }
+
+      if (selectedCouponId) {
         const userCoupon = await tx.userCoupon.findFirst({
-          where: { userId, couponId, status: 'unused' },
+          where: { userId, couponId: selectedCouponId, status: 'unused' },
           include: { coupon: true },
         });
         if (!userCoupon) throw new AppError('优惠券无效', 400, 'INVALID_COUPON');
         if (new Date(userCoupon.coupon.endDate) < new Date()) {
           throw new AppError('优惠券已过期', 400, 'COUPON_EXPIRED');
+        }
+        // 校验商家匹配：全平台券(merchantId=null)或本店券
+        if (userCoupon.coupon.merchantId && userCoupon.coupon.merchantId !== merchantId) {
+          throw new AppError('该优惠券不适用于此商家的商品', 400, 'INVALID_COUPON');
         }
         if (totalUsd < Number(userCoupon.coupon.minSpend)) {
           throw new AppError(`未达到最低消费 $${userCoupon.coupon.minSpend}`, 400, 'COUPON_MIN_SPEND');
@@ -208,6 +222,54 @@ export async function createOrder(userId, body) {
       await redis.del(lockKey);
     }
   }
+}
+
+/**
+ * 自动查找最优可用优惠券
+ * 规则：满足最低消费门槛 + 折扣金额最大 + 同金额 fixed 优先 + 同类型最近过期优先
+ */
+async function findBestCoupon(tx, userId, merchantId, totalUsd) {
+  const now = new Date();
+  const userCoupons = await tx.userCoupon.findMany({
+    where: {
+      userId,
+      status: 'unused',
+      coupon: {
+        status: 'active',
+        startDate: { lte: now },
+        endDate: { gte: now },
+        minSpend: { lte: totalUsd },
+        OR: [
+          { merchantId: null },          // 全平台券
+          { merchantId },                // 本店券
+        ],
+      },
+    },
+    include: { coupon: true },
+  });
+
+  if (userCoupons.length === 0) return null;
+
+  // 计算每张券的实际折扣金额，排序取最优
+  const ranked = userCoupons
+    .map((uc) => {
+      const discount = uc.coupon.type === 'fixed'
+        ? Number(uc.coupon.value)
+        : Math.round(totalUsd * Number(uc.coupon.value) / 100 * 100) / 100;
+      return { ...uc, computedDiscount: discount };
+    })
+    .sort((a, b) => {
+      // 折扣金额降序
+      const diff = b.computedDiscount - a.computedDiscount;
+      if (diff !== 0) return diff;
+      // 同金额时 fixed 优先
+      if (a.coupon.type === 'fixed' && b.coupon.type !== 'fixed') return -1;
+      if (a.coupon.type !== 'fixed' && b.coupon.type === 'fixed') return 1;
+      // 同类型时取最近过期的
+      return new Date(a.coupon.endDate) - new Date(b.coupon.endDate);
+    });
+
+  return ranked[0].coupon;
 }
 
 export async function getUserOrders(userId, { status, page, limit }) {
