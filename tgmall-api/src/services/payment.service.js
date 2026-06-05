@@ -33,7 +33,7 @@ export async function createKHQRPayment(userId, orderId) {
   }
 
   if (order.status !== 'pending_payment') {
-    throw new AppError('订单状态不支持支付', 400, 'ORDER_CANNOT_CANCEL');
+    throw new AppError('订单状态不支持支付', 400, 'ORDER_NOT_PAYABLE');
   }
 
   // 3. 校验支付方式

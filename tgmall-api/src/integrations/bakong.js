@@ -137,8 +137,8 @@ export function verifySignature(payload, signature, provider = 'bakong') {
 
   const secret = secretMap[provider];
   if (!secret) {
-    console.warn(`未配置 ${provider} 的签名密钥，签名校验默认通过（安全风险）`);
-    return true;
+    console.error(`未配置 ${provider} 的签名密钥，拒绝回调`);
+    return false;
   }
 
   // 构造待签名字符串：按 key 字母序排序后拼接

@@ -327,6 +327,65 @@ export async function toggleProduct(merchantId, productId) {
 }
 
 // ============================================================
+// 商家订单详情
+// ============================================================
+export async function getOrderDetail(merchantId, orderId) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, merchantId },
+    include: {
+      items: {
+        include: {
+          product: { select: { nameKm: true, nameEn: true, images: true } },
+        },
+      },
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          phone: true,
+          telegramId: true,
+        },
+      },
+    },
+  });
+
+  if (!order) throw new AppError('订单不存在或不属于您的店铺', 404, 'NOT_FOUND');
+
+  return {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    totalUsd: Number(order.totalUsd),
+    totalKhr: order.totalKhr,
+    shippingAddress: order.shippingAddress,
+    logisticsInfo: order.logisticsInfo,
+    items: order.items.map((item) => ({
+      id: item.id,
+      productName: item.product?.nameKm || item.productName,
+      productNameEn: item.product?.nameEn,
+      thumbnail: item.product?.images?.[0]?.thumb_url || '',
+      quantity: item.quantity,
+      unitPriceUsd: Number(item.unitPriceUsd),
+      unitPriceKhr: item.unitPriceKhr,
+      totalPriceUsd: Number(item.totalPriceUsd),
+      totalPriceKhr: item.totalPriceKhr,
+    })),
+    customer: {
+      name: [order.user?.firstName, order.user?.lastName].filter(Boolean).join(' ') || '—',
+      phone: order.user?.phone || '—',
+      telegramId: order.user?.telegramId,
+    },
+    createdAt: order.createdAt,
+    paidAt: order.paidAt,
+    shippedAt: order.shippedAt,
+    completedAt: order.completedAt,
+    cancelledAt: order.cancelledAt,
+  };
+}
+
+// ============================================================
 // 商家订单列表（按状态 Tab + 日期筛选）
 // ============================================================
 export async function getOrders(merchantId, { status, startDate, endDate, page, limit }) {

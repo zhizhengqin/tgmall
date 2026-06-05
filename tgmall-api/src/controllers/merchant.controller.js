@@ -91,6 +91,14 @@ export async function listOrders(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// GET /merchants/orders/:id — 商家订单详情
+export async function getOrder(req, res, next) {
+  try {
+    const order = await merchantService.getOrderDetail(req.merchant.id, req.params.id);
+    res.json({ success: true, data: order });
+  } catch (err) { next(err); }
+}
+
 // POST /merchants/orders/:id/ship — 确认发货
 export async function shipOrder(req, res, next) {
   try {

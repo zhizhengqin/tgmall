@@ -36,6 +36,7 @@ merchantRouter.post('/products/:id/toggle', ctrl.toggleProduct);
 
 // 商家订单管理
 merchantRouter.get('/orders', ctrl.listOrders);
+merchantRouter.get('/orders/:id', ctrl.getOrder);
 merchantRouter.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
 
 // ============ 管理员路由（需 admin 权限） ============

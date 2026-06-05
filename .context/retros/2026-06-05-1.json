@@ -1,0 +1,45 @@
+{
+  "date": "2026-06-05",
+  "window": "7d",
+  "metrics": {
+    "commits": 6,
+    "contributors": 1,
+    "prs_merged": 0,
+    "insertions": 33158,
+    "deletions": 47,
+    "net_loc": 33111,
+    "test_loc": 0,
+    "test_ratio": 0.0,
+    "active_days": 1,
+    "sessions": 2,
+    "deep_sessions": 0,
+    "avg_session_minutes": 8,
+    "loc_per_session_hour": 120000,
+    "feat_pct": 0.17,
+    "fix_pct": 0.67,
+    "chore_pct": 0.17,
+    "peak_hour": 18,
+    "ai_assisted_commits": 6
+  },
+  "authors": {
+    "qinzhizheng": {
+      "commits": 6,
+      "insertions": 33158,
+      "deletions": 47,
+      "test_ratio": 0.0,
+      "top_area": "tgmall-api/src/services/"
+    }
+  },
+  "version_range": ["0.1.0", "0.1.0"],
+  "streak_days": 1,
+  "tweetable": "Week of Jun 5: 6 commits (solo), 33.2k LOC, 0% tests, 0 PRs, peak: 6pm | Streak: 1d",
+  "skill_usage": {
+    "qa": 1
+  },
+  "test_health": {
+    "total_test_files": 0,
+    "tests_added_this_period": 0,
+    "regression_test_commits": 0,
+    "test_files_changed": 0
+  }
+}

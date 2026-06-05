@@ -2,6 +2,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 
@@ -19,7 +20,16 @@ app.use(cors({
   credentials: true,
 }));
 
-// 3. 请求体解析（限制大小防攻击）
+// 3. 全局速率限制
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 分钟
+  limit: 100,                // 每 IP 100 次
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { code: 'RATE_LIMIT', message: '请求过于频繁，请稍后再试' } },
+}));
+
+// 4. 请求体解析（限制大小防攻击）
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
