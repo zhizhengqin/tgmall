@@ -1,0 +1,9 @@
+# Railway 部署配置 — TG Mall
+
+[build]
+dockerfilePath = "Dockerfile.railway"
+
+[deploy]
+startCommand = "npx prisma migrate deploy && node src/index.js"
+healthcheckPath = "/api/v1/health"
+restartPolicyType = "ON_FAILURE"
