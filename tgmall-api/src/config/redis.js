@@ -8,7 +8,6 @@ const redis = new Redis(config.redisUrl, {
     if (times > 5) return null;
     return Math.min(times * 100, 3000);
   },
-  lazyConnect: true,
 });
 
 redis.on('error', (err) => {
@@ -19,5 +18,4 @@ redis.on('connect', () => {
   console.log('Redis 已连接');
 });
 
-// 懒连接：首次调用命令时自动连接
 export default redis;

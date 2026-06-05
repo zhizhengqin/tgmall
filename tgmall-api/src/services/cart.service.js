@@ -15,7 +15,8 @@ export async function getCart(userId) {
   return groupCartItems(enriched);
 }
 
-export async function addCartItem(userId, { productId, quantity, spec = {} }) {
+export async function addCartItem(userId, { product_id, quantity, spec = {} }) {
+  const productId = product_id;
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
   if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');

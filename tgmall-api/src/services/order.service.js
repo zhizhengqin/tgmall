@@ -4,7 +4,14 @@ import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
 
-export async function createOrder(userId, { items, shippingAddressId, couponId, paymentMethod, notes }) {
+export async function createOrder(userId, body) {
+  const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
+  const shippingAddressId = shipping_address_id;
+  const couponId = coupon_id;
+  const paymentMethod = payment_method;
+  // 将 snake_case 的 items 转为 camelCase
+  const items = rawItems.map(i => ({ ...i, productId: i.product_id, quantity: i.quantity, spec: i.spec }));
+
   // 1. 验证收货地址
   const address = await prisma.address.findFirst({ where: { id: shippingAddressId, userId } });
   if (!address) throw new AppError('收货地址不存在', 404, 'NOT_FOUND');
