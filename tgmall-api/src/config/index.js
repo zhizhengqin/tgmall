@@ -29,8 +29,13 @@ export const config = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
-  bakongApiUrl: process.env.BAKONG_API_URL,
-  abaPaySecret: process.env.ABA_PAY_SECRET,
-  wingPaySecret: process.env.WING_PAY_SECRET,
+  // 支付
+  bakongApiUrl: process.env.BAKONG_API_URL || '',
+  bakongMerchantId: process.env.BAKONG_MERCHANT_ID || 'MOCK_MERCHANT',
+  bakongWebhookSecret: process.env.BAKONG_WEBHOOK_SECRET || '',
+  paymentMockMode: process.env.PAYMENT_MOCK_MODE === 'true' || process.env.NODE_ENV !== 'production',
+  abaPaySecret: process.env.ABA_PAY_SECRET || '',
+  wingPaySecret: process.env.WING_PAY_SECRET || '',
+  adminTelegramIds: process.env.ADMIN_TELEGRAM_IDS || '',
   cdnBaseUrl: process.env.CDN_BASE_URL || 'http://localhost:3000/static',
 };

@@ -16,6 +16,21 @@ const messages = {
     en: 'Insufficient stock',
     zh: '库存不足',
   },
+  ORDER_ALREADY_PAID: {
+    km: 'ការបញ្ជាទិញបានបង់ប្រាក់រួចហើយ',
+    en: 'Order already paid',
+    zh: '订单已支付',
+  },
+  ORDER_CANCELLED: {
+    km: 'ការបញ្ជាទិញត្រូវបានលុបចោល',
+    en: 'Order has been cancelled',
+    zh: '订单已取消',
+  },
+  PAYMENT_SERVICE_UNAVAILABLE: {
+    km: 'សេវាទូទាត់មិនអាចប្រើបានបណ្តោះអាសន្ន',
+    en: 'Payment service temporarily unavailable',
+    zh: '支付服务暂不可用',
+  },
   NOT_FOUND: {
     km: 'រកមិនឃើញ',
     en: 'Not found',

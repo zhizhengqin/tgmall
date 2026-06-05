@@ -15,7 +15,7 @@
     <div v-else-if="!orders.length" class="empty">暂无订单</div>
 
     <div v-else>
-      <router-link v-for="o in orders" :key="o.id" :to="`/orders/${o.id}`" class="order-card">
+      <div v-for="o in orders" :key="o.id" class="order-card" @click="goDetail(o.id)">
         <div class="oc-header">
           <span class="oc-number">{{ o.orderNumber }}</span>
           <span class="oc-status" :class="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
@@ -30,8 +30,9 @@
         </div>
         <div class="oc-footer">
           <span class="oc-time">{{ formatDate(o.createdAt) }}</span>
+          <button v-if="o.status === 'pending_payment'" class="btn-pay-sm" @click.stop="goPay(o)">去支付</button>
         </div>
-      </router-link>
+      </div>
 
       <p v-if="!hasMore && orders.length" class="no-more">— 已经到底了 —</p>
     </div>
@@ -42,8 +43,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { getOrders } from '@/api/orders';
 import BottomNav from '@/components/common/BottomNav.vue';
+
+const router = useRouter();
 
 const tabs = [
   { value: '', label: '全部' },
@@ -67,6 +71,21 @@ function statusClass(s) {
   return map[s] || '';
 }
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('zh-CN') : ''; }
+
+function goDetail(id) { router.push(`/orders/${id}`); }
+
+function goPay(order) {
+  router.push({
+    name: 'Payment',
+    query: {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      paymentMethod: order.paymentMethod,
+      amountUsd: order.totalUsd,
+      amountKhr: order.totalKhr || Math.round(order.totalUsd * 4000),
+    },
+  });
+}
 
 async function switchTab(val) { activeTab.value = val; page.value = 1; orders.value = []; hasMore.value = true; await loadOrders(); }
 async function loadOrders() {
@@ -92,7 +111,7 @@ onMounted(loadOrders);
 .tab { flex-shrink: 0; font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
 .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .empty { text-align: center; padding: 80px 0; color: var(--muted); }
-.order-card { display: block; background: var(--surface); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); text-decoration: none; color: inherit; }
+.order-card { display: block; background: var(--surface); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); text-decoration: none; color: inherit; cursor: pointer; }
 .oc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .oc-number { font-size: 12px; color: var(--muted); font-family: monospace; }
 .oc-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
@@ -107,7 +126,9 @@ onMounted(loadOrders);
 .oc-merchant { font-size: 13px; font-weight: 600; }
 .oc-count { font-size: 12px; color: var(--muted); margin: 4px 0; }
 .oc-price { font-size: 15px; font-weight: 700; color: var(--accent-red); }
-.oc-footer { margin-top: 8px; }
+.oc-footer { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
 .oc-time { font-size: 11px; color: var(--muted); }
+.btn-pay-sm { padding: 6px 14px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; border: none; cursor: pointer; white-space: nowrap; }
+.btn-pay-sm:active { opacity: 0.8; }
 .no-more { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
 </style>

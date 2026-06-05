@@ -116,14 +116,25 @@ async function submitOrder() {
   if (!selectedAddress.value) return;
   submitting.value = true;
   try {
-    await createOrder({
+    const res = await createOrder({
       items: items.value.map(i => ({ product_id: i.productId, quantity: i.quantity, spec: i.spec })),
       shipping_address_id: selectedAddress.value.id,
       coupon_id: selectedCoupon.value?.id,
       payment_method: paymentMethod.value,
     });
     localStorage.removeItem('checkout_items');
-    router.push('/orders');
+    // 下单成功后跳转到支付页
+    const order = res.data;
+    router.push({
+      name: 'Payment',
+      query: {
+        orderId: order.id,
+        orderNumber: order.order_number || order.orderNumber,
+        paymentMethod: paymentMethod.value,
+        amountUsd: order.total_usd || order.totalUsd || total.value,
+        amountKhr: order.total_khr || order.totalKhr || totalKhr.value,
+      },
+    });
   } catch (e) {
     alert('下单失败: ' + (e?.response?.data?.error?.message || '网络错误'));
   }
