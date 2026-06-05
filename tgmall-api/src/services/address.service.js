@@ -13,6 +13,16 @@ export async function getUserAddresses(userId) {
 }
 
 export async function createAddress(userId, data) {
+  // Zod validated body 是 snake_case，转 camelCase 给 Prisma
+  const mapped = {
+    recipientName: data.recipient_name,
+    phone: data.phone,
+    province: data.province,
+    district: data.district,
+    detail: data.detail,
+    isDefault: data.is_default ?? false,
+  };
+
   // 检查数量上限
   const count = await prisma.address.count({ where: { userId } });
   if (count >= MAX_ADDRESSES) {
@@ -20,7 +30,7 @@ export async function createAddress(userId, data) {
   }
 
   // 如果设为默认，先取消其他默认地址
-  if (data.isDefault) {
+  if (mapped.isDefault) {
     await prisma.address.updateMany({
       where: { userId, isDefault: true },
       data: { isDefault: false },
@@ -28,7 +38,7 @@ export async function createAddress(userId, data) {
   }
 
   return prisma.address.create({
-    data: { ...data, userId },
+    data: { ...mapped, userId },
   });
 }
 
@@ -38,7 +48,16 @@ export async function updateAddress(userId, addressId, data) {
   });
   if (!addr) throw new AppError('地址不存在', 404, 'NOT_FOUND');
 
-  if (data.isDefault) {
+  // snake_case → camelCase
+  const mapped = {};
+  if (data.recipient_name !== undefined) mapped.recipientName = data.recipient_name;
+  if (data.phone !== undefined) mapped.phone = data.phone;
+  if (data.province !== undefined) mapped.province = data.province;
+  if (data.district !== undefined) mapped.district = data.district;
+  if (data.detail !== undefined) mapped.detail = data.detail;
+  if (data.is_default !== undefined) mapped.isDefault = data.is_default;
+
+  if (mapped.isDefault) {
     await prisma.address.updateMany({
       where: { userId, isDefault: true, id: { not: addressId } },
       data: { isDefault: false },
@@ -47,7 +66,7 @@ export async function updateAddress(userId, addressId, data) {
 
   return prisma.address.update({
     where: { id: addressId },
-    data,
+    data: mapped,
   });
 }
 
