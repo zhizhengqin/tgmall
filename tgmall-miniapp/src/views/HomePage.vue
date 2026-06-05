@@ -88,7 +88,7 @@ enableCloseConfirmation();
 
 // 品类列表
 const categories = [
-  { value: '', label: '全部' },
+  { value: 'all', label: '全部' },
   { value: 'fashion', label: '时尚' },
   { value: 'beauty', label: '美妆' },
   { value: 'electronics', label: '电子' },
@@ -96,7 +96,7 @@ const categories = [
 ];
 
 // 响应式状态
-const activeCategory = ref('');
+const activeCategory = ref('all');
 const products = ref([]);
 const page = ref(1);
 const hasMore = ref(true);
@@ -136,7 +136,7 @@ async function fetchProducts(reset = false) {
 
   try {
     const params = { page: page.value, limit: 20, sort: 'newest' };
-    if (activeCategory.value) params.category = activeCategory.value;
+    if (activeCategory.value && activeCategory.value !== 'all') params.category = activeCategory.value;
 
     const res = await getProducts(params);
 
