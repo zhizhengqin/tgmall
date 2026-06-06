@@ -125,7 +125,7 @@ const categories = [
 const langList = [
   { code: 'zh', label: '中' },
   { code: 'km', label: '柬' },
-  { code: 'en', label: '英' },
+  { code: 'en', label: 'EN' },
 ];
 
 // 响应式状态
