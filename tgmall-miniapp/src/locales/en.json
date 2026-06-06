@@ -1,7 +1,7 @@
 {
   "app": { "name": "TG Mall" },
   "nav": { "home": "Home", "categories": "Shop", "cart": "Cart", "orders": "Orders", "profile": "Me" },
-  "home": { "searchPlaceholder": "Search products...", "all": "All", "fashion": "Fashion", "beauty": "Beauty", "electronics": "Electronics", "home": "Home", "noProducts": "No products yet", "comingSoon": "Products are being added, please check back later" },
+  "home": { "searchPlaceholder": "Search products...", "all": "All", "fashion": "Fashion", "beauty": "Beauty", "electronics": "Electronics", "home": "Home", "noProducts": "No products yet", "comingSoon": "Products are being added, please check back later", "hotProducts": "Hot Products" },
   "product": { "addToCart": "Add to Cart", "buyNow": "Buy Now", "soldOut": "Sold Out", "stockLeft": "Only {count} left", "description": "Description" },
   "cart": { "title": "Shopping Cart", "empty": "Your cart is empty", "goShopping": "Go Shopping", "total": "Total", "checkout": "Checkout", "selectAll": "Select All", "remove": "Remove" },
   "common": { "loading": "Loading...", "error": "Something went wrong", "loadError": "Failed to load", "retry": "Retry", "noMore": "— No more —", "confirm": "OK", "cancel": "Cancel", "save": "Save", "delete": "Delete" },

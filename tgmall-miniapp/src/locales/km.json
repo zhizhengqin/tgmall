@@ -1,7 +1,7 @@
 {
   "app": { "name": "TG Mall" },
   "nav": { "home": "ទំព័រដើម", "categories": "ប្រភេទ", "cart": "កន្ត្រក", "orders": "ការបញ្ជាទិញ", "profile": "គណនី" },
-  "home": { "searchPlaceholder": "ស្វែងរកទំនិញ...", "all": "ទាំងអស់", "fashion": "សំលៀក", "beauty": "សម្រស់", "electronics": "អេឡិចត្រូនិច", "home": "គ្រឿងសង្ហារិម", "noProducts": "មិនទាន់មានទំនិញ", "comingSoon": "ទំនិញកំពុងឡើង សូមរង់ចាំ" },
+  "home": { "searchPlaceholder": "ស្វែងរកទំនិញ...", "all": "ទាំងអស់", "fashion": "សំលៀក", "beauty": "សម្រស់", "electronics": "អេឡិចត្រូនិច", "home": "គ្រឿងសង្ហារិម", "noProducts": "មិនទាន់មានទំនិញ", "comingSoon": "ទំនិញកំពុងឡើង សូមរង់ចាំ", "hotProducts": "ទំនិញពេញនិយម" },
   "product": { "addToCart": "ដាក់ក្នុងកន្ត្រក", "buyNow": "ទិញឥឡូវនេះ", "soldOut": "អស់", "stockLeft": "សល់ {count} ប៉ុណ្ណោះ", "description": "ការពិពណ៌នា" },
   "cart": { "title": "កន្ត្រកទំនិញ", "empty": "កន្ត្រកទំនិញទទេ", "goShopping": "ទៅទិញឥឡូវនេះ", "total": "សរុប", "checkout": "ទូទាត់", "selectAll": "ជ្រើសរើសទាំងអស់", "remove": "លុប" },
   "common": { "loading": "កំពុងផ្ទុក...", "error": "មានបញ្ហា", "loadError": "ផ្ទុកមិនបានជោគជ័យ", "retry": "ព្យាយាមម្តងទៀត", "noMore": "អស់ហើយ", "confirm": "យល់ព្រម", "cancel": "បោះបង់", "save": "រក្សាទុក", "delete": "លុប" },
