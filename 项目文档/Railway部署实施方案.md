@@ -238,6 +238,20 @@ Docker 镜像是什么？你可以理解为一个"打包好的运行环境"—�
 
 ### 4.3 需要添加的变量清单
 
+#### 4.3.1 获取 MINI_APP_URL（你的公网地址）
+
+部署完成后 Railway 会分配一个域名，但在配置环境变量时需要先占位。**可以先部署一次拿到域名后再回来补上**，或者按以下方式处理：
+
+1. 先随便填一个占位值（如 `https://placeholder.up.railway.app`）
+2. 完成首次部署后，在 Railway → tgmall 服务 → Settings → Public Networking 找到真实域名
+3. 复制真实域名，回到 Variables 修改 `MINI_APP_URL`
+4. 重新部署一次（Railway 会自动检测修改并重新部署）
+
+**MINI_APP_URL 的作用**：
+- Bot 菜单按钮点击后打开的网址
+- 扫码进入 Mini App 时跳转的目标地址
+- Telegram Mini App 必须通过这个 HTTPS 地址加载
+
 #### 数据库和缓存（自动注入，检查即可）
 
 | 变量名 | 来源 | 状态 |
@@ -250,17 +264,35 @@ Docker 镜像是什么？你可以理解为一个"打包好的运行环境"—�
 | 变量名 | 值 | 说明 | 怎么获取 |
 |--------|-----|------|----------|
 | `BOT_TOKEN` | `123456:ABCdef...` | Telegram Bot Token | 看下方 4.4 |
+| `BOT_USERNAME` | `xhzmall_bot` | Telegram Bot 用户名（不含@） | 看下方 4.4 |
+| `MINI_APP_URL` | `https://xxx.up.railway.app` | Mini App 公网地址 | 看下方 4.3.1 |
 | `JWT_SECRET` | `a1b2c3d4...` | JWT 签名密钥 | 看下方 4.5 |
-| `BAKONG_WEBHOOK_SECRET` | `随机字符串` | 支付回调签名密钥 | 看下方 4.5 |
-| `ABA_PAY_SECRET` | `随机字符串` | ABA Pay 密钥 | 看下方 4.5 |
-| `WING_PAY_SECRET` | `随机字符串` | Wing Pay 密钥 | 看下方 4.5 |
 | `ADMIN_TELEGRAM_IDS` | `你的Telegram ID` | 管理员白名单 | 看下方 4.6 |
 | `NODE_ENV` | `production` | 生产模式 | 直接填写 |
-| `PORT` | `3000` | 后端端口 | 直接填写 |
 
 > ⚠️ **重要**：`BOT_TOKEN` 直接控制着你的 Telegram Bot，**绝对不要**分享给别人或在公开场合展示。
 
-### 4.4 获取 BOT_TOKEN
+#### 可选添加的变量（支付相关，开发阶段可不填）
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `BAKONG_WEBHOOK_SECRET` | `随机字符串` | Bakong KHQR 支付回调签名密钥 |
+| `ABA_PAY_SECRET` | `随机字符串` | ABA Pay 支付回调签名密钥 |
+| `WING_PAY_SECRET` | `随机字符串` | Wing Pay 支付回调签名密钥 |
+
+> 💡 这三个支付密钥在**接入真实支付前不需要配置**。当前开发阶段使用模拟支付模式，不影响部署和测试。
+
+#### 不需要手动添加的变量
+
+| 变量名 | 说明 |
+|--------|------|
+| `PORT` | Railway 自动注入，Nginx 监听用，**不要手动设置** |
+| `DATABASE_URL` | 添加 PostgreSQL 时自动生成 |
+| `REDIS_URL` | 添加 Redis 时自动生成 |
+
+### 4.4 获取 BOT_TOKEN 和 BOT_USERNAME
+
+#### 获取 BOT_TOKEN
 
 1. 在 Telegram 搜索 **@BotFather**（注意是带勾的官方账号）
 2. 发送命令 `/mybots`
@@ -270,6 +302,17 @@ Docker 镜像是什么？你可以理解为一个"打包好的运行环境"—�
 6. 复制整串，粘贴到 Railway 的 `BOT_TOKEN` 变量中
 
 > 如果还没有 Bot，发 `/newbot` 给 BotFather，按提示创建。
+
+#### 获取 BOT_USERNAME
+
+你的 Bot 用户名就是 Telegram 上的 `@xxx_bot` 形式，**不带 @ 符号**。
+
+例如你的 Bot 是 `@xhzmall_bot`，那 `BOT_USERNAME` 就填：
+```
+xhzmall_bot
+```
+
+**为什么要填这个？** 代码需要知道 Bot 用户名来生成扫码链接（`https://t.me/xhzmall_bot?startapp=...`）。
 
 ### 4.5 生成随机密钥
 
@@ -357,13 +400,16 @@ Railway Variables 页面应该类似：
 DATABASE_URL           postgresql://postgres:xxx@xxx.railway.internal:5432/railway
 REDIS_URL              redis://default:xxx@xxx.railway.internal:6379
 BOT_TOKEN              1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+BOT_USERNAME           xhzmall_bot
+MINI_APP_URL           https://tgmall-production-xxxx.up.railway.app
 JWT_SECRET             a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a
+ADMIN_TELEGRAM_IDS     123456789
+NODE_ENV               production
+
+# 可选：支付密钥（接入真实支付前可不填）
 BAKONG_WEBHOOK_SECRET  f1a2b3c4d5e6f7a8
 ABA_PAY_SECRET         g1a2b3c4d5e6f7a8
 WING_PAY_SECRET        h1a2b3c4d5e6f7a8
-ADMIN_TELEGRAM_IDS     123456789
-NODE_ENV               production
-PORT                   3000
 ```
 
 ---
@@ -393,10 +439,20 @@ PORT                   3000
 
 ### 5.3 验证部署成功
 
-1. 部署完成后，Railway 会显示一个域名，类似：`tgmall-production-xxxx.up.railway.app`
-2. 点击 **"Settings"** → 找到 **"Public URL"**，复制这个网址
+1. 部署完成后，在 Railway → tgmall 服务 → **Settings** → **Public Networking**
+2. 复制显示的域名，类似：`tgmall-production-xxxx.up.railway.app`
 3. 在浏览器打开：`https://你的域名.up.railway.app/api/v1/health`
 4. 如果看到 `{"status":"ok","timestamp":"..."}` → 部署成功！
+5. 同时检查 Railway Variables，把真实域名更新到 `MINI_APP_URL` 中
+
+### 5.4 重新部署（更新 MINI_APP_URL 后）
+
+如果你之前用占位值填了 `MINI_APP_URL`，现在拿到了真实域名：
+
+1. Railway → tgmall 服务 → **Variables**
+2. 修改 `MINI_APP_URL` 为真实域名
+3. Railway 会自动检测到变量变化并重新部署
+4. 等待 2-3 分钟，再次访问健康检查接口确认
 
 ### 5.4 生成自定义域名（可选）
 
@@ -428,26 +484,90 @@ Railway 的默认域名比较长，你可以设置一个短的：
 
 ## 六、配置 Telegram Mini App（5 分钟）
 
-### 6.1 设置 Mini App URL
+### 6.1 获取公网域名
 
-1. 在 Telegram 搜索 **@BotFather**
-2. 发送命令 `/mybots`
-3. 选择你的 Bot
-4. 点击 **"Bot Settings"**
-5. 点击 **"Configure Mini App"**
-6. 在 **"Web App URL"** 输入框中填入：
+1. 部署完成后，Railway → tgmall 服务 → **Settings**
+2. 找到 **Public Networking** 区域
+3. 复制显示的域名，类似：
    ```
-   https://你的域名.up.railway.app
+   https://tgmall-production-xxxx.up.railway.app
    ```
-   > ⚠️ 注意：URL 必须用 `https://` 开头！Railway 自动提供 HTTPS。
-7. 保存
+4. 把这个域名填到 Railway Variables 的 `MINI_APP_URL` 中（如果之前填的是占位值）
 
-### 6.2 设置 Bot 菜单按钮
+### 6.2 设置 Bot 菜单按钮（API 自动配置）
 
-1. 在 BotFather 中，Bot Settings → **"Edit Commands"**
-2. 或者在 Chat 中发送 `/setmenubutton`
-3. 设置菜单按钮文字（如 "🛒 打开商城"）
-4. 按钮 URL 填入与上面相同的网址
+**好消息**：代码已自动处理！
+
+API 启动时会自动调用 `setChatMenuButton`，所有用户打开你的 Bot 都会看到底部固定按钮：
+
+```
+┌─────────────────────────────────┐
+│  🛒 ចូលទៅហាង  ← 底部固定菜单按钮    │
+└─────────────────────────────────┘
+```
+
+点击后直接进入 Mini App，无需手动在 BotFather 中配置。
+
+> ⚠️ 如果菜单按钮没有自动出现，可以在 BotFather 中手动设置：Bot Settings → Menu Button → Configure menu button，URL 填入你的 `MINI_APP_URL`。
+
+### 6.3 生成扫码进入的二维码
+
+#### 扫码链接格式
+
+你的扫码链接就是 Telegram 的 Direct Link：
+
+```
+https://t.me/xhzmall_bot?startapp=shop
+```
+
+#### 带店铺参数的链接（不同商家不同二维码）
+
+```
+https://t.me/xhzmall_bot?startapp=shop_001   ← 商家A
+https://t.me/xhzmall_bot?startapp=shop_002   ← 商家B
+https://t.me/xhzmall_bot?startapp=flyer_01   ← 传单A版
+```
+
+#### 生成 QR 码
+
+**快速验证**：把链接贴到 [qr-code-generator.com](https://www.qr-code-generator.com/) 生成 QR 码，打印测试。
+
+**代码自动生成**（商家后台功能）：
+```js
+import QRCode from 'qrcode';
+
+// 生成店铺专属二维码
+const shopUrl = `https://t.me/xhzmall_bot?startapp=shop_${shopId}`;
+const qrImage = await QRCode.toDataURL(shopUrl);
+// qrImage → base64 图片，商家下载打印
+```
+
+### 6.4 用户扫码后的体验
+
+| 扫码方式 | 效果 |
+|---------|------|
+| **Telegram 内置扫码** | ✅ 直接打开 Mini App，最佳体验 |
+| **微信/相机扫码** | 跳转浏览器 → 提示"在 Telegram 中打开" → 进入 Bot → 点底部按钮 |
+| **长按 QR 码识别** | 大部分手机支持，自动跳转 Telegram |
+
+**最推荐**：引导用户**在 Telegram 内长按扫码** 或 **用 Telegram 的扫码功能扫描**。
+
+### 6.5 柬埔寨线下推广物料模板
+
+给商家提供的标准 QR 码贴纸：
+
+```
+┌─────────────────────────────┐
+│                             │
+│      [QR 码图片]             │
+│                             │
+│   📱 សឺមើកដើម្បីបើកហាង        │
+│      扫码进入商城             │
+│                             │
+│   🛒 TG Mall - ទំនិញគុណភាព │
+│                             │
+└─────────────────────────────┘
+```
 
 ---
 
@@ -535,9 +655,11 @@ Railway 每天自动备份 PostgreSQL。如果要手动备份：
 | 问题 | 可能原因 | 解决方法 |
 |------|----------|----------|
 | 构建超时 | npm install 太慢 | Railway → Settings → 增加 Build Timeout |
-| Prisma migrate 失败 | 数据库连接不对 | 检查 `DATABASE_URL` 是否自动注入 |
-| 容器启动后立即崩溃 | 环境变量缺失 | 检查是否设置了所有必需的变量 |
-| healthcheck 失败 | 服务没启动 | 看 Runtime Logs 找错误 |
+| Prisma migrate 失败 | 数据库连接不对 / OpenSSL 缺失 | 检查 `DATABASE_URL` 是否自动注入；确认 Dockerfile 安装了 `openssl` |
+| 容器启动后立即崩溃 | 环境变量缺失（BOT_TOKEN/JWT_SECRET 等） | 检查日志中的 `❌ 缺少必要的环境变量:` 提示 |
+| healthcheck 失败 | Nginx 未启动 / Node.js 崩溃 | 看 Runtime Logs 找 `ReferenceError` 或 `nginx` 错误 |
+| Node.js 循环崩溃重启 | Prisma OpenSSL 问题 | 确认 Dockerfile 有 `RUN apk add --no-cache openssl libc6-compat` |
+| 端口冲突 | Railway PORT=3000 与 Node.js 冲突 | 代码已修复（Node.js 监听 3001，Nginx 监听 PORT），更新代码重新部署 |
 
 ### Mini App 打不开
 
