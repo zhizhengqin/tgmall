@@ -1,19 +1,19 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
-    <div class="main"><h1>{{ isEdit?'កែទំនិញ':'បន្ថែមទំនិញ' }}</h1>
-      <el-form :model="f" label-width="100px" style="max-width:600px">
-        <el-form-item label="ឈ្មោះ (KM)"><el-input v-model="f.nameKm" /></el-form-item>
-        <el-form-item label="Name (EN)"><el-input v-model="f.nameEn" /></el-form-item>
-        <el-form-item label="名称 (ZH)"><el-input v-model="f.nameZh" /></el-form-item>
-        <el-form-item label="USD"><el-input-number v-model="f.priceUsd" :min="0.01" :precision="2" /></el-form-item>
-        <el-form-item label="KHR"><el-input-number v-model="f.priceKhr" :min="0" :step="100" /></el-form-item>
-        <el-form-item label="ស្តុក"><el-input-number v-model="f.stock" :min="0" /></el-form-item>
-        <el-form-item label="ប្រភេទ"><el-input v-model="f.category" /></el-form-item>
-        <el-form-item label="រូបភាព"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button></el-form-item>
+    <div class="main"><h1>{{ isEdit ? $t('products.editTitle') : $t('products.createTitle') }}</h1>
+      <el-form :model="f" label-width="120px" style="max-width:600px">
+        <el-form-item :label="$t('products.nameKm')"><el-input v-model="f.nameKm" /></el-form-item>
+        <el-form-item :label="$t('products.nameEn')"><el-input v-model="f.nameEn" /></el-form-item>
+        <el-form-item :label="$t('products.nameZh')"><el-input v-model="f.nameZh" /></el-form-item>
+        <el-form-item :label="$t('products.priceUsd')"><el-input-number v-model="f.priceUsd" :min="0.01" :precision="2" /></el-form-item>
+        <el-form-item :label="$t('products.priceKhr')"><el-input-number v-model="f.priceKhr" :min="0" :step="100" /></el-form-item>
+        <el-form-item :label="$t('products.stock')"><el-input-number v-model="f.stock" :min="0" /></el-form-item>
+        <el-form-item :label="$t('products.category')"><el-input v-model="f.category" /></el-form-item>
+        <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button></el-form-item>
         <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)">{{im.url}}</el-tag></div>
         <el-form-item style="margin-top:20px">
-          <el-button type="primary" @click="save" :loading="saving">រក្សាទុក</el-button>
-          <el-button @click="$router.back()">បោះបង់</el-button>
+          <el-button type="primary" @click="save" :loading="saving">{{ $t('common.save') }}</el-button>
+          <el-button @click="$router.back()">{{ $t('common.cancel') }}</el-button>
         </el-form-item>
       </el-form>
     </div>

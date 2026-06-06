@@ -2,17 +2,17 @@
   <div class="page"><TopBar /><Sidebar />
     <div class="main">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1>ទំនិញ</h1><el-button type="primary" @click="$router.push('/products/new')">+ បន្ថែម</el-button>
+        <h1>{{ $t('products.title') }}</h1><el-button type="primary" @click="$router.push('/products/new')">{{ $t('products.add') }}</el-button>
       </div>
       <el-table :data="items" v-loading="loading" stripe>
-        <el-table-column prop="nameKm" label="ឈ្មោះ" min-width="150" />
+        <el-table-column prop="nameKm" :label="$t('products.name')" min-width="150" />
         <el-table-column label="USD" width="80"><template #default="{row}">${{row.priceUsd}}</template></el-table-column>
-        <el-table-column prop="stock" label="ស្តុក" width="80" />
-        <el-table-column label="ស្ថានភាព" width="80">
+        <el-table-column prop="stock" :label="$t('products.stock')" width="80" />
+        <el-table-column :label="$t('products.status')" width="80">
           <template #default="{row}"><el-switch :model-value="row.status==='active'" @change="toggle(row.id)" /></template>
         </el-table-column>
         <el-table-column label="" width="80">
-          <template #default="{row}"><el-button size="small" @click="$router.push(`/products/${row.id}`)">កែ</el-button></template>
+          <template #default="{row}"><el-button size="small" @click="$router.push(`/products/${row.id}`)">{{ $t('products.edit') }}</el-button></template>
         </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="page" :total="total" :page-size="20" layout="prev,pager,next" @current-change="load" style="margin-top:16px" />

@@ -1,8 +1,8 @@
 <template>
-  <div class="login"><el-card class="card"><h2>TG Mall — ចូលហាង</h2>
-    <el-input v-model="token" placeholder="បិទភ្ជាប់ JWT Token" style="margin:16px 0" />
-    <el-button type="primary" @click="doLogin" :loading="loading" style="width:100%">ចូល</el-button>
-    <p style="font-size:12px;color:#999;margin-top:10px">សូមចូលតាម Mini App ដើម្បីទទួលបាន Token</p>
+  <div class="login"><el-card class="card"><h2>{{ $t('login.title') }}</h2>
+    <el-input v-model="token" :placeholder="$t('login.tokenPlaceholder') || 'បិទភ្ជាប់ JWT Token'" style="margin:16px 0" />
+    <el-button type="primary" @click="doLogin" :loading="loading" style="width:100%">{{ $t('common.confirm') }}</el-button>
+    <p style="font-size:12px;color:#999;margin-top:10px">{{ $t('login.tokenHint') || 'សូមចូលតាម Mini App ដើម្បីទទួលបាន Token' }}</p>
   </el-card></div>
 </template>
 <script setup>
@@ -13,7 +13,7 @@ async function doLogin() {
   try {
     await api.get('/merchants/dashboard', { headers: { Authorization: `Bearer ${token.value}` } });
     store.setAuth(token.value, 'TG Mall Shop'); router.push('/dashboard');
-  } catch { alert('ការចូលបរាជ័យ'); } finally { loading.value = false; }
+  } catch { alert('ចូលបរាជ័យ / Login failed / 登录失败'); } finally { loading.value = false; }
 }
 </script>
 <style scoped>

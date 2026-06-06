@@ -1,32 +1,33 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
     <div class="main" v-if="order">
-      <el-page-header @back="$router.back()"><template #content>លេខកម្មង {{ order.orderNumber }}</template></el-page-header>
+      <el-page-header @back="$router.back()"><template #content>{{ $t('orders.orderNumber') }} {{ order.orderNumber }}</template></el-page-header>
       <el-row :gutter="20" style="margin-top:20px">
         <el-col :span="12">
-          <el-card header="ទំនិញ">
+          <el-card :header="$t('orders.items')">
             <el-table :data="order.items" size="small">
-              <el-table-column prop="productName" label="ទំនិញ" />
-              <el-table-column prop="quantity" label="ចំនួន" width="60" />
-              <el-table-column label="ថ្លៃ" width="80"><template #default="{row}">${{row.unitPriceUsd}}</template></el-table-column>
+              <el-table-column prop="productName" :label="$t('products.name')" />
+              <el-table-column prop="quantity" :label="$t('products.stock')" width="60" />
+              <el-table-column :label="$t('orders.amount')" width="80"><template #default="{row}">${{row.unitPriceUsd}}</template></el-table-column>
             </el-table>
-            <p style="margin-top:12px;font-weight:700">សរុប: ${{ order.totalUsd }} / {{ order.totalKhr }}៛</p>
+            <p style="margin-top:12px;font-weight:700">{{ $t('orders.total') }}: ${{ order.totalUsd }} / {{ order.totalKhr }}៛</p>
           </el-card>
         </el-col>
         <el-col :span="12">
-          <el-card header="អាសយដ្ឋាន">
+          <el-card :header="$t('orders.shippingAddress')">
             <p>{{ order.customer?.name }}</p><p>{{ order.customer?.phone }}</p>
             <p>{{ order.shippingAddress?.detail }}</p>
           </el-card>
-          <el-card header="ដឹកជញ្ជូន" style="margin-top:10px" v-if="order.status==='paid'">
-            <el-form :model="s"><el-form-item label="ក្រុមហ៊ុន"><el-input v-model="s.logistics_company" /></el-form-item>
-              <el-form-item label="លេខតាមដាន"><el-input v-model="s.tracking_number" /></el-form-item>
-              <el-button type="primary" @click="doShip" :loading="shipping">បញ្ជាក់ការដឹក</el-button>
+          <el-card :header="$t('orders.ship')" style="margin-top:10px" v-if="order.status==='paid'">
+            <el-form :model="s">
+              <el-form-item :label="$t('orders.logisticsCompany')"><el-input v-model="s.logistics_company" /></el-form-item>
+              <el-form-item :label="$t('orders.trackingNumber')"><el-input v-model="s.tracking_number" /></el-form-item>
+              <el-button type="primary" @click="doShip" :loading="shipping">{{ $t('orders.confirmShip') }}</el-button>
             </el-form>
           </el-card>
           <el-card v-else-if="order.logisticsInfo" style="margin-top:10px">
-            <p>ក្រុមហ៊ុន: {{ order.logisticsInfo.logistics_company || order.logisticsInfo.company }}</p>
-            <p>លេខតាមដាន: {{ order.logisticsInfo.tracking_number }}</p>
+            <p>{{ $t('orders.logisticsCompany') }}: {{ order.logisticsInfo.logistics_company || order.logisticsInfo.company }}</p>
+            <p>{{ $t('orders.trackingNumber') }}: {{ order.logisticsInfo.tracking_number }}</p>
           </el-card>
         </el-col>
       </el-row>

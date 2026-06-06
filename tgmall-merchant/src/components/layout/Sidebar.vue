@@ -2,11 +2,11 @@
   <el-menu :default-active="route.path" router class="sidebar" background-color="#1a1a2e" text-color="#8b8b9e" active-text-color="#c4932a">
     <div class="logo">
       <h2>TG Mall</h2>
-      <span>{{ $t('merchant.panel') || 'ផ្ទាំងគ្រប់គ្រង' }}</span>
+      <span>{{ $t('app.name') }}</span>
     </div>
-    <el-menu-item index="/dashboard"><el-icon><DataAnalysis /></el-icon><span>របាយការណ៍</span></el-menu-item>
-    <el-menu-item index="/products"><el-icon><Goods /></el-icon><span>ទំនិញ</span></el-menu-item>
-    <el-menu-item index="/orders"><el-icon><List /></el-icon><span>កម្មង</span></el-menu-item>
+    <el-menu-item index="/dashboard"><el-icon><DataAnalysis /></el-icon><span>{{ $t('nav.dashboard') }}</span></el-menu-item>
+    <el-menu-item index="/products"><el-icon><Goods /></el-icon><span>{{ $t('nav.products') }}</span></el-menu-item>
+    <el-menu-item index="/orders"><el-icon><List /></el-icon><span>{{ $t('nav.orders') }}</span></el-menu-item>
   </el-menu>
 </template>
 <script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, Goods, List } from '@element-plus/icons-vue'; const route = useRoute();</script>

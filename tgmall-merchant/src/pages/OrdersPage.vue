@@ -1,19 +1,22 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
-    <div class="main"><h1>កម្មង</h1>
+    <div class="main"><h1>{{ $t('orders.title') }}</h1>
       <el-tabs v-model="filter" @tab-change="load">
-        <el-tab-pane label="ទាំងអស់" name="" /><el-tab-pane label="រង់ចាំបង់ប្រាក់" name="pending_payment" />
-        <el-tab-pane label="បានបង់" name="paid" /><el-tab-pane label="បានដឹក" name="shipped" /><el-tab-pane label="បានបញ្ចប់" name="completed" />
+        <el-tab-pane :label="$t('orders.all')" name="" />
+        <el-tab-pane :label="$t('orders.pending_payment')" name="pending_payment" />
+        <el-tab-pane :label="$t('orders.paid')" name="paid" />
+        <el-tab-pane :label="$t('orders.shipped')" name="shipped" />
+        <el-tab-pane :label="$t('orders.completed')" name="completed" />
       </el-tabs>
       <el-table :data="items" v-loading="loading">
-        <el-table-column prop="orderNumber" label="លេខកម្មង" width="180" />
-        <el-table-column label="ចំនួន" width="100"><template #default="{row}">${{row.totalUsd}}</template></el-table-column>
-        <el-table-column label="ស្ថានភាព" width="100">
-          <template #default="{row}"><el-tag :type="tag(row.status)">{{row.status}}</el-tag></template>
+        <el-table-column prop="orderNumber" :label="$t('orders.orderNumber')" width="180" />
+        <el-table-column :label="$t('orders.amount')" width="100"><template #default="{row}">${{row.totalUsd}}</template></el-table-column>
+        <el-table-column :label="$t('orders.status') || $t('products.status')" width="100">
+          <template #default="{row}"><el-tag :type="tag(row.status)">{{ $t(`orders.${row.status}`) || row.status }}</el-tag></template>
         </el-table-column>
-        <el-table-column prop="customerName" label="អតិថិជន" />
-        <el-table-column label="កាលបរិច្ឆេទ" width="110"><template #default="{row}">{{row.createdAt?.slice(0,10)}}</template></el-table-column>
-        <el-table-column label="" width="80"><template #default="{row}"><el-button size="small" @click="$router.push(`/orders/${row.id}`)">លម្អិត</el-button></template></el-table-column>
+        <el-table-column prop="customerName" :label="$t('orders.customer')" />
+        <el-table-column :label="$t('orders.date')" width="110"><template #default="{row}">{{row.createdAt?.slice(0,10)}}</template></el-table-column>
+        <el-table-column label="" width="80"><template #default="{row}"><el-button size="small" @click="$router.push(`/orders/${row.id}`)">{{ $t('orders.detail') }}</el-button></template></el-table-column>
       </el-table>
       <el-pagination v-model:current-page="page" :total="total" :page-size="20" layout="prev,pager,next" @current-change="load" style="margin-top:16px" />
     </div>

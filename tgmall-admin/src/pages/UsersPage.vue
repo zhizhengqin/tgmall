@@ -1,11 +1,13 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
-    <div class="main"><h1>អ្នកប្រើ</h1>
-      <el-input v-model="search" placeholder="ស្វែងរក..." @input="load" clearable style="width:300px;margin-bottom:10px" />
+    <div class="main"><h1>{{ $t('users.title') }}</h1>
+      <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable style="width:300px;margin-bottom:10px" />
       <el-table :data="items" v-loading="loading">
-        <el-table-column prop="firstName" label="នាម" /><el-table-column prop="lastName" label="គោត្តនាម" />
-        <el-table-column prop="phone" label="ទូរស័ព្ទ" width="120" /><el-table-column prop="telegramId" label="Telegram ID" width="120" />
-        <el-table-column prop="status" label="ស្ថានភាព" width="80" />
+        <el-table-column prop="firstName" :label="$t('users.name')" />
+        <el-table-column prop="lastName" :label="$t('users.name')" />
+        <el-table-column prop="phone" :label="$t('users.phone')" width="120" />
+        <el-table-column prop="telegramId" label="Telegram ID" width="120" />
+        <el-table-column prop="status" :label="$t('users.status')" width="80" />
       </el-table>
       <el-pagination v-model:current-page="page" :total="total" :page-size="20" layout="prev,pager,next" @current-change="load" style="margin-top:16px" />
     </div>

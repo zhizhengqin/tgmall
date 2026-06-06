@@ -1,0 +1,75 @@
+{
+  "app": { "name": "TG Mall — Admin Panel" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "merchants": "Merchants",
+    "users": "Users",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalOrders": "Total Orders",
+    "totalRevenue": "Total Revenue",
+    "totalUsers": "Total Users",
+    "totalMerchants": "Total Merchants",
+    "noData": "No data yet"
+  },
+  "merchants": {
+    "title": "Merchant Management",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "all": "All",
+    "name": "Shop Name",
+    "owner": "Owner",
+    "phone": "Phone",
+    "status": "Status",
+    "date": "Date",
+    "detail": "Detail",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reason": "Reason",
+    "commissionRate": "Commission Rate",
+    "noMerchants": "No merchants yet"
+  },
+  "users": {
+    "title": "User Management",
+    "search": "Search",
+    "name": "Name",
+    "phone": "Phone",
+    "orders": "Orders",
+    "totalSpent": "Total Spent",
+    "status": "Status",
+    "active": "Active",
+    "banned": "Banned",
+    "ban": "Ban",
+    "unban": "Unban",
+    "noUsers": "No users yet"
+  },
+  "settings": {
+    "title": "System Settings",
+    "categories": "Product Categories",
+    "commissionRate": "Default Commission Rate",
+    "hotKeywords": "Hot Search Keywords",
+    "save": "Save",
+    "saved": "Saved"
+  },
+  "login": {
+    "title": "Admin Login",
+    "telegramLogin": "Login with Telegram",
+    "noAccess": "You do not have access"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "OK",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "back": "Back",
+    "noMore": "No more"
+  },
+  "language": "Language"
+}

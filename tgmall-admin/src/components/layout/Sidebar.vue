@@ -1,9 +1,9 @@
 <template>
   <el-menu :default-active="route.path" router class="sidebar" background-color="#1a1a2e" text-color="#8b8b9e" active-text-color="#c4932a">
-    <div class="logo"><h2>TG Mall</h2><span>គ្រប់គ្រងប្រព័ន្ធ</span></div>
-    <el-menu-item index="/dashboard"><el-icon><DataAnalysis /></el-icon><span>របាយការណ៍</span></el-menu-item>
-    <el-menu-item index="/merchants"><el-icon><Shop /></el-icon><span>ហាង</span></el-menu-item>
-    <el-menu-item index="/users"><el-icon><User /></el-icon><span>អ្នកប្រើ</span></el-menu-item>
+    <div class="logo"><h2>TG Mall</h2><span>{{ $t('app.name') }}</span></div>
+    <el-menu-item index="/dashboard"><el-icon><DataAnalysis /></el-icon><span>{{ $t('nav.dashboard') }}</span></el-menu-item>
+    <el-menu-item index="/merchants"><el-icon><Shop /></el-icon><span>{{ $t('nav.merchants') }}</span></el-menu-item>
+    <el-menu-item index="/users"><el-icon><User /></el-icon><span>{{ $t('nav.users') }}</span></el-menu-item>
   </el-menu>
 </template>
 <script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, Shop, User } from '@element-plus/icons-vue'; const route = useRoute();</script>

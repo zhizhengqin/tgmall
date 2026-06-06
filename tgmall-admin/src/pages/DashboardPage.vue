@@ -1,13 +1,13 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
-    <div class="main"><h1>របាយការណ៍ប្រព័ន្ធ</h1>
+    <div class="main"><h1>{{ $t('dashboard.title') }}</h1>
       <el-row :gutter="20" style="margin-bottom:20px">
-        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV ថ្ងៃនេះ</div><div style="font-size:28px;font-weight:800;color:#c4932a">${{ (data.gmvToday||0).toFixed(0) }}</div></div></el-card></el-col>
-        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV ខែនេះ</div><div style="font-size:28px;font-weight:800;color:#409eff">${{ (data.gmvThisMonth||0).toFixed(0) }}</div></div></el-card></el-col>
-        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">ហាង / អ្នកប្រើ</div><div style="font-size:28px;font-weight:800;color:#67c23a">{{ data.totalMerchants||0 }} / {{ data.totalUsers||0 }}</div></div></el-card></el-col>
-        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">កម្មង / រង់ចាំ</div><div style="font-size:28px;font-weight:800" :style="{color:data.pendingAudit?'#e6a23c':'#67c23a'}">{{ data.totalOrders||0 }} / {{ data.pendingAudit||0 }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV {{ $t('dashboard.today') || 'ថ្ងៃនេះ' }}</div><div style="font-size:28px;font-weight:800;color:#c4932a">${{ (data.gmvToday||0).toFixed(0) }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">GMV {{ $t('dashboard.thisMonth') || 'ខែនេះ' }}</div><div style="font-size:28px;font-weight:800;color:#409eff">${{ (data.gmvThisMonth||0).toFixed(0) }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">{{ $t('dashboard.totalMerchants') }} / {{ $t('dashboard.totalUsers') }}</div><div style="font-size:28px;font-weight:800;color:#67c23a">{{ data.totalMerchants||0 }} / {{ data.totalUsers||0 }}</div></div></el-card></el-col>
+        <el-col :span="6"><el-card shadow="hover"><div style="text-align:center"><div style="font-size:13px;color:#999">{{ $t('dashboard.totalOrders') }} / {{ $t('merchants.pending') }}</div><div style="font-size:28px;font-weight:800" :style="{color:data.pendingAudit?'#e6a23c':'#67c23a'}">{{ data.totalOrders||0 }} / {{ data.pendingAudit||0 }}</div></div></el-card></el-col>
       </el-row>
-      <el-card><template #header>និន្នាការ ៧ ថ្ងៃ</template>
+      <el-card><template #header>{{ $t('dashboard.trend7d') || 'និន្នាការ ៧ ថ្ងៃ' }}</template>
         <v-chart :option="opt" style="height:300px" autoresize />
       </el-card>
     </div>

@@ -1,22 +1,47 @@
 <template>
   <div class="topbar">
-    <span class="shop">{{ store.merchantName || 'TG Mall' }}</span>
+    <span class="shop">{{ $t('app.name') }}</span>
     <div class="actions">
-      <el-select v-model="lang" @change="switchLang" size="small" style="width:100px">
-        <el-option label="ភាសាខ្មែរ" value="km" /><el-option label="English" value="en" /><el-option label="中文" value="zh" />
-      </el-select>
-      <el-button @click="logout" size="small" type="danger" plain>ចាកចេញ</el-button>
+      <div class="lang-switcher">
+        <button
+          v-for="l in langList"
+          :key="l.code"
+          class="lang-btn"
+          :class="{ active: locale === l.code }"
+          @click="switchLang(l.code)"
+        >
+          {{ l.label }}
+        </button>
+      </div>
+      <el-button @click="logout" size="small" type="danger" plain>{{ $t('nav.logout') }}</el-button>
     </div>
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'; import { useUserStore } from '@/stores/userStore';
-const store = useUserStore(); const lang = ref(localStorage.getItem('merchant_lang') || 'km');
-const switchLang = (v) => { localStorage.setItem('merchant_lang', v); location.reload(); };
-const logout = () => { localStorage.removeItem('merchant_token'); location.href = '/login'; };
+import { useI18n } from 'vue-i18n';
+const { locale } = useI18n();
+
+const langList = [
+  { code: 'zh', label: '中' },
+  { code: 'km', label: 'ខ' },
+  { code: 'en', label: 'EN' },
+];
+
+function switchLang(code) {
+  locale.value = code;
+  localStorage.setItem('merchant_lang', code);
+}
+
+function logout() {
+  localStorage.removeItem('merchant_token');
+  location.href = '/merchant/';
+}
 </script>
 <style scoped>
 .topbar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #fff; border-bottom: 1px solid #e8e8e8; margin-left: 220px; }
-.actions { display: flex; gap: 10px; align-items: center; }
+.actions { display: flex; gap: 12px; align-items: center; }
 .shop { font-weight: 600; }
+.lang-switcher { display: flex; gap: 4px; }
+.lang-btn { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: #f5f5f5; border: 1px solid #ddd; color: #666; cursor: pointer; transition: all 0.2s; min-width: 32px; }
+.lang-btn.active { background: #c4932a; color: #fff; border-color: #c4932a; }
 </style>

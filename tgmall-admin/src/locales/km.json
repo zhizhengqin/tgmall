@@ -1,0 +1,75 @@
+{
+  "app": { "name": "TG Mall — ផ្ទាំងគ្រប់គ្រងប្រព័ន្ធ" },
+  "nav": {
+    "dashboard": "ផ្ទាំងទិន្នន័យ",
+    "merchants": "ហាង",
+    "users": "អ្នកប្រើ",
+    "settings": "ការកំណត់",
+    "logout": "ចាកចេញ"
+  },
+  "dashboard": {
+    "title": "ផ្ទាំងទិន្នន័យ",
+    "totalOrders": "កម្មងសរុប",
+    "totalRevenue": "ចំណូលសរុប",
+    "totalUsers": "អ្នកប្រើសរុប",
+    "totalMerchants": "ហាងសរុប",
+    "noData": "មិនទាន់មានទិន្នន័យ"
+  },
+  "merchants": {
+    "title": "គ្រប់គ្រងហាង",
+    "pending": "រង់ចាំ",
+    "approved": "បានយល់ព្រម",
+    "rejected": "បានបដិសេធ",
+    "all": "ទាំងអស់",
+    "name": "ឈ្មោះហាង",
+    "owner": "ម្ចាស់",
+    "phone": "ទូរស័ព្ទ",
+    "status": "ស្ថានភាព",
+    "date": "កាលបរិច្ឆេទ",
+    "detail": "លម្អិត",
+    "approve": "យល់ព្រម",
+    "reject": "បដិសេធ",
+    "reason": "មូលហេតុ",
+    "commissionRate": "ភាគរយកម្រៃ",
+    "noMerchants": "មិនទាន់មានហាង"
+  },
+  "users": {
+    "title": "គ្រប់គ្រងអ្នកប្រើ",
+    "search": "ស្វែងរក",
+    "name": "ឈ្មោះ",
+    "phone": "ទូរស័ព្ទ",
+    "orders": "កម្មង",
+    "totalSpent": "ចំណាយសរុប",
+    "status": "ស្ថានភាព",
+    "active": "សកម្ម",
+    "banned": "បានហាមឃាត់",
+    "ban": "ហាមឃាត់",
+    "unban": "ដកហាមឃាត់",
+    "noUsers": "មិនទាន់មានអ្នកប្រើ"
+  },
+  "settings": {
+    "title": "ការកំណត់ប្រព័ន្ធ",
+    "categories": "ប្រភេទទំនិញ",
+    "commissionRate": "ភាគរយកម្រៃលំនាំដើម",
+    "hotKeywords": "ពាក្យស្វែងរកពេញនិយម",
+    "save": "រក្សាទុក",
+    "saved": "បានរក្សាទុក"
+  },
+  "login": {
+    "title": "ចូលគណនីអ្នកគ្រប់គ្រង",
+    "telegramLogin": "ចូលជាមួយ Telegram",
+    "noAccess": "អ្នកមិនមានសិទ្ធិចូលប្រើ"
+  },
+  "common": {
+    "save": "រក្សាទុក",
+    "cancel": "បោះបង់",
+    "confirm": "យល់ព្រម",
+    "delete": "លុប",
+    "loading": "កំពុងផ្ទុក...",
+    "error": "មានបញ្ហា",
+    "success": "ជោគជ័យ",
+    "back": "ត្រលប់",
+    "noMore": "អស់ហើយ"
+  },
+  "language": "ភាសា"
+}

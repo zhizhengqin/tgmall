@@ -1,20 +1,20 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
-    <div class="main"><h1>របាយការណ៍</h1>
+    <div class="main"><h1>{{ $t('dashboard.title') }}</h1>
       <el-row :gutter="20" style="margin-bottom:20px">
-        <el-col :span="6"><StatCard title="ចំណូលថ្ងៃនេះ" :value="'$'+(data.todayRevenueUsd||0)" color="#c4932a" /></el-col>
-        <el-col :span="6"><StatCard title="ត្រូវដឹក" :value="String(data.pendingOrders||0)" color="#409eff" /></el-col>
-        <el-col :span="6"><StatCard title="កំពុងដឹក" :value="String(data.shippedOrders||0)" color="#e6a23c" /></el-col>
-        <el-col :span="6"><StatCard title="ទំនិញសរុប" :value="String(data.productCount||0)" color="#67c23a" /></el-col>
+        <el-col :span="6"><StatCard :title="$t('dashboard.todayRevenue')" :value="'$'+(data.todayRevenueUsd||0)" color="#c4932a" /></el-col>
+        <el-col :span="6"><StatCard :title="$t('dashboard.pendingOrders')" :value="String(data.pendingOrders||0)" color="#409eff" /></el-col>
+        <el-col :span="6"><StatCard :title="$t('orders.shipped')" :value="String(data.shippedOrders||0)" color="#e6a23c" /></el-col>
+        <el-col :span="6"><StatCard :title="$t('dashboard.totalProducts')" :value="String(data.productCount||0)" color="#67c23a" /></el-col>
       </el-row>
-      <el-card><template #header>ចំណូល ៧ ថ្ងៃចុងក្រោយ</template>
+      <el-card><template #header>{{ $t('dashboard.recent7Days') || 'ចំណូល ៧ ថ្ងៃចុងក្រោយ' }}</template>
         <v-chart :option="chartOption" style="height:300px" autoresize />
       </el-card>
       <el-card v-if="data.lowStockAlerts?.length" style="margin-top:20px">
-        <template #header>ទំនិញជិតអស់</template>
+        <template #header>{{ $t('dashboard.lowStock') || 'ទំនិញជិតអស់' }}</template>
         <el-table :data="data.lowStockAlerts" size="small">
-          <el-table-column prop="nameKm" label="ទំនិញ" />
-          <el-table-column prop="stock" label="ស្តុក" width="80"><template #default="{row}"><el-tag type="danger">{{row.stock}}</el-tag></template></el-table-column>
+          <el-table-column prop="nameKm" :label="$t('nav.products')" />
+          <el-table-column prop="stock" :label="$t('products.stock')" width="80"><template #default="{row}"><el-tag type="danger">{{row.stock}}</el-tag></template></el-table-column>
         </el-table>
       </el-card>
     </div>
