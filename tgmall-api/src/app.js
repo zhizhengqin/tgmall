@@ -8,8 +8,10 @@ import routes from './routes/index.js';
 
 const app = express();
 
-// 1. 安全头
-app.use(helmet());
+// 1. 安全头（关闭 CSP，落地页 /go 有内联样式和脚本）
+app.use(helmet({
+  contentSecurityPolicy: false,
+}));
 
 // 2. CORS（开发阶段允许本地前端）
 app.use(cors({
