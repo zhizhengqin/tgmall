@@ -4,7 +4,27 @@
   "home": { "searchPlaceholder": "搜索商品...", "all": "全部", "fashion": "时尚", "beauty": "美妆", "electronics": "电子", "home": "家居", "noProducts": "暂无商品", "comingSoon": "商品正在上架中，请稍后再来" },
   "product": { "addToCart": "加入购物车", "buyNow": "立即购买", "soldOut": "售罄", "stockLeft": "仅剩 {count} 件", "description": "商品描述" },
   "cart": { "title": "购物车", "empty": "购物车是空的", "goShopping": "去逛逛", "total": "合计", "checkout": "去结算", "selectAll": "全选", "remove": "删除" },
-  "common": { "loading": "加载中...", "error": "出错了", "loadError": "加载失败", "retry": "重试", "noMore": "— 已经到底了 —", "confirm": "确定", "cancel": "取消" },
+  "common": { "loading": "加载中...", "error": "出错了", "loadError": "加载失败", "retry": "重试", "noMore": "— 已经到底了 —", "confirm": "确定", "cancel": "取消", "save": "保存", "delete": "删除" },
+  "profile": {
+    "guest": "用户",
+    "noPhone": "未绑定手机号",
+    "addresses": "收货地址",
+    "coupons": "优惠券",
+    "defaultTag": "默认",
+    "addAddress": "添加新地址",
+    "saveFailed": "保存失败",
+    "deleteFailed": "删除失败",
+    "confirmDelete": "确定删除？",
+    "language": "语言 / ភាសា / Language",
+    "form": {
+      "name": "收件人姓名",
+      "phone": "+855 手机号",
+      "province": "省份",
+      "district": "区/县",
+      "detail": "详细地址",
+      "setDefault": "设为默认"
+    }
+  },
   "payment": {
     "khqrTitle": "KHQR 支付",
     "abaPayTitle": "ABA Pay 支付",
