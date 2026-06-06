@@ -53,6 +53,13 @@ ${LISTEN_DIRECTIVES}
         proxy_pass http://127.0.0.1:3001/api/v1/health;
     }
 
+    # ── 扫码落地页 ──
+    location /go {
+        proxy_pass http://127.0.0.1:3001/go;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
     # ── Mini App (消费者端) — Telegram 打开时使用 ──
     location / {
         root /usr/share/nginx/html/miniapp;
