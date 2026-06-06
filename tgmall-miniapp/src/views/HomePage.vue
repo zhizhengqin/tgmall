@@ -97,6 +97,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTelegram } from '@/composables/useTelegram';
@@ -107,6 +108,7 @@ import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale } = useI18n();
 const languageStore = useLanguageStore();
+const route = useRoute();
 const { enableCloseConfirmation } = useTelegram();
 
 // 开启 Mini App 关闭确认
@@ -202,6 +204,11 @@ onMounted(() => {
   // 同步 vue-i18n locale 和 languageStore（处理首次加载）
   if (locale.value !== languageStore.current) {
     locale.value = languageStore.current;
+  }
+  // 从 URL 参数读取分类（从分类页跳转过来）
+  const categoryFromUrl = route.query.category;
+  if (categoryFromUrl && categories.some(c => c.value === categoryFromUrl)) {
+    activeCategory.value = categoryFromUrl;
   }
   fetchProducts(true);
   window.addEventListener('scroll', handleScroll, { passive: true });
