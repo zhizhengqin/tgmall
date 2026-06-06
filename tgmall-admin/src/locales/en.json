@@ -58,6 +58,7 @@
   "login": {
     "title": "Admin Login",
     "telegramLogin": "Login with Telegram",
+    "tokenPlaceholder": "Paste Admin Token",
     "noAccess": "You do not have access"
   },
   "common": {

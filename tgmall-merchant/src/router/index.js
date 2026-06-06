@@ -11,7 +11,7 @@ const routes = [
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
 ];
 
-const router = createRouter({ history: createWebHistory(), routes });
+const router = createRouter({ history: createWebHistory('/merchant/'), routes });
 
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('merchant_token');

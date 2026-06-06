@@ -68,6 +68,8 @@
   "login": {
     "title": "商家登录",
     "telegramLogin": "使用 Telegram 登录",
+    "tokenPlaceholder": "粘贴 JWT Token",
+    "tokenHint": "请通过 Mini App 登录获取 Token",
     "pending": "您的店铺正在审核中",
     "rejected": "您的入驻申请被驳回",
     "notFound": "未找到入驻申请"

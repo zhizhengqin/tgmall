@@ -68,6 +68,8 @@
   "login": {
     "title": "ចូលគណនីអ្នកលក់",
     "telegramLogin": "ចូលជាមួយ Telegram",
+    "tokenPlaceholder": "បិទភ្ជាប់ JWT Token",
+    "tokenHint": "សូមចូលតាម Mini App ដើម្បីទទួលបាន Token",
     "pending": "ហាងរបស់អ្នកកំពុងរង់ចាំការពិនិត្យ",
     "rejected": "ពាក្យស្នើសុំត្រូវបានបដិសេធ",
     "notFound": "មិនបានរកឃើញពាក្យស្នើសុំ"

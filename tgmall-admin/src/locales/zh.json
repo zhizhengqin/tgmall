@@ -58,6 +58,7 @@
   "login": {
     "title": "管理员登录",
     "telegramLogin": "使用 Telegram 登录",
+    "tokenPlaceholder": "粘贴 Admin Token",
     "noAccess": "您没有访问权限"
   },
   "common": {
