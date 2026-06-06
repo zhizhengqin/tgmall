@@ -10,11 +10,19 @@ export async function register(req, res, next) {
   } catch (err) { next(err); }
 }
 
-// POST /merchants/login — 商家登录（返回 merchant 角色 JWT）
+// POST /merchants/login — 商家登录（Mini App initData，返回 merchant 角色 JWT）
 export async function login(req, res, next) {
   try {
     const { init_data } = req.validatedBody;
     const result = await merchantService.merchantLogin(init_data);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+}
+
+// POST /merchants/web-login — 商家 Web 端登录（Telegram Login Widget）
+export async function webLogin(req, res, next) {
+  try {
+    const result = await merchantService.merchantWebLogin(req.body);
     res.json({ success: true, data: result });
   } catch (err) { next(err); }
 }

@@ -22,6 +22,8 @@ merchantRouter.post('/register', auth, validate(registerMerchantSchema), ctrl.re
 
 // 商家登录（获取 merchant 角色 Token）
 merchantRouter.post('/login', validate(telegramLoginSchema), ctrl.login);
+// 商家 Web 端登录（Telegram Login Widget，浏览器环境）
+merchantRouter.post('/web-login', ctrl.webLogin);
 
 // 以下路由需要 merchant 角色鉴权
 merchantRouter.use(merchantAuth);

@@ -49,6 +49,49 @@ export function parseInitDataUnsafe(initData) {
 }
 
 // ============================================================
+// Telegram Login Widget 校验（Web 端 OAuth 登录）
+// ============================================================
+
+/**
+ * 校验 Telegram Login Widget 回调数据
+ * 用于商家后台和运营后台的 Web 端 Telegram 登录
+ */
+export function verifyTelegramLoginData(data) {
+  const receivedHash = data.hash;
+  if (!receivedHash) {
+    throw new Error('缺少 hash 签名');
+  }
+
+  // 按 key 字母排序，拼接 check string
+  const checkString = Object.keys(data)
+    .filter(k => k !== 'hash')
+    .sort()
+    .map(k => `${k}=${data[k]}`)
+    .join('\n');
+
+  // Login Widget: secret = SHA256(bot_token)，与 Mini App 不同（Mini App 用 WebAppData 常量）
+  const secretKey = crypto.createHash('sha256').update(config.botToken).digest();
+  const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex');
+
+  if (computedHash !== receivedHash) {
+    throw new Error('Telegram Login 签名校验失败');
+  }
+
+  const authDate = parseInt(data.auth_date, 10);
+  if (Math.floor(Date.now() / 1000) - authDate > 86400) {
+    throw new Error('登录数据已过期，请重新授权');
+  }
+
+  return {
+    telegramId: parseInt(data.id, 10),
+    firstName: data.first_name || '',
+    lastName: data.last_name || '',
+    username: data.username || '',
+    photoUrl: data.photo_url || '',
+  };
+}
+
+// ============================================================
 // Bot 消息发送
 // ============================================================
 

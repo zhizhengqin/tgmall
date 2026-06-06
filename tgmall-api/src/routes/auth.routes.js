@@ -6,5 +6,6 @@ import * as authController from '../controllers/auth.controller.js';
 const router = Router();
 
 router.post('/telegram', validate(telegramLoginSchema), authController.telegramLogin);
+router.post('/web-login', authController.webLogin);
 
 export default router;

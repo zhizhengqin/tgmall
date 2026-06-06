@@ -58,6 +58,8 @@
   "login": {
     "title": "ចូលគណនីអ្នកគ្រប់គ្រង",
     "telegramLogin": "ចូលជាមួយ Telegram",
+    "desc": "សូមចូលជាមួយគណនី Telegram",
+    "orToken": "ឬបិទភ្ជាប់ Token",
     "tokenPlaceholder": "បិទភ្ជាប់ Admin Token",
     "noAccess": "អ្នកមិនមានសិទ្ធិចូលប្រើ"
   },

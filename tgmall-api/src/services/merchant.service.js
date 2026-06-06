@@ -3,7 +3,7 @@ import prisma from '../config/database.js';
 import { config } from '../config/index.js';
 import { sendShippedNotification, sendApprovalNotification, sendAuditNotification } from '../integrations/telegram.js';
 import { signToken } from '../utils/jwt.js';
-import { verifyInitData } from '../integrations/telegram.js';
+import { verifyInitData, verifyTelegramLoginData } from '../integrations/telegram.js';
 import { AppError } from '../utils/AppError.js';
 
 // ============================================================
@@ -96,6 +96,63 @@ export async function merchantLogin(initData) {
     if (pending) {
       throw new AppError('您的商家账号正在审核中，请等待审核通过', 403, 'FORBIDDEN');
     }
+    throw new AppError('未找到已激活的商家账号，请先申请入驻', 404, 'NOT_FOUND');
+  }
+
+  // 4. 签发 merchant 角色 JWT
+  const token = signToken({
+    userId: user.id,
+    telegramId: user.telegramId,
+    merchantId: merchant.id,
+    role: 'merchant',
+  });
+
+  return {
+    token,
+    merchant: {
+      id: merchant.id,
+      nameKm: merchant.nameKm,
+      nameEn: merchant.nameEn,
+      phone: merchant.phone,
+      category: merchant.category,
+      status: merchant.status,
+    },
+  };
+}
+
+// ============================================================
+// 商家 Web 端登录（Telegram Login Widget）— 浏览器环境
+// ============================================================
+export async function merchantWebLogin(tgLoginData) {
+  // 1. 校验 Telegram Login Widget 签名
+  const userData = verifyTelegramLoginData(tgLoginData);
+
+  // 2. 查找/创建用户
+  let user = await prisma.user.findUnique({
+    where: { telegramId: userData.telegramId },
+  });
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        telegramId: userData.telegramId,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        username: userData.username,
+        language: 'km',
+      },
+    });
+  }
+
+  // 3. 查找该用户对应的 active 商家
+  const merchant = await prisma.merchant.findFirst({
+    where: { telegramId: userData.telegramId, status: 'active' },
+  });
+
+  if (!merchant) {
+    const pending = await prisma.merchant.findFirst({
+      where: { telegramId: userData.telegramId, status: 'pending' },
+    });
+    if (pending) throw new AppError('您的商家账号正在审核中', 403, 'FORBIDDEN');
     throw new AppError('未找到已激活的商家账号，请先申请入驻', 404, 'NOT_FOUND');
   }
 

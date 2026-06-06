@@ -8,33 +8,90 @@
         </div>
       </div>
       <h2>{{ $t('login.title') }}</h2>
-      <el-input v-model="token" :placeholder="$t('login.tokenPlaceholder')" style="margin:16px 0" />
-      <el-button type="primary" @click="doLogin" :loading="loading" style="width:100%">{{ $t('common.confirm') }}</el-button>
-      <p style="font-size:12px;color:#999;margin-top:10px">{{ $t('login.tokenHint') }}</p>
+      <p style="font-size:13px;color:#999;margin-bottom:16px;text-align:center">{{ $t('login.desc') }}</p>
+
+      <!-- Telegram Login Widget -->
+      <div id="telegram-login-wrapper" style="display:flex;justify-content:center;margin:16px 0" v-show="!loading"></div>
+
+      <!-- 加载中 -->
+      <div v-if="loading" style="text-align:center;padding:20px;color:#999">
+        <el-icon class="is-loading"><Loading /></el-icon> {{ $t('common.loading') }}
+      </div>
+
+      <!-- 手动输入 Token（备用方式） -->
+      <el-divider style="margin:12px 0"><span style="font-size:11px;color:#bbb">{{ $t('login.orToken') }}</span></el-divider>
+      <el-input v-model="token" :placeholder="$t('login.tokenPlaceholder')" size="small" />
+      <el-button @click="doLogin" :loading="loading" style="width:100%;margin-top:8px">{{ $t('common.confirm') }}</el-button>
+      <p style="font-size:12px;color:#999;margin-top:10px;text-align:center">{{ $t('login.tokenHint') }}</p>
     </el-card>
   </div>
 </template>
+
 <script setup>
-import { ref } from 'vue'; import { useRouter } from 'vue-router'; import { useI18n } from 'vue-i18n'; import { useUserStore } from '@/stores/userStore'; import api from '@/api';
-const router = useRouter(); const store = useUserStore(); const token = ref(''); const loading = ref(false);
+import { ref, onMounted } from 'vue'; import { useRouter } from 'vue-router'; import { useI18n } from 'vue-i18n'; import api from '@/api';
+const router = useRouter(); const token = ref(''); const loading = ref(false);
 const { locale } = useI18n();
+
 const langList = [
   { code: 'zh', label: '中' },
   { code: 'km', label: 'ខ' },
   { code: 'en', label: 'EN' },
 ];
+
 function switchLang(code) { locale.value = code; localStorage.setItem('merchant_lang', code); }
+
+onMounted(() => {
+  // 注入 Telegram Login Widget
+  const script = document.createElement('script');
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.async = true;
+  script.setAttribute('data-telegram-login', 'xhzmall_bot');
+  script.setAttribute('data-size', 'large');
+  script.setAttribute('data-radius', '8');
+  script.setAttribute('data-auth-url', ''); // 使用 onAuth 回调
+  script.setAttribute('data-request-access', 'write');
+
+  // 定义全局回调
+  window.onTelegramAuth = async (user) => {
+    loading.value = true;
+    try {
+      const res = await api.post('/merchants/web-login', {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        photo_url: user.photo_url,
+        auth_date: user.auth_date,
+        hash: user.hash,
+      });
+      if (res.data?.token) {
+        localStorage.setItem('merchant_token', res.data.token);
+        router.push('/dashboard');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.error?.message || 'ចូលបរាជ័យ / Login failed / 登录失败');
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  document.getElementById('telegram-login-wrapper').appendChild(script);
+});
+
 async function doLogin() {
   if (!token.value) return; loading.value = true;
   try {
     await api.get('/merchants/dashboard', { headers: { Authorization: `Bearer ${token.value}` } });
-    store.setAuth(token.value, 'TG Mall Shop'); router.push('/dashboard');
-  } catch { alert('ចូលបរាជ័យ / Login failed / 登录失败'); } finally { loading.value = false; }
+    localStorage.setItem('merchant_token', token.value);
+    router.push('/dashboard');
+  } catch { alert('Token មិនត្រឹមត្រូវ / Invalid / 无效'); } finally { loading.value = false; }
 }
 </script>
+
 <style scoped>
-.login { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f5f5; }
-.card { width: 400px; }
+.login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 20px; }
+.card { width: 400px; max-width: 100%; }
 .lang-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 .lang-switcher { display: flex; gap: 4px; }
 .lang-btn { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: #f5f5f5; border: 1px solid #ddd; color: #666; cursor: pointer; transition: all 0.2s; min-width: 32px; }

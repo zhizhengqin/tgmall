@@ -68,6 +68,8 @@
   "login": {
     "title": "Merchant Login",
     "telegramLogin": "Login with Telegram",
+    "desc": "Sign in with your Telegram account",
+    "orToken": "or paste Token",
     "tokenPlaceholder": "Paste JWT Token",
     "tokenHint": "Login via Mini App to get your token",
     "pending": "Your shop is under review",
