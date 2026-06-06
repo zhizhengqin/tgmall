@@ -1,40 +1,40 @@
-<!-- 订单列表 — Sprint 2 -->
+<!-- 订单列表 -->
 <template>
   <div class="page">
-    <h2 class="page-title">订单</h2>
+    <h2 class="page-title">{{ $t('orders.title') }}</h2>
 
     <!-- 状态 Tab -->
     <div class="tabs">
       <button v-for="tab in tabs" :key="tab.value" class="tab" :class="{ active: activeTab === tab.value }" @click="switchTab(tab.value)">
-        {{ tab.label }}
+        {{ $t(`orders.status.${tab.value || 'all'}`) }}
       </button>
     </div>
 
-    <div v-if="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
 
-    <div v-else-if="!orders.length" class="empty">暂无订单</div>
+    <div v-else-if="!orders.length" class="empty">{{ $t('orders.empty') }}</div>
 
     <div v-else>
       <div v-for="o in orders" :key="o.id" class="order-card" @click="goDetail(o.id)">
         <div class="oc-header">
           <span class="oc-number">{{ o.orderNumber }}</span>
-          <span class="oc-status" :class="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+          <span class="oc-status" :class="statusClass(o.status)">{{ $t(`orders.status.${o.status}`) }}</span>
         </div>
         <div class="oc-body">
           <img :src="o.thumbnail" class="oc-thumb" />
           <div class="oc-info">
             <p class="oc-merchant">{{ o.merchantName }}</p>
-            <p class="oc-count">共 {{ o.itemCount }} 件</p>
+            <p class="oc-count">{{ $t('orders.itemCount', { count: o.itemCount }) }}</p>
             <p class="oc-price">${{ o.totalUsd }}</p>
           </div>
         </div>
         <div class="oc-footer">
           <span class="oc-time">{{ formatDate(o.createdAt) }}</span>
-          <button v-if="o.status === 'pending_payment'" class="btn-pay-sm" @click.stop="goPay(o)">去支付</button>
+          <button v-if="o.status === 'pending_payment'" class="btn-pay-sm" @click.stop="goPay(o)">{{ $t('orders.goPay') }}</button>
         </div>
       </div>
 
-      <p v-if="!hasMore && orders.length" class="no-more">— 已经到底了 —</p>
+      <p v-if="!hasMore && orders.length" class="no-more">{{ $t('common.noMore') }}</p>
     </div>
 
     <BottomNav />
@@ -42,19 +42,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useLanguageStore } from '@/stores/languageStore';
 import { getOrders } from '@/api/orders';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const router = useRouter();
+const { t, locale } = useI18n();
+const languageStore = useLanguageStore();
 
 const tabs = [
-  { value: '', label: '全部' },
-  { value: 'pending_payment', label: '待付款' },
-  { value: 'paid', label: '已付款' },
-  { value: 'shipped', label: '已发货' },
-  { value: 'completed', label: '已完成' },
+  { value: '', labelKey: 'all' },
+  { value: 'pending_payment', labelKey: 'pending_payment' },
+  { value: 'paid', labelKey: 'paid' },
+  { value: 'shipped', labelKey: 'shipped' },
+  { value: 'completed', labelKey: 'completed' },
 ];
 const activeTab = ref('');
 const orders = ref([]);
@@ -62,15 +66,18 @@ const loading = ref(true);
 const hasMore = ref(true);
 const page = ref(1);
 
-function statusLabel(s) {
-  const map = { pending_payment: '待付款', paid: '已付款', shipped: '已发货', completed: '已完成', cancelled: '已取消' };
-  return map[s] || s;
-}
 function statusClass(s) {
   const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
   return map[s] || '';
 }
-function formatDate(d) { return d ? new Date(d).toLocaleDateString('zh-CN') : ''; }
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  const lang = locale.value;
+  if (lang === 'zh') return date.toLocaleDateString('zh-CN');
+  if (lang === 'km') return date.toLocaleDateString('km-KH');
+  return date.toLocaleDateString('en-US');
+}
 
 function goDetail(id) { router.push(`/orders/${id}`); }
 
@@ -100,6 +107,11 @@ async function loadOrders() {
   loading.value = false;
 }
 
+// 语言切换后重新加载
+watch(() => languageStore.current, () => {
+  loadOrders();
+});
+
 onMounted(loadOrders);
 </script>
 
@@ -110,6 +122,7 @@ onMounted(loadOrders);
 .tabs::-webkit-scrollbar { display: none; }
 .tab { flex-shrink: 0; font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
 .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.loading { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
 .empty { text-align: center; padding: 80px 0; color: var(--muted); }
 .order-card { display: block; background: var(--surface); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); text-decoration: none; color: inherit; cursor: pointer; }
 .oc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }

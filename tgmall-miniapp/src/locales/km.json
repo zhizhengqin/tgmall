@@ -25,6 +25,20 @@
       "setDefault": "កំណត់ជាលំនាំដើម"
     }
   },
+  "orders": {
+    "title": "ការបញ្ជាទិញ",
+    "empty": "មិនទាន់មានការបញ្ជាទិញ",
+    "goPay": "ទូទាត់",
+    "itemCount": "សរុប {count} មុខ",
+    "status": {
+      "all": "ទាំងអស់",
+      "pending_payment": "រង់ចាំ",
+      "paid": "បានបង់",
+      "shipped": "បានដឹក",
+      "completed": "បញ្ចប់",
+      "cancelled": "បោះបង់"
+    }
+  },
   "payment": {
     "khqrTitle": "ការទូទាត់ KHQR",
     "abaPayTitle": "ការទូទាត់ ABA Pay",

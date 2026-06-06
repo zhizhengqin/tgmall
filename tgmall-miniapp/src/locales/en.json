@@ -25,6 +25,20 @@
       "setDefault": "Set as Default"
     }
   },
+  "orders": {
+    "title": "Orders",
+    "empty": "No orders yet",
+    "goPay": "Pay Now",
+    "itemCount": "{count} item(s)",
+    "status": {
+      "all": "All",
+      "pending_payment": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
   "payment": {
     "khqrTitle": "KHQR Payment",
     "abaPayTitle": "ABA Pay",
