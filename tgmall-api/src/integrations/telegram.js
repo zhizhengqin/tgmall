@@ -241,6 +241,82 @@ const notificationTemplates = {
   },
 };
 
+// ============================================================
+// Bot 菜单按钮配置 — Mini App 入口
+// ============================================================
+
+/** 设置 Bot 的菜单按钮为 Web App（底部固定"打开商城"按钮） */
+export async function setMiniAppMenuButton() {
+  if (!config.botToken) {
+    console.warn('[Bot] BOT_TOKEN 未配置，跳过菜单按钮设置');
+    return { ok: false, error: 'BOT_TOKEN_NOT_CONFIGURED' };
+  }
+
+  const miniAppUrl = config.miniAppUrl || 'https://tgmall-production.up.railway.app';
+
+  // 1. 设置默认菜单按钮（所有用户的 Bot 底部显示"打开商城"）
+  const setMenuBtnUrl = `https://api.telegram.org/bot${config.botToken}/setChatMenuButton`;
+  const menuBody = {
+    menu_button: {
+      type: 'web_app',
+      text: '🛒 ចូលទៅហាង',
+      web_app: { url: miniAppUrl },
+    },
+  };
+
+  // 2. 设置 Bot 命令（/start 等）
+  const setCmdsUrl = `https://api.telegram.org/bot${config.botToken}/setMyCommands`;
+  const commandsBody = {
+    commands: [
+      { command: 'start', description: 'ចាប់ផ្តើម / Start' },
+      { command: 'shop', description: 'បើកហាង / Open Shop' },
+      { command: 'orders', description: 'ការបញ្ជាទិញរបស់ខ្ញុំ / My Orders' },
+    ],
+    scope: { type: 'default' },
+  };
+
+  try {
+    const [menuRes, cmdsRes] = await Promise.all([
+      fetch(setMenuBtnUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(menuBody),
+      }),
+      fetch(setCmdsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(commandsBody),
+      }),
+    ]);
+
+    const menuResult = await menuRes.json();
+    const cmdsResult = await cmdsRes.json();
+
+    if (!menuResult.ok) {
+      console.error(`[Bot] 菜单按钮设置失败: ${menuResult.description}`);
+      return { ok: false, error: menuResult.description };
+    }
+
+    if (!cmdsResult.ok) {
+      console.warn(`[Bot] 命令设置失败: ${cmdsResult.description}`);
+    }
+
+    console.log(`[Bot] ✅ Mini App 菜单按钮已设置 → ${miniAppUrl}`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[Bot] 菜单按钮网络错误: ${err.message}`);
+    return { ok: false, error: err.message };
+  }
+}
+
+/** 生成扫码进入 Mini App 的 QR 码链接 */
+export function getMiniAppEntryUrl(startParam = '') {
+  // 从 BOT_TOKEN 提取 bot 用户名（格式: 数字:token）
+  const botUsername = config.botUsername || 'tgmall_bot';
+  const base = `https://t.me/${botUsername}`;
+  return startParam ? `${base}?startapp=${encodeURIComponent(startParam)}` : base;
+}
+
 export default {
   verifyInitData,
   parseInitDataUnsafe,
@@ -250,4 +326,6 @@ export default {
   sendAuditNotification,
   sendShippedNotification,
   sendApprovalNotification,
+  setMiniAppMenuButton,
+  getMiniAppEntryUrl,
 };

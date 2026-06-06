@@ -40,4 +40,7 @@ export const config = {
   wingPaySecret: process.env.WING_PAY_SECRET || '',
   adminTelegramIds: process.env.ADMIN_TELEGRAM_IDS || '',
   cdnBaseUrl: process.env.CDN_BASE_URL || 'http://localhost:3000/static',
+  // Mini App
+  miniAppUrl: process.env.MINI_APP_URL || '',
+  botUsername: process.env.BOT_USERNAME || '',
 };
