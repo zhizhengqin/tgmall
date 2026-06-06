@@ -24,7 +24,7 @@
       "detail": "Detailed Address",
       "setDefault": "Set as Default"
     }
-  }
+  },
   "payment": {
     "khqrTitle": "KHQR Payment",
     "abaPayTitle": "ABA Pay",
