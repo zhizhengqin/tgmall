@@ -124,7 +124,7 @@ const categories = [
 // 语言列表（三语并排显示）
 const langList = [
   { code: 'zh', label: '中' },
-  { code: 'km', label: '柬' },
+  { code: 'km', label: 'ខ' },
   { code: 'en', label: 'EN' },
 ];
 
