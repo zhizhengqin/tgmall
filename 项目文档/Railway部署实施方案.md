@@ -287,8 +287,11 @@ Docker 镜像是什么？你可以理解为一个"打包好的运行环境"—�
 | 变量名 | 说明 |
 |--------|------|
 | `PORT` | Railway 自动注入，Nginx 监听用，**不要手动设置** |
+| `API_PORT` | 代码固定为 `3001`，Node.js 内部监听端口，**不需要设置** |
 | `DATABASE_URL` | 添加 PostgreSQL 时自动生成 |
 | `REDIS_URL` | 添加 Redis 时自动生成 |
+
+> ⚠️ **不要手动设置 `PORT` 环境变量**。Railway 会自动注入 `PORT`，Nginx 启动脚本会读取它并监听该端口。如果手动设置（如 `PORT=3000`），可能与 Node.js 内部端口冲突。
 
 ### 4.4 获取 BOT_TOKEN 和 BOT_USERNAME
 
@@ -429,8 +432,8 @@ WING_PAY_SECRET        h1a2b3c4d5e6f7a8
 ```
 [1/5] Building Docker image...       ← 构建镜像（3-5 分钟）
 [2/5] Running Prisma Migration...    ← 创建数据库表
-[3/5] Starting supervisord...        ← 启动进程管理
-[4/5] Starting Node.js...            ← 启动后端
+[3/5] Generating Nginx config...     ← 动态生成 Nginx 配置（双端口监听）
+[4/5] Starting Node.js...            ← 启动后端（端口 3001）
 [5/5] Starting Nginx...              ← 启动 Web 服务器
 ✅ Deploy successful!
 ```
@@ -473,11 +476,12 @@ Railway 的默认域名比较长，你可以设置一个短的：
    - 构建运营后台
    - 组装 Nginx + Node.js + 所有静态文件到最终镜像
 3. 启动容器后，`railway-start.sh` 先运行数据库迁移，然后同时启动 Nginx 和 Node.js
-4. Nginx 监听 8080 端口（Railway 对外暴露的端口），路由规则：
-   - `/api/*` → 转发给 Node.js:3000
+4. Nginx 监听 **双端口**（Railway 分配的 PORT + 3000 备用），路由规则：
+   - `/api/*` → 转发给 Node.js:3001
    - `/` → Mini App 前端页面
    - `/merchant/*` → 商家后台
    - `/admin/*` → 运营后台
+   - `/go` → 扫码落地页（智能引导）
 </details>
 
 ---
@@ -510,23 +514,38 @@ API 启动时会自动调用 `setChatMenuButton`，所有用户打开你的 Bot 
 
 > ⚠️ 如果菜单按钮没有自动出现，可以在 BotFather 中手动设置：Bot Settings → Menu Button → Configure menu button，URL 填入你的 `MINI_APP_URL`。
 
-### 6.3 生成扫码进入的二维码
+### 6.3 扫码进入 Mini App 的三种方式
 
-#### 扫码链接格式
+Telegram Mini App **必须依附于 Bot**，无法完全跳过 Bot 聊天界面。但可以通过不同链接优化体验：
 
-你的扫码链接就是 Telegram 的 Direct Link：
+| 方式 | 链接格式 | 适用场景 | 用户体验 |
+|------|----------|----------|----------|
+| **落地页（推荐）** | `https://你的域名/go?ref=xxx` | 线下 QR 码、微信分享 | Telegram 内直接打开，其他显示引导页 |
+| **tg:// 协议** | `tg://resolve?domain=xhzmall_bot` | Telegram 内分享 | ✅ 直接打开 Mini App，不显示聊天 |
+| **Direct Link** | `https://t.me/xhzmall_bot?startapp=xxx` | 浏览器/外部 | 进入 Bot 聊天 → 点底部按钮 |
+
+#### 推荐：落地页扫码（兼容所有场景）
+
+QR 码内容使用落地页链接：
 
 ```
-https://t.me/xhzmall_bot?startapp=shop
+https://tgmall-production.up.railway.app/go?ref=promo_june
 ```
+
+**落地页的行为**：
+- **Telegram 内打开** → 自动跳转到 Mini App（直接打开，不经过聊天）
+- **微信/相机扫码** → 显示引导页，有"在 Telegram 中打开"按钮
+- **浏览器打开** → 显示引导页，自动尝试跳转 `tg://`
 
 #### 带店铺参数的链接（不同商家不同二维码）
 
 ```
-https://t.me/xhzmall_bot?startapp=shop_001   ← 商家A
-https://t.me/xhzmall_bot?startapp=shop_002   ← 商家B
-https://t.me/xhzmall_bot?startapp=flyer_01   ← 传单A版
+https://你的域名/go?ref=shop_001   ← 商家A专属
+https://你的域名/go?ref=shop_002   ← 商家B专属
+https://你的域名/go?ref=flyer_01   ← 传单A版追踪
 ```
+
+`ref` 参数可以任意设置，用于追踪来源（哪个商家、哪张传单、哪个活动）。
 
 #### 生成 QR 码
 
@@ -536,8 +555,8 @@ https://t.me/xhzmall_bot?startapp=flyer_01   ← 传单A版
 ```js
 import QRCode from 'qrcode';
 
-// 生成店铺专属二维码
-const shopUrl = `https://t.me/xhzmall_bot?startapp=shop_${shopId}`;
+// 生成店铺专属二维码（使用落地页链接）
+const shopUrl = `https://你的域名/go?ref=shop_${shopId}`;
 const qrImage = await QRCode.toDataURL(shopUrl);
 // qrImage → base64 图片，商家下载打印
 ```
@@ -547,10 +566,14 @@ const qrImage = await QRCode.toDataURL(shopUrl);
 | 扫码方式 | 效果 |
 |---------|------|
 | **Telegram 内置扫码** | ✅ 直接打开 Mini App，最佳体验 |
-| **微信/相机扫码** | 跳转浏览器 → 提示"在 Telegram 中打开" → 进入 Bot → 点底部按钮 |
+| **微信/相机扫码落地页** | 显示引导页 → 点击"在 Telegram 中打开"→ 进入 Mini App |
+| **微信/相机扫码 Direct Link** | 跳转浏览器 → 提示"在 Telegram 中打开" → 进入 Bot → 点底部按钮 |
 | **长按 QR 码识别** | 大部分手机支持，自动跳转 Telegram |
 
-**最推荐**：引导用户**在 Telegram 内长按扫码** 或 **用 Telegram 的扫码功能扫描**。
+**最推荐**：
+1. **线下 QR 码** 使用落地页链接 `https://你的域名/go?ref=xxx`
+2. **Telegram 内分享** 使用 `tg://resolve?domain=xhzmall_bot`
+3. **引导用户** 在 Telegram 内长按扫码 或 用 Telegram 的扫码功能扫描
 
 ### 6.5 柬埔寨线下推广物料模板
 
@@ -575,16 +598,25 @@ const qrImage = await QRCode.toDataURL(shopUrl);
 
 ### 7.1 手机打开 Mini App
 
+**方式一：通过 Bot 菜单按钮**
 1. 打开手机上的 **Telegram App**（iOS 或 Android）
 2. 搜索你的 Bot 名称
 3. 点击底部的菜单按钮（"🛒 打开商城"）
 4. Mini App 应该在你手机上打开了！
 
+**方式二：扫码测试（推荐测试落地页）**
+1. 在 Telegram 聊天中发送链接：`https://你的域名/go`
+2. 点击链接 → 应该直接打开 Mini App（不经过 Bot 聊天）
+3. 在微信中打开同一链接 → 应该显示引导页
+
 ### 7.2 验证清单
 
 | 功能 | 怎么测 | 期望结果 |
 |------|--------|----------|
+| 健康检查 | 浏览器访问 `/api/v1/health` | 返回 `{"status":"ok"}` |
+| 落地页 | 浏览器访问 `/go` | 显示 TG Mall 引导页，有"在 Telegram 中打开"按钮 |
 | 首页加载 | 打开 Mini App | 看到商品列表，有图片和价格 |
+| 扫码入口 | Telegram 内点击 `/go` 链接 | 直接打开 Mini App，不经过 Bot 聊天 |
 | 商品详情 | 点击一个商品 | 跳转详情页，有名称/价格/库存 |
 | 登录 | 查看是否自动登录 | 不应报错（Telegram 自动注入 initData） |
 | 加购 | 点击"加入购物车" | 底部购物车数量 +1 |
@@ -658,8 +690,9 @@ Railway 每天自动备份 PostgreSQL。如果要手动备份：
 | Prisma migrate 失败 | 数据库连接不对 / OpenSSL 缺失 | 检查 `DATABASE_URL` 是否自动注入；确认 Dockerfile 安装了 `openssl` |
 | 容器启动后立即崩溃 | 环境变量缺失（BOT_TOKEN/JWT_SECRET 等） | 检查日志中的 `❌ 缺少必要的环境变量:` 提示 |
 | healthcheck 失败 | Nginx 未启动 / Node.js 崩溃 | 看 Runtime Logs 找 `ReferenceError` 或 `nginx` 错误 |
+| "Application failed to respond" | Railway 转发端口与 Nginx 监听端口不匹配 | 确认代码已更新到最新版（Nginx 双端口监听），重新部署 |
 | Node.js 循环崩溃重启 | Prisma OpenSSL 问题 | 确认 Dockerfile 有 `RUN apk add --no-cache openssl libc6-compat` |
-| 端口冲突 | Railway PORT=3000 与 Node.js 冲突 | 代码已修复（Node.js 监听 3001，Nginx 监听 PORT），更新代码重新部署 |
+| 端口冲突 | Railway PORT=3000 与 Node.js 冲突 | 代码已修复（Node.js 监听 3001，Nginx 监听 PORT+3000），更新代码重新部署 |
 
 ### Mini App 打不开
 
@@ -701,8 +734,9 @@ curl https://你的域名.up.railway.app/api/v1/health
 ┌──────────────────────────────────────┐
 │  Railway 容器                         │
 │  ┌────────┐  ┌──────────────────────┐ │
-│  │ Nginx  │  │  Node.js API (3000)  │ │
-│  │ (8080) │  │  + Prisma            │ │
+│  │ Nginx  │  │  Node.js API (3001)  │ │
+│  │(8080 + │  │  + Prisma            │ │
+│  │ 3000)  │  │                      │ │
 │  │ + 前端 │  │                      │ │
 │  └────────┘  └──────────────────────┘ │
 └──────────────────────────────────────┘
@@ -739,14 +773,20 @@ Stage 5: 最终镜像       → Nginx + Node.js + 所有 dist/
 ### 10.4 Nginx 的角色
 
 ```
-用户请求 → Nginx (8080) → 判断 URL 路径
-                          ├── /api/*    → 转发 Node.js:3000
-                          ├── /merchant/ → 静态文件
-                          ├── /admin/   → 静态文件
-                          └── /         → Mini App 前端
+用户请求 → Nginx (PORT + 3000) → 判断 URL 路径
+                                ├── /api/*    → 转发 Node.js:3001
+                                ├── /go       → 扫码落地页
+                                ├── /merchant/ → 静态文件
+                                ├── /admin/   → 静态文件
+                                └── /         → Mini App 前端
 ```
 
 Nginx 在这里是一个"门卫"——根据 URL 路径，把请求分发到正确的处理者。它比 Node.js 更擅长处理静态文件（HTML/JS/CSS/图片），性能高出 10 倍以上。
+
+**为什么监听双端口？**
+- Railway 可能从 `PORT` 环境变量或 `EXPOSE` 推断转发端口（通常是 8080）
+- 某些情况下 Railway 默认转发到 3000
+- Nginx 同时监听两个端口，确保无论 Railway 转发到哪个都能接收请求
 
 ### 10.5 环境变量 vs 硬编码
 
