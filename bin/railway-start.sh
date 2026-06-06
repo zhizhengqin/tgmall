@@ -23,9 +23,16 @@ timeout 60 npx prisma migrate deploy || {
 # 2. 配置 Nginx 监听 Railway 分配的 PORT（默认 8080）
 NGINX_PORT=${PORT:-8080}
 echo "--- Nginx 将监听端口: $NGINX_PORT ---"
-export NGINX_PORT
-envsubst '$NGINX_PORT' < /etc/nginx/http.d/default.conf > /tmp/nginx.conf
-mv /tmp/nginx.conf /etc/nginx/http.d/default.conf
+
+# Alpine 没有 envsubst，用 sed 替换端口变量
+sed -i "s/\$NGINX_PORT/$NGINX_PORT/g" /etc/nginx/http.d/default.conf
+
+# 验证 Nginx 配置语法
+echo "--- 验证 Nginx 配置 ---"
+nginx -t || {
+  echo "❌ Nginx 配置验证失败"
+  exit 1
+}
 
 # 3. 启动 Nginx + Node.js（supervisord 管理）
 echo "--- 启动服务 ---"
