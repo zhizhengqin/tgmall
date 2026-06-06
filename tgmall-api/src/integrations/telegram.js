@@ -309,12 +309,41 @@ export async function setMiniAppMenuButton() {
   }
 }
 
-/** 生成扫码进入 Mini App 的 QR 码链接 */
+/**
+ * 生成扫码进入 Mini App 的链接
+ *
+ * Telegram 内直接打开（推荐）：tg://resolve?domain=bot&appname
+ * 通用 fallback（会经过 Bot 聊天）：https://t.me/bot?startapp=
+ */
 export function getMiniAppEntryUrl(startParam = '') {
-  // 从 BOT_TOKEN 提取 bot 用户名（格式: 数字:token）
   const botUsername = config.botUsername || 'xhzmall_bot';
-  const base = `https://t.me/${botUsername}`;
-  return startParam ? `${base}?startapp=${encodeURIComponent(startParam)}` : base;
+  const httpsBase = `https://t.me/${botUsername}`;
+  const tgBase = `tg://resolve?domain=${botUsername}`;
+
+  if (!startParam) {
+    return {
+      https: httpsBase,
+      telegram: tgBase,
+      // 推荐：优先使用 tg:// 协议（Telegram 内直接打开 Mini App）
+      recommended: tgBase,
+    };
+  }
+
+  const encodedParam = encodeURIComponent(startParam);
+  return {
+    https: `${httpsBase}?startapp=${encodedParam}`,
+    telegram: `${tgBase}&startapp=${encodedParam}`,
+    recommended: `${tgBase}&startapp=${encodedParam}`,
+  };
+}
+
+/**
+ * 生成带落地页的扫码链接（兼容微信/系统相机）
+ * QR 码指向落地页，落地页自动判断环境并跳转
+ */
+export function getMiniAppLandingUrl(startParam = '') {
+  const base = config.miniAppUrl || 'https://tgmall-production.up.railway.app';
+  return startParam ? `${base}/go?ref=${encodeURIComponent(startParam)}` : `${base}/go`;
 }
 
 export default {
