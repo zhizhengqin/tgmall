@@ -15,6 +15,9 @@
     "saveFailed": "Save failed",
     "deleteFailed": "Delete failed",
     "confirmDelete": "Confirm delete?",
+    "copyToken": "Merchant Token",
+    "copy": "Copy",
+    "tokenCopied": "✓ Copied",
     "language": "Language / ភាសា / Language",
     "form": {
       "name": "Recipient Name",

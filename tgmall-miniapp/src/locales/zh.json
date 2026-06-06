@@ -15,6 +15,9 @@
     "saveFailed": "保存失败",
     "deleteFailed": "删除失败",
     "confirmDelete": "确定删除？",
+    "copyToken": "商家后台 Token",
+    "copy": "复制",
+    "tokenCopied": "✓ 已复制",
     "language": "语言 / ភាសា / Language",
     "form": {
       "name": "收件人姓名",

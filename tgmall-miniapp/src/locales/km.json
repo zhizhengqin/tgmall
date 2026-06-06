@@ -15,6 +15,9 @@
     "saveFailed": "រក្សាទុកមិនបានជោគជ័យ",
     "deleteFailed": "លុបមិនបានជោគជ័យ",
     "confirmDelete": "បញ្ជាក់ការលុប？",
+    "copyToken": "Token ហាង",
+    "copy": "ចម្លង",
+    "tokenCopied": "✓ បានចម្លង",
     "language": "ភាសា / ភាសា / Language",
     "form": {
       "name": "ឈ្មោះអ្នកទទួល",

@@ -59,8 +59,13 @@
     "title": "ចូលគណនីអ្នកគ្រប់គ្រង",
     "telegramLogin": "ចូលជាមួយ Telegram",
     "desc": "សូមចូលជាមួយគណនី Telegram",
-    "orToken": "ឬបិទភ្ជាប់ Token",
+    "step1": "បើក @xhzmall_bot ក្នុង Telegram",
+    "step2": "ចុច គណនី → ចម្លង Token",
+    "step3": "បិទភ្ជាប់ Token ខាងក្រោម",
+    "loginBtn": "ចូលគណនីអ្នកគ្រប់គ្រង",
     "tokenPlaceholder": "បិទភ្ជាប់ Admin Token",
+    "help1": "មានតែអ្នកគ្រប់គ្រងទេដែលអាចចូលបាន",
+    "help2": "សូមទាក់ទង Admin បើអ្នកត្រូវការសិទ្ធិចូលប្រើ",
     "noAccess": "អ្នកមិនមានសិទ្ធិចូលប្រើ"
   },
   "common": {

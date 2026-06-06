@@ -51,6 +51,15 @@
       </router-link>
     </div>
 
+    <!-- Token（用于登录商家后台/运营后台） -->
+    <div class="token-section" v-if="userStore.token">
+      <p class="section-label">{{ $t('profile.copyToken') }}</p>
+      <div class="token-row">
+        <code class="token-text">{{ maskedToken }}</code>
+        <button class="copy-btn" @click="copyToken">{{ copied ? $t('profile.tokenCopied') : $t('profile.copy') }}</button>
+      </div>
+    </div>
+
     <!-- 语言切换 -->
     <div class="lang-section">
       <p class="section-label">{{ $t('profile.language') }}</p>
@@ -86,8 +95,35 @@ const langs = [
 const addresses = ref([]);
 const showAddresses = ref(false);
 const showAddrForm = ref(false);
+const copied = ref(false);
 const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
 const addressCount = computed(() => addresses.value.length);
+
+// Token 遮罩显示 + 一键复制
+const maskedToken = computed(() => {
+  const t = userStore.token;
+  if (!t) return '';
+  return t.length > 20 ? t.slice(0, 12) + '...' + t.slice(-8) : t;
+});
+
+async function copyToken() {
+  if (!userStore.token) return;
+  try {
+    await navigator.clipboard.writeText(userStore.token);
+    copied.value = true;
+    setTimeout(() => { copied.value = false; }, 2000);
+  } catch {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = userStore.token;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copied.value = true;
+    setTimeout(() => { copied.value = false; }, 2000);
+  }
+}
 
 function switchLang(code) {
   locale.value = code;
@@ -138,6 +174,10 @@ onMounted(loadAddresses);
 .form-actions { display: flex; gap: 8px; }
 .form-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; }
 .btn-save { background: var(--accent); color: #fff; }
+.token-section { margin-bottom: 20px; }
+.token-row { display: flex; gap: 8px; align-items: center; }
+.token-text { flex: 1; font-size: 11px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); word-break: break-all; color: var(--muted); }
+.copy-btn { font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; white-space: nowrap; }
 .lang-section { margin-bottom: 24px; }
 .section-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .lang-btns { display: flex; gap: 8px; }
