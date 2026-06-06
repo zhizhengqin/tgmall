@@ -48,8 +48,7 @@ FROM node:20-alpine
 # 安装 Nginx + OpenSSL（Prisma 查询引擎依赖）
 RUN apk add --no-cache nginx openssl libc6-compat
 
-# 配置 Nginx
-COPY nginx/railway-nginx.conf /etc/nginx/http.d/default.conf
+# 配置 Nginx（配置文件由启动脚本动态生成，覆盖默认配置）
 RUN mkdir -p /run/nginx
 
 # 后端 API

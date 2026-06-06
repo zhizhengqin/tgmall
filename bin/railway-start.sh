@@ -20,10 +20,59 @@ timeout 60 npx prisma migrate deploy || {
   echo "请检查 DATABASE_URL 是否正确，以及 Railway Postgres 是否已绑定"
 }
 
-# 2. 配置 Nginx 监听 Railway 分配的 PORT（默认 8080）
+# 2. 动态生成 Nginx 配置
+# Railway 可能从 PORT 环境变量或 EXPOSE 推断端口，也可能默认转发到 3000
+# 为保险起见，同时监听分配的端口 + 3000
 NGINX_PORT=${PORT:-8080}
 echo "--- Nginx 将监听端口: $NGINX_PORT ---"
-sed -i "s/\$NGINX_PORT/$NGINX_PORT/g" /etc/nginx/http.d/default.conf
+
+# 构建 listen 指令（避免重复端口）
+LISTEN_DIRECTIVES="    listen ${NGINX_PORT};"
+if [ "$NGINX_PORT" != "3000" ]; then
+  LISTEN_DIRECTIVES="${LISTEN_DIRECTIVES}
+    listen 3000;"
+  echo "--- 额外监听备用端口: 3000 ---"
+fi
+
+cat > /etc/nginx/http.d/default.conf <<EOF
+# Railway Nginx 配置 — 单容器托管 API + 所有前端
+server {
+${LISTEN_DIRECTIVES}
+
+    # ── 后端 API ──
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    # ── 健康检查 ──
+    location /api/v1/health {
+        proxy_pass http://127.0.0.1:3001/api/v1/health;
+    }
+
+    # ── Mini App (消费者端) — Telegram 打开时使用 ──
+    location / {
+        root /usr/share/nginx/html/miniapp;
+        index index.html;
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    # ── 商家后台 ──
+    location /merchant/ {
+        alias /usr/share/nginx/html/merchant/;
+        try_files \$uri \$uri/ /merchant/index.html;
+    }
+
+    # ── 运营后台 ──
+    location /admin/ {
+        alias /usr/share/nginx/html/admin/;
+        try_files \$uri \$uri/ /admin/index.html;
+    }
+}
+EOF
 
 # 验证 Nginx 配置语法
 echo "--- 验证 Nginx 配置 ---"
