@@ -6,7 +6,8 @@ import { dirname, resolve } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../.env') });
 
-const requiredEnvVars = ['DATABASE_URL', 'REDIS_URL', 'BOT_TOKEN', 'JWT_SECRET', 'BAKONG_WEBHOOK_SECRET', 'ABA_PAY_SECRET', 'WING_PAY_SECRET'];
+// 启动时必填的核心环境变量（支付密钥在真实支付模式下才需要，不应阻塞部署）
+const requiredEnvVars = ['DATABASE_URL', 'REDIS_URL', 'BOT_TOKEN', 'JWT_SECRET'];
 
 for (const varName of requiredEnvVars) {
   if (!process.env[varName]) {
