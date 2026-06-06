@@ -312,7 +312,7 @@ export async function setMiniAppMenuButton() {
 /** 生成扫码进入 Mini App 的 QR 码链接 */
 export function getMiniAppEntryUrl(startParam = '') {
   // 从 BOT_TOKEN 提取 bot 用户名（格式: 数字:token）
-  const botUsername = config.botUsername || 'tgmall_bot';
+  const botUsername = config.botUsername || 'xhzmall_bot';
   const base = `https://t.me/${botUsername}`;
   return startParam ? `${base}?startapp=${encodeURIComponent(startParam)}` : base;
 }
