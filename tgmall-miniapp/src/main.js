@@ -13,7 +13,7 @@ import './assets/styles/tokens.css';
 
 const i18n = createI18n({
   legacy: false,
-  locale: localStorage.getItem('lang') || 'km',
+  locale: localStorage.getItem('lang') || 'zh',
   fallbackLocale: 'en',
   messages: { km, en, zh },
 });

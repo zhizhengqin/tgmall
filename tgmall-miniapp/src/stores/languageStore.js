@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 
 export const useLanguageStore = defineStore('language', () => {
-  const current = ref(localStorage.getItem('lang') || 'km');
+  const current = ref(localStorage.getItem('lang') || 'zh');
 
   const isKm = computed(() => current.value === 'km');
   const isEn = computed(() => current.value === 'en');

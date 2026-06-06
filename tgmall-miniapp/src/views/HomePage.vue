@@ -7,9 +7,18 @@
         <span class="search-icon">🔍</span>
         <span class="search-text">{{ $t('home.searchPlaceholder') }}</span>
       </div>
-      <button class="lang-btn" @click="toggleLanguage">
-        {{ langLabel }}
-      </button>
+      <!-- 三语切换按钮 -->
+      <div class="lang-switcher">
+        <button
+          v-for="lang in langList"
+          :key="lang.code"
+          class="lang-btn"
+          :class="{ active: locale === lang.code }"
+          @click="switchLanguage(lang.code)"
+        >
+          {{ lang.label }}
+        </button>
+      </div>
     </header>
 
     <!-- Banner 轮播占位 -->
@@ -37,6 +46,23 @@
     <section class="product-section">
       <!-- 骨架屏 -->
       <LoadingSkeleton v-if="isLoading && products.length === 0" :count="6" />
+
+      <!-- 加载错误 -->
+      <div v-else-if="loadError" class="error-state">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">{{ $t('common.loadError') || '加载失败' }}</div>
+        <div class="error-desc">{{ loadError }}</div>
+        <button class="retry-btn" @click="refreshProducts">
+          {{ $t('common.retry') || '重试' }}
+        </button>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else-if="products.length === 0" class="empty-state">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">{{ $t('home.noProducts') || '暂无商品' }}</div>
+        <div class="empty-desc">{{ $t('home.comingSoon') || '商品正在上架中，请稍后再来' }}</div>
+      </div>
 
       <!-- 商品双列网格 -->
       <div v-else class="product-grid">
@@ -70,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTelegram } from '@/composables/useTelegram';
@@ -95,24 +121,27 @@ const categories = [
   { value: 'home', label: '家居' },
 ];
 
+// 语言列表（三语并排显示）
+const langList = [
+  { code: 'zh', label: '中' },
+  { code: 'km', label: '柬' },
+  { code: 'en', label: '英' },
+];
+
 // 响应式状态
 const activeCategory = ref('all');
 const products = ref([]);
 const page = ref(1);
 const hasMore = ref(true);
 const isLoading = ref(false);
+const loadError = ref('');
 
-// 语言切换
-const langOptions = { km: 'ភាសាខ្មែរ', en: 'EN', zh: '中文' };
-const langOrder = ['km', 'en', 'zh'];
-const langLabel = computed(() => langOptions[locale.value] || 'KM');
-
-function toggleLanguage() {
-  const idx = langOrder.indexOf(locale.value);
-  const next = langOrder[(idx + 1) % 3];
-  locale.value = next;
-  languageStore.setLanguage(next);
-  // 切换语言后重新加载（商品名称语言跟随 Accept-Language 头）
+// 切换语言
+function switchLanguage(lang) {
+  if (locale.value === lang) return;
+  locale.value = lang;
+  languageStore.setLanguage(lang);
+  // 切换语言后重新加载商品
   refreshProducts();
 }
 
@@ -127,6 +156,7 @@ async function switchCategory(category) {
 async function fetchProducts(reset = false) {
   if (isLoading.value || (!hasMore.value && !reset)) return;
   isLoading.value = true;
+  loadError.value = '';
 
   if (reset) {
     page.value = 1;
@@ -141,15 +171,16 @@ async function fetchProducts(reset = false) {
     const res = await getProducts(params);
 
     if (reset) {
-      products.value = res.data;
+      products.value = res.data || [];
     } else {
-      products.value.push(...res.data);
+      products.value.push(...(res.data || []));
     }
 
-    hasMore.value = res.meta.hasNext;
+    hasMore.value = res.meta?.hasNext ?? false;
     page.value += 1;
   } catch (err) {
     console.error('加载商品失败:', err);
+    loadError.value = err.response?.data?.error?.message || err.message || '网络错误';
   } finally {
     isLoading.value = false;
   }
@@ -168,6 +199,10 @@ function handleScroll() {
 }
 
 onMounted(() => {
+  // 同步 vue-i18n locale 和 languageStore（处理首次加载）
+  if (locale.value !== languageStore.current) {
+    locale.value = languageStore.current;
+  }
   fetchProducts(true);
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
@@ -208,14 +243,29 @@ onUnmounted(() => {
 }
 .search-icon { font-size: 14px; }
 .search-text { font-size: 13px; color: var(--muted); }
+
+/* 语言切换器 —— 三语并排 */
+.lang-switcher {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
 .lang-btn {
   font-size: 12px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-sm);
   background: var(--bg);
   border: 1px solid var(--border);
-  color: var(--fg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 32px;
+}
+.lang-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 /* Banner */
@@ -265,6 +315,35 @@ onUnmounted(() => {
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-md);
 }
+
+/* 错误状态 */
+.error-state {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+}
+.error-icon { font-size: 40px; margin-bottom: var(--space-md); }
+.error-title { font-size: 16px; font-weight: 600; color: var(--fg); margin-bottom: var(--space-sm); }
+.error-desc { font-size: 13px; color: var(--muted); margin-bottom: var(--space-lg); }
+.retry-btn {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+}
+.empty-icon { font-size: 48px; margin-bottom: var(--space-md); }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--fg); margin-bottom: var(--space-sm); }
+.empty-desc { font-size: 13px; color: var(--muted); }
+
 .loading-more,
 .no-more {
   text-align: center;
