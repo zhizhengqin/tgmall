@@ -11,7 +11,7 @@ import en from './locales/en.json';
 import zh from './locales/zh.json';
 
 // ElementPlus 默认使用英文，避免它尝试解析 vue-i18n 消息导致 "Invalid linked format"
-import enLocale from 'element-plus/es/locale/lang/en';
+import enElLocale from 'element-plus/dist/locale/en.mjs';
 
 const i18n = createI18n({
   legacy: false,
@@ -22,7 +22,7 @@ const i18n = createI18n({
 
 const app = createApp(App);
 app.use(createPinia());
-app.use(ElementPlus, { locale: enLocale });
+app.use(ElementPlus, { locale: enElLocale });
 app.use(router);
 app.use(i18n);
 app.mount('#app');
