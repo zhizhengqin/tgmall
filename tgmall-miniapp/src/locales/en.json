@@ -16,6 +16,7 @@
     "deleteFailed": "Delete failed",
     "confirmDelete": "Confirm delete?",
     "copyToken": "Merchant Token",
+    "tokenHelp": "Make sure you opened the Mini App inside Telegram. If still no token, close and reopen the Mini App.",
     "copy": "Copy",
     "tokenCopied": "✓ Copied",
     "language": "Language / ភាសា / Language",

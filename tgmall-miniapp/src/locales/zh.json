@@ -16,6 +16,7 @@
     "deleteFailed": "删除失败",
     "confirmDelete": "确定删除？",
     "copyToken": "商家后台 Token",
+    "tokenHelp": "请确保在 Telegram 内打开 Mini App。若已登录仍无 Token，请关闭后重新打开。",
     "copy": "复制",
     "tokenCopied": "✓ 已复制",
     "language": "语言 / ភាសា / Language",

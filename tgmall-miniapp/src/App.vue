@@ -1,4 +1,4 @@
-<!-- 根组件 -->
+// 根组件
 <template>
   <router-view v-slot="{ Component }">
     <transition name="fade" mode="out-in">
@@ -22,7 +22,12 @@ onMounted(async () => {
 
   const tg = window.Telegram?.WebApp;
   if (!tg || !tg.initData) {
-    console.warn('非 Telegram Mini App 环境，使用浏览器开发模式');
+    // 浏览器开发模式：尝试用本地存储的 token
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      userStore.token = savedToken;
+    }
+    console.warn('非 Telegram Mini App 环境');
     return;
   }
 
@@ -30,8 +35,11 @@ onMounted(async () => {
     tg.ready();
     tg.expand();
     const res = await telegramLogin(tg.initData);
-    if (res.data?.token && res.data?.user) {
-      userStore.setAuth(res.data.token, res.data.user);
+    // API 响应: { success: true, data: { token, user } }
+    const payload = res?.data || res;
+    if (payload?.token) {
+      userStore.setAuth(payload.token, payload.user || {});
+      console.log('✅ 自动登录成功');
     }
   } catch (err) {
     console.error('Telegram 登录失败:', err);
@@ -41,11 +49,7 @@ onMounted(async () => {
 
 <style>
 .fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease;
-}
+.fade-leave-active { transition: opacity 0.15s ease; }
 .fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+.fade-leave-to { opacity: 0; }
 </style>

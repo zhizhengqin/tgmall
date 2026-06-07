@@ -16,6 +16,7 @@
     "deleteFailed": "លុបមិនបានជោគជ័យ",
     "confirmDelete": "បញ្ជាក់ការលុប？",
     "copyToken": "Token ហាង",
+    "tokenHelp": "សូមប្រាកដថាអ្នកកំពុងប្រើ Mini App ក្នុង Telegram។ បើមិនឃើញ Token សូមបិទហើយបើកម្តងទៀត។",
     "copy": "ចម្លង",
     "tokenCopied": "✓ បានចម្លង",
     "language": "ភាសា / ភាសា / Language",

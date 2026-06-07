@@ -55,11 +55,14 @@
     </div>
 
     <!-- Token（用于登录商家后台/运营后台） -->
-    <div class="token-section" v-if="userStore.token">
+    <div class="token-section">
       <p class="section-label">{{ $t('profile.copyToken') }}</p>
-      <div class="token-row">
+      <div v-if="userStore.token" class="token-row">
         <code class="token-text">{{ maskedToken }}</code>
         <button class="copy-btn" @click="copyToken">{{ copied ? $t('profile.tokenCopied') : $t('profile.copy') }}</button>
+      </div>
+      <div v-else class="token-empty">
+        <p>{{ $t('profile.tokenHelp') }}</p>
       </div>
     </div>
 
@@ -178,6 +181,8 @@ onMounted(loadAddresses);
 .form-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; }
 .btn-save { background: var(--accent); color: #fff; }
 .token-section { margin-bottom: 20px; }
+.token-empty { padding: 10px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: var(--radius-sm); }
+.token-empty p { font-size: 12px; color: #f57f17; margin: 0; line-height: 1.6; }
 .token-row { display: flex; gap: 8px; align-items: center; }
 .token-text { flex: 1; font-size: 11px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); word-break: break-all; color: var(--muted); }
 .copy-btn { font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; white-space: nowrap; }
