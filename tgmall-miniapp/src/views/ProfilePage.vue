@@ -63,6 +63,9 @@
       </div>
       <div v-else class="token-empty">
         <p>{{ $t('profile.tokenHelp') }}</p>
+        <button class="login-btn" @click="doManualLogin" :disabled="loginLoading">
+          {{ loginLoading ? '...' : $t('profile.retryLogin') }}
+        </button>
       </div>
     </div>
 
@@ -86,6 +89,7 @@ import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
+import { telegramLogin } from '@/api/auth';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
@@ -102,6 +106,7 @@ const addresses = ref([]);
 const showAddresses = ref(false);
 const showAddrForm = ref(false);
 const copied = ref(false);
+const loginLoading = ref(false);
 const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
 const addressCount = computed(() => addresses.value.length);
 
@@ -111,6 +116,28 @@ const maskedToken = computed(() => {
   if (!t) return '';
   return t.length > 20 ? t.slice(0, 12) + '...' + t.slice(-8) : t;
 });
+
+async function doManualLogin() {
+  loginLoading.value = true;
+  try {
+    const tg = window.Telegram?.WebApp;
+    if (!tg || !tg.initData) {
+      alert('请在 Telegram 中打开此页面');
+      return;
+    }
+    const res = await telegramLogin(tg.initData);
+    const payload = res?.data || res;
+    if (payload?.token) {
+      userStore.setAuth(payload.token, payload.user || {});
+    } else {
+      alert('登录失败，请关闭 Mini App 后重试');
+    }
+  } catch (e) {
+    alert('登录失败: ' + (e?.response?.data?.error?.message || e.message));
+  } finally {
+    loginLoading.value = false;
+  }
+}
 
 async function copyToken() {
   if (!userStore.token) return;
@@ -182,7 +209,9 @@ onMounted(loadAddresses);
 .btn-save { background: var(--accent); color: #fff; }
 .token-section { margin-bottom: 20px; }
 .token-empty { padding: 10px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: var(--radius-sm); }
-.token-empty p { font-size: 12px; color: #f57f17; margin: 0; line-height: 1.6; }
+.token-empty p { font-size: 12px; color: #f57f17; margin: 0 0 8px 0; line-height: 1.6; }
+.login-btn { font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; }
+.login-btn:disabled { opacity: 0.5; }
 .token-row { display: flex; gap: 8px; align-items: center; }
 .token-text { flex: 1; font-size: 11px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); word-break: break-all; color: var(--muted); }
 .copy-btn { font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; white-space: nowrap; }
