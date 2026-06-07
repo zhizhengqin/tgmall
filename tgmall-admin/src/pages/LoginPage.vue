@@ -6,21 +6,19 @@
       </div>
       <h2>{{ t('login.title') }}</h2>
 
-      <div class="steps">
-        <div class="step"><span class="step-num">1</span><span>{{ t('login.step1') }}</span></div>
-        <div class="step"><span class="step-num">2</span><span>{{ t('login.step2') }}</span></div>
-        <div class="step"><span class="step-num">3</span><span>{{ t('login.step3') }}</span></div>
+      <div class="field">
+        <label>{{ t('login.username') }}</label>
+        <input class="input" v-model="username" :placeholder="t('login.usernamePlaceholder')" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>{{ t('login.password') }}</label>
+        <input class="input" v-model="password" type="password" :placeholder="t('login.passwordPlaceholder')" autocomplete="current-password" @keyup.enter="doLogin" />
       </div>
 
-      <input class="token-input" v-model="token" :placeholder="t('login.tokenPlaceholder')" type="password" />
       <button class="login-btn" @click="doLogin" :disabled="loading">
         {{ loading ? t('common.loading') : t('login.loginBtn') }}
       </button>
-
-      <div class="help-text">
-        <p>{{ t('login.help1') }}</p>
-        <p>{{ t('login.help2') }}</p>
-      </div>
+      <div v-if="error" class="error">{{ error }}</div>
     </div>
   </div>
 </template>
@@ -36,8 +34,10 @@ import zh from '@/locales/zh.json';
 
 const router = useRouter();
 const store = useUserStore();
-const token = ref('');
+const username = ref('');
+const password = ref('');
 const loading = ref(false);
+const error = ref('');
 const locale = ref(localStorage.getItem('admin_lang') || 'km');
 
 const messages = { km, en, zh };
@@ -60,19 +60,25 @@ function switchLang(code) {
 }
 
 async function doLogin() {
-  if (!token.value.trim()) return;
+  error.value = '';
+  if (!username.value || !password.value) {
+    error.value = '请输入用户名和密码';
+    return;
+  }
   loading.value = true;
   try {
-    const res = await api.get('/admin/dashboard', {
-      headers: { Authorization: `Bearer ${token.value.trim()}` },
+    const res = await api.post('/auth/admin-login', {
+      username: username.value.trim(),
+      password: password.value,
     });
-    if (res.success !== false) {
-      store.setAuth(token.value.trim());
-      localStorage.setItem('admin_token', token.value.trim());
+    const data = res?.data || res;
+    if (data?.token) {
+      store.setAuth(data.token);
+      localStorage.setItem('admin_token', data.token);
       router.push('/dashboard');
     }
-  } catch {
-    alert('សិទ្ធិមិនត្រឹមត្រូវ / Access denied / 权限不足');
+  } catch (e) {
+    error.value = e?.response?.data?.error?.message || '登录失败';
   } finally {
     loading.value = false;
   }
@@ -81,17 +87,16 @@ async function doLogin() {
 
 <style scoped>
 .login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 20px; }
-.card { width: 420px; max-width: 100%; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.card { width: 400px; max-width: 100%; background: #fff; border-radius: 12px; padding: 32px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 .lang-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }
 .lang-btn { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: #f5f5f5; border: 1px solid #ddd; color: #666; cursor: pointer; margin-left: 4px; }
 .lang-btn.active { background: #c4932a; color: #fff; border-color: #c4932a; }
-h2 { text-align: center; font-size: 18px; font-weight: 700; color: #2d2b28; margin-bottom: 20px; }
-.steps { margin-bottom: 16px; }
-.step { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; color: #555; }
-.step-num { width: 24px; height: 24px; border-radius: 50%; background: #c4932a; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.token-input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; margin-bottom: 12px; box-sizing: border-box; }
-.token-input:focus { outline: none; border-color: #c4932a; }
-.login-btn { width: 100%; padding: 10px; background: #c4932a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.help-text { margin-top: 16px; font-size: 11px; color: #999; text-align: center; line-height: 1.8; }
+h2 { text-align: center; font-size: 20px; font-weight: 700; color: #2d2b28; margin-bottom: 24px; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+.input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+.input:focus { outline: none; border-color: #c4932a; }
+.login-btn { width: 100%; padding: 11px; background: #c4932a; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.error { margin-top: 12px; padding: 10px; background: #fce4ec; color: #c62828; border-radius: 8px; font-size: 13px; text-align: center; }
 </style>

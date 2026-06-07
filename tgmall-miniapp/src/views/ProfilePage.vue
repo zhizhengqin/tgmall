@@ -46,9 +46,6 @@
         </div>
       </div>
 
-      <router-link to="/merchant/register" class="menu-item">
-        <span>🏪</span><span>{{ $t('merchant.register') }}</span><span class="arrow">›</span>
-      </router-link>
       <router-link to="/coupons" class="menu-item">
         <span>🎫</span><span>{{ $t('profile.coupons') }}</span><span class="arrow">›</span>
       </router-link>

@@ -12,13 +12,41 @@ for var in DATABASE_URL REDIS_URL BOT_TOKEN JWT_SECRET; do
   fi
 done
 
-# 1. 运行数据库迁移（带超时，防止无限卡住）
+# 1. 运行数据库迁移 + 种子默认管理员
 echo "--- 运行 Prisma Migration ---"
 cd /app
 timeout 60 npx prisma migrate deploy || {
   echo "⚠️ 数据库迁移失败（超时或连接错误），跳过迁移继续启动..."
-  echo "请检查 DATABASE_URL 是否正确，以及 Railway Postgres 是否已绑定"
 }
+
+echo "--- 种子默认管理员 ---"
+# 如果 ADMIN_PASSWORD 环境变量存在，自动创建 admin 用户
+if [ -n "$ADMIN_PASSWORD" ]; then
+  node -e "
+    const { PrismaClient } = require('@prisma/client');
+    const bcrypt = require('bcryptjs');
+    const p = new PrismaClient();
+    (async () => {
+      const existing = await p.adminUser.findFirst();
+      if (!existing) {
+        await p.adminUser.create({
+          data: {
+            username: 'admin',
+            passwordHash: process.env.ADMIN_PASSWORD,
+            displayName: '管理员',
+            role: 'admin',
+          },
+        });
+        console.log('✅ 默认管理员已创建 (admin)');
+      } else {
+        console.log('✅ 管理员用户已存在，跳过种子');
+      }
+      await p.\$disconnect();
+    })().catch(e => { console.error('种子失败:', e.message); process.exit(0); });
+  " || echo "⚠️ 种子脚本执行失败，请手动创建管理员"
+else
+  echo "⚠️ ADMIN_PASSWORD 未设置，跳过管理员种子"
+fi
 
 # 2. 动态生成 Nginx 配置
 # Railway 可能从 PORT 环境变量或 EXPOSE 推断端口，也可能默认转发到 3000
@@ -67,10 +95,9 @@ ${LISTEN_DIRECTIVES}
         try_files \$uri \$uri/ /index.html;
     }
 
-    # ── 商家后台 ──
+    # ── 商家后台 → 301 重定向到运营后台 ──
     location /merchant/ {
-        alias /usr/share/nginx/html/merchant/;
-        try_files \$uri \$uri/ /merchant/index.html;
+        return 301 /admin/\$is_args\$args;
     }
 
     # ── 运营后台 ──
