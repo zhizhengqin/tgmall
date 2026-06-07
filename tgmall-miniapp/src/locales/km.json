@@ -42,6 +42,25 @@
       "cancelled": "បោះបង់"
     }
   },
+  "merchant": {
+    "register": "ដាក់ពាក្យជាអ្នកលក់",
+    "title": "ដាក់ពាក្យបើកហាង",
+    "nameKm": "ឈ្មោះហាង (ភាសាខ្មែរ)",
+    "nameKmPlaceholder": "ឈ្មោះហាងជាភាសាខ្មែរ",
+    "nameEn": "ឈ្មោះហាង (អង់គ្លេស)",
+    "nameEnPlaceholder": "Shop name in English",
+    "ownerName": "ឈ្មោះម្ចាស់",
+    "ownerNamePlaceholder": "ឈ្មោះពិតប្រាកដរបស់អ្នក",
+    "phone": "លេខទូរស័ព្ទ",
+    "address": "អាសយដ្ឋាន",
+    "addressPlaceholder": "ខេត្ត / ស្រុក / អាសយដ្ឋានលម្អិត",
+    "category": "ប្រភេទទំនិញ",
+    "selectCategory": "ជ្រើសរើសប្រភេទ",
+    "description": "ការពិពណ៌នាហាង (មិនចាំបាច់)",
+    "descriptionPlaceholder": "ពិពណ៌នាអំពីហាងរបស់អ្នក...",
+    "submit": "ដាក់ពាក្យ",
+    "success": "ពាក្យស្នើសុំបានដាក់ជូន! ការពិនិត្យនឹងចំណាយពេល 1-3 ថ្ងៃធ្វើការ។ លទ្ធផលនឹងផ្ញើតាម @xhzmall_bot។"
+  },
   "payment": {
     "khqrTitle": "ការទូទាត់ KHQR",
     "abaPayTitle": "ការទូទាត់ ABA Pay",

@@ -69,6 +69,12 @@ const routes = [
     meta: { title: 'profile' },
   },
   {
+    path: '/merchant/register',
+    name: 'MerchantRegister',
+    component: () => import('@/views/MerchantRegister.vue'),
+    meta: { title: 'merchantRegister' },
+  },
+  {
     path: '/coupons',
     name: 'Coupons',
     component: () => import('@/views/CouponCenter.vue'),
