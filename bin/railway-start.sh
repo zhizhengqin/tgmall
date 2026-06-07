@@ -13,10 +13,10 @@ for var in DATABASE_URL REDIS_URL BOT_TOKEN JWT_SECRET; do
 done
 
 # 1. 运行数据库迁移 + 种子默认管理员
-echo "--- 运行 Prisma Migration ---"
+echo "--- 同步数据库 Schema ---"
 cd /app
-timeout 60 npx prisma migrate deploy || {
-  echo "⚠️ 数据库迁移失败（超时或连接错误），跳过迁移继续启动..."
+timeout 60 npx prisma db push --skip-generate || {
+  echo "⚠️ 数据库同步失败，跳过继续启动..."
 }
 
 echo "--- 种子默认管理员 ---"
