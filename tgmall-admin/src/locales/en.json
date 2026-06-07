@@ -2,6 +2,8 @@
   "app": { "name": "TG Mall — Admin Panel" },
   "nav": {
     "dashboard": "Dashboard",
+    "products": "Products",
+    "orders": "Orders",
     "merchants": "Merchants",
     "users": "Users",
     "settings": "Settings",
@@ -69,6 +71,24 @@
     "help1": "Only administrators can access this panel",
     "help2": "Contact Admin if you need access",
     "noAccess": "You do not have access"
+  },
+  "products": {
+    "title": "Products", "add": "+ Add", "name": "Name",
+    "priceUsd": "USD", "priceKhr": "KHR", "stock": "Stock",
+    "status": "Status", "category": "Category", "active": "Active",
+    "inactive": "Inactive", "edit": "Edit", "images": "Images",
+    "createTitle": "Add Product", "editTitle": "Edit Product",
+    "saveAsDraft": "Save Draft", "publishNow": "Publish",
+    "nameKm": "Name (Khmer)", "nameEn": "Name (English)", "nameZh": "Name (Chinese)"
+  },
+  "orders": {
+    "title": "Orders", "all": "All",
+    "pending_payment": "Pending", "paid": "Paid",
+    "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
+    "orderNumber": "Order No.", "amount": "Amount", "customer": "Customer",
+    "date": "Date", "detail": "Detail", "items": "Items",
+    "shippingAddress": "Address", "total": "Total", "ship": "Ship",
+    "logisticsCompany": "Logistics", "trackingNumber": "Tracking", "confirmShip": "Confirm"
   },
   "common": {
     "save": "Save",

@@ -1,60 +1,51 @@
-// 商家路由 — 入驻、登录、看板、商品、订单
+// V2: 管理员路由 — 商品管理、订单管理、商家审核、用户管理
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
-import { merchantAuth } from '../middleware/merchantAuth.js';
 import { adminAuth } from '../middleware/adminAuth.js';
+import { defaultMerchant } from '../middleware/defaultMerchant.js';
 import { validate } from '../middleware/validate.js';
 import {
-  registerMerchantSchema,
   merchantProductSchema,
   shipOrderSchema,
   rejectMerchantSchema,
 } from '../validators/merchant.schema.js';
-import { telegramLoginSchema } from '../validators/auth.schema.js';
 import * as ctrl from '../controllers/merchant.controller.js';
 import * as adminCtrl from '../controllers/admin.controller.js';
 
-// ============ 商家路由（需 merchant JWT） ============
-const merchantRouter = Router();
-
-// 商家入驻申请（用户 JWT 即可）
-merchantRouter.post('/register', auth, validate(registerMerchantSchema), ctrl.register);
-
-// 商家登录（获取 merchant 角色 Token）
-merchantRouter.post('/login', validate(telegramLoginSchema), ctrl.login);
-// 商家 Web 端登录（Telegram Login Widget，浏览器环境）
-merchantRouter.post('/web-login', ctrl.webLogin);
-
-// 以下路由需要 merchant 角色鉴权
-merchantRouter.use(merchantAuth);
-
-// 商家数据看板
-merchantRouter.get('/dashboard', ctrl.dashboard);
-
-// 商家商品管理
-merchantRouter.get('/products', ctrl.listProducts);
-merchantRouter.get('/products/:id', ctrl.getProduct);
-merchantRouter.post('/products', validate(merchantProductSchema), ctrl.createProduct);
-merchantRouter.put('/products/:id', validate(merchantProductSchema), ctrl.updateProduct);
-merchantRouter.post('/products/:id/toggle', ctrl.toggleProduct);
-
-// 商家订单管理
-merchantRouter.get('/orders', ctrl.listOrders);
-merchantRouter.get('/orders/:id', ctrl.getOrder);
-merchantRouter.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
-
-// ============ 管理员路由（需 admin 权限） ============
+// ============ 管理员路由（需 admin JWT） ============
 const adminRouter = Router();
 
-adminRouter.use(auth);         // 先通过 JWT 鉴权
-adminRouter.use(adminAuth);    // 再校验管理员身份
+adminRouter.use(auth);
+adminRouter.use(adminAuth);
 
+// 商家审核（保留兼容旧数据）
 adminRouter.post('/merchants/:id/approve', ctrl.approve);
 adminRouter.post('/merchants/:id/reject', validate(rejectMerchantSchema), ctrl.reject);
 
+// 数据看板
 adminRouter.get('/dashboard', adminCtrl.dashboard);
 adminRouter.get('/merchants', adminCtrl.listMerchants);
 adminRouter.get('/users', adminCtrl.listUsers);
 
-export { merchantRouter, adminRouter };
+// 商品管理（管理员直接管理所有商品，归属到默认平台 merchant）
+adminRouter.use(defaultMerchant);
+adminRouter.get('/products', ctrl.listProducts);
+adminRouter.get('/products/:id', ctrl.getProduct);
+adminRouter.post('/products', validate(merchantProductSchema), ctrl.createProduct);
+adminRouter.put('/products/:id', validate(merchantProductSchema), ctrl.updateProduct);
+adminRouter.post('/products/:id/toggle', ctrl.toggleProduct);
 
+// 订单管理（管理员查看/处理所有订单）
+adminRouter.get('/orders', ctrl.listOrders);
+adminRouter.get('/orders/:id', ctrl.getOrder);
+adminRouter.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
+
+// 保留空的 merchantRouter 兼容现有引用
+const merchantRouter = Router();
+merchantRouter.use(auth);
+merchantRouter.use(adminAuth);
+merchantRouter.get('/dashboard', ctrl.dashboard);
+merchantRouter.get('/products', ctrl.listProducts);
+merchantRouter.get('/orders', ctrl.listOrders);
+
+export { merchantRouter, adminRouter };
