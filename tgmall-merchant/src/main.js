@@ -1,28 +1,37 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { createI18n } from 'vue-i18n';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import App from './App.vue';
 import router from './router';
 
+const app = createApp(App);
+app.use(createPinia());
+app.use(ElementPlus);
+app.use(router);
+
+// 简易 i18n（直接装在 app.config.globalProperties，不引入 vue-i18n 库避免与 ElementPlus 冲突）
 import km from './locales/km.json';
 import en from './locales/en.json';
 import zh from './locales/zh.json';
 
-// ElementPlus 默认使用英文，避免它尝试解析 vue-i18n 消息导致 "Invalid linked format"
-import enElLocale from 'element-plus/dist/locale/en.mjs';
+const messages = { km, en, zh };
+const savedLang = localStorage.getItem('merchant_lang') || 'km';
+const locale = { current: savedLang };
 
-const i18n = createI18n({
-  legacy: false,
-  locale: localStorage.getItem('merchant_lang') || 'km',
-  fallbackLocale: 'en',
-  messages: { km, en, zh },
+app.config.globalProperties.$t = (key) => {
+  const keys = key.split('.');
+  let val = messages[locale.current] || messages.en;
+  for (const k of keys) val = val?.[k];
+  return typeof val === 'string' ? val : key;
+};
+
+app.config.globalProperties.$locale = locale;
+
+// 提供 reactive locale 和 t 函数
+app.provide('i18n', {
+  locale,
+  t: app.config.globalProperties.$t,
 });
 
-const app = createApp(App);
-app.use(createPinia());
-app.use(ElementPlus, { locale: enElLocale });
-app.use(router);
-app.use(i18n);
 app.mount('#app');

@@ -18,9 +18,9 @@
   </div>
 </template>
 <script setup>
-import { useI18n } from 'vue-i18n';
-const { locale } = useI18n();
+import { ref } from 'vue';
 
+const locale = ref(localStorage.getItem('merchant_lang') || 'km');
 const langList = [
   { code: 'zh', label: '中' },
   { code: 'km', label: 'ខ' },
@@ -30,6 +30,7 @@ const langList = [
 function switchLang(code) {
   locale.value = code;
   localStorage.setItem('merchant_lang', code);
+  location.reload();
 }
 
 function logout() {
