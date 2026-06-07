@@ -56,7 +56,9 @@
 
     <!-- Token（用于登录商家后台/运营后台） -->
     <div class="token-section">
-      <p class="section-label">{{ $t('profile.copyToken') }}</p>
+      <p class="section-label">
+        <router-link to="/token" style="color:inherit;text-decoration:none">{{ $t('profile.copyToken') }}</router-link>
+      </p>
       <div v-if="userStore.token" class="token-row">
         <code class="token-text">{{ maskedToken }}</code>
         <button class="copy-btn" @click="copyToken">{{ copied ? $t('profile.tokenCopied') : $t('profile.copy') }}</button>

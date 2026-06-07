@@ -69,6 +69,12 @@ const routes = [
     meta: { title: 'profile' },
   },
   {
+    path: '/token',
+    name: 'Token',
+    component: () => import('@/views/TokenPage.vue'),
+    meta: { title: 'token' },
+  },
+  {
     path: '/merchant/register',
     name: 'MerchantRegister',
     component: () => import('@/views/MerchantRegister.vue'),
