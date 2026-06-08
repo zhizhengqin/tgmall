@@ -1,4 +1,4 @@
-// 根组件
+<!-- 根组件 -->
 <template>
   <router-view v-slot="{ Component }">
     <transition name="fade" mode="out-in">
@@ -17,32 +17,41 @@ const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
 onMounted(async () => {
-  // 如果已有 token，跳过登录
   if (userStore.token) return;
 
   const tg = window.Telegram?.WebApp;
-  if (!tg || !tg.initData) {
-    // 浏览器开发模式：尝试用本地存储的 token
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      userStore.token = savedToken;
-    }
+  if (!tg) {
     console.warn('非 Telegram Mini App 环境');
     return;
   }
 
+  tg.ready();
+  tg.expand();
+
+  // 先从 Telegram 获取用户基本信息（无需 API）
+  const tgUser = tg.initDataUnsafe?.user;
+  if (tgUser && !userStore.user) {
+    userStore.user = {
+      telegramId: tgUser.id,
+      firstName: tgUser.first_name,
+      lastName: tgUser.last_name,
+      username: tgUser.username,
+      languageCode: tgUser.language_code || 'km',
+    };
+  }
+
+  // 然后通过 API 认证获取 JWT
+  if (!tg.initData) return;
   try {
-    tg.ready();
-    tg.expand();
     const res = await telegramLogin(tg.initData);
-    // API 响应: { success: true, data: { token, user } }
     const payload = res?.data || res;
     if (payload?.token) {
-      userStore.setAuth(payload.token, payload.user || {});
+      userStore.setAuth(payload.token, payload.user || userStore.user);
       console.log('✅ 自动登录成功');
     }
   } catch (err) {
     console.error('Telegram 登录失败:', err);
+    // 即使 API 失败，Telegram 基本信息也已展示
   }
 });
 </script>
