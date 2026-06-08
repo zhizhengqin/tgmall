@@ -1,7 +1,6 @@
 <!-- 个人中心 -->
 <template>
   <div class="page">
-    <!-- 用户信息 -->
     <div class="profile-header">
       <div class="avatar">👤</div>
       <div class="user-info">
@@ -10,7 +9,6 @@
       </div>
     </div>
 
-    <!-- 功能入口 -->
     <div class="menu-list">
       <router-link to="/orders" class="menu-item">
         <span>📋</span><span>{{ $t('nav.orders') }}</span><span class="arrow">›</span>
@@ -19,7 +17,6 @@
         <span>📍</span><span>{{ $t('profile.addresses') }} ({{ addressCount }})</span><span class="arrow">›</span>
       </div>
 
-      <!-- 地址管理展开区 -->
       <div v-if="showAddresses" class="address-list">
         <div v-for="a in addresses" :key="a.id" class="addr-card">
           <div class="addr-info">
@@ -31,7 +28,6 @@
         </div>
         <button class="add-addr-btn" @click="showAddrForm = true">+ {{ $t('profile.addAddress') }}</button>
 
-        <!-- 新增地址表单 -->
         <div v-if="showAddrForm" class="addr-form">
           <input v-model="addrForm.recipient_name" :placeholder="$t('profile.form.name')" />
           <input v-model="addrForm.phone" :placeholder="$t('profile.form.phone')" />
@@ -51,13 +47,10 @@
       </router-link>
     </div>
 
-    <!-- 语言切换 -->
     <div class="lang-section">
       <p class="section-label">{{ $t('profile.language') }}</p>
       <div class="lang-btns">
-        <button v-for="l in langs" :key="l.code" class="lang-btn" :class="{ active: locale === l.code }" @click="switchLang(l.code)">
-          {{ l.label }}
-        </button>
+        <button v-for="l in langs" :key="l.code" class="lang-btn" :class="{ active: locale === l.code }" @click="switchLang(l.code)">{{ l.label }}</button>
       </div>
     </div>
 
@@ -86,3 +79,56 @@ const langs = [
 const addresses = ref([]);
 const showAddresses = ref(false);
 const showAddrForm = ref(false);
+const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
+const addressCount = computed(() => addresses.value.length);
+
+function switchLang(code) { locale.value = code; languageStore.setLanguage(code); }
+
+async function loadAddresses() {
+  try { const res = await getAddresses(); addresses.value = res.data; } catch { addresses.value = []; }
+}
+
+async function handleSaveAddr() {
+  try {
+    await createAddress({ ...addrForm });
+    Object.assign(addrForm, { recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
+    showAddrForm.value = false;
+    await loadAddresses();
+  } catch (e) { alert(e?.response?.data?.error?.message || t('profile.saveFailed')); }
+}
+
+async function handleDeleteAddr(id) {
+  if (!confirm(t('profile.confirmDelete'))) return;
+  try { await deleteAddress(id); await loadAddresses(); } catch (e) { alert(t('profile.deleteFailed')); }
+}
+
+onMounted(loadAddresses);
+</script>
+
+<style scoped>
+.page { max-width: var(--max-width); margin: 0 auto; padding: var(--space-lg); padding-bottom: 100px; min-height: 100vh; background: var(--bg); }
+.profile-header { display: flex; align-items: center; gap: 16px; padding: 24px 0; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.user-name { font-size: 18px; font-weight: 700; }
+.user-phone { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.menu-list { margin-bottom: 24px; }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 14px; text-decoration: none; color: inherit; cursor: pointer; }
+.menu-item .arrow { margin-left: auto; color: var(--muted); }
+.address-list { padding-left: 32px; margin: 8px 0 16px; }
+.addr-card { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.addr-text { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.default-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: #fff; margin-top: 4px; }
+.del-btn { color: var(--accent-red); font-size: 12px; }
+.add-addr-btn { color: var(--accent); font-size: 13px; margin-top: 8px; padding: 8px 0; display: block; }
+.addr-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.addr-form input { padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; }
+.default-check { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.form-actions { display: flex; gap: 8px; }
+.form-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; }
+.btn-save { background: var(--accent); color: #fff; }
+.lang-section { margin-bottom: 24px; }
+.section-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.lang-btns { display: flex; gap: 8px; }
+.lang-btn { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--border); font-size: 13px; background: var(--surface); }
+.lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
