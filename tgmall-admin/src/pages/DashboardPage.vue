@@ -15,8 +15,11 @@
 </template>
 <script setup>
 import { ref, computed, onMounted } from 'vue'; import { getAdminDashboard } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue'; import VChart from 'vue-echarts'; import 'echarts';
+import km from '@/locales/km.json'; import en from '@/locales/en.json'; import zh from '@/locales/zh.json';
+const msg={km,en,zh}; const lang=localStorage.getItem('admin_lang')||'km';
+const t=k=>{const keys=k.split('.');let v=msg[lang]||msg.en;for(const p of keys)v=v?.[p];return typeof v==='string'?v:k;};
 const data = ref({});
-const opt = computed(() => ({ xAxis: { type: 'category', data: (data.value.recent7DaysTrend||[]).map(d=>d.date.slice(5)) }, yAxis: { type: 'value' }, series: [{ name: 'GMV', data: (data.value.recent7DaysTrend||[]).map(d=>d.gmv), type: 'line', smooth: true }, { name: 'អ្នកប្រើ', data: (data.value.recent7DaysTrend||[]).map(d=>d.newUsers), type: 'bar' }] }));
+const opt = computed(() => ({ xAxis: { type: 'category', data: (data.value.recent7DaysTrend||[]).map(d=>d.date.slice(5)) }, yAxis: { type: 'value' }, series: [{ name: t('dashboard.gmv'), data: (data.value.recent7DaysTrend||[]).map(d=>d.gmv), type: 'line', smooth: true }, { name: t('dashboard.newUsers'), data: (data.value.recent7DaysTrend||[]).map(d=>d.newUsers), type: 'bar' }] }));
 onMounted(async () => { data.value = (await getAdminDashboard()).data; });
 </script>
 <style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; }</style>

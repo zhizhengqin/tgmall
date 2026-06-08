@@ -23,6 +23,8 @@
     "todayRevenue": "今日收入",
     "lowStock": "库存不足",
     "recent7Days": "近 7 天收入",
+    "gmv": "交易额",
+    "newUsers": "新用户",
     "noData": "暂无数据"
   },
   "merchants": {
