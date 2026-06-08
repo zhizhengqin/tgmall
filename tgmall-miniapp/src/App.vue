@@ -28,8 +28,9 @@ onMounted(async () => {
   tg.ready();
   tg.expand();
 
-  // 先从 Telegram 获取用户基本信息（无需 API）
-  const tgUser = tg.initDataUnsafe?.user;
+  // 获取用户信息：优先 initDataUnsafe，fallback 解析 initData
+  const tgUser = tg.initDataUnsafe?.user
+    || (tg.initData ? JSON.parse(new URLSearchParams(tg.initData).get('user') || 'null') : null);
   if (tgUser && !userStore.user) {
     userStore.user = {
       telegramId: tgUser.id,
@@ -38,6 +39,9 @@ onMounted(async () => {
       username: tgUser.username,
       languageCode: tgUser.language_code || 'km',
     };
+    console.log('✅ 用户信息已获取:', tgUser.first_name);
+  } else if (!tgUser) {
+    console.warn('⚠️ 未能获取 Telegram 用户信息，initData:', tg.initData?.substring(0, 100));
   }
 
   // 然后通过 API 认证获取 JWT

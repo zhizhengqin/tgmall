@@ -23,7 +23,9 @@ export function useTelegram() {
     tg.expand();
 
     state.isReady = true;
-    state.user = tg.initDataUnsafe?.user || null;
+    state.user = tg.initDataUnsafe?.user
+      || (tg.initData ? JSON.parse(new URLSearchParams(tg.initData).get('user') || 'null') : null)
+      || null;
     state.initData = tg.initData || '';
     state.isDark = tg.colorScheme === 'dark';
 
