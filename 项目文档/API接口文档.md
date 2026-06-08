@@ -2,8 +2,9 @@
 
 ## 柬埔寨 Telegram Mini App 社交电商平台
 
-> **文档版本**：V1.0  
-> **编制日期**：2026 年 6 月 5 日  
+> **文档版本**：V2.0  
+> **编制日期**：2026 年 6 月 9 日
+> **V2 变更**：新增 POST /auth/admin-login（用户名密码登录）；移除商家入驻/登录 API；新增 /admin/products 和 /admin/orders 路由  
 > **Base URL**：`https://api.shop.xinhua-tech.kh/api/v1`  
 > **协议**：HTTPS only  
 > **内容格式**：`application/json`（文件上传除外）  
