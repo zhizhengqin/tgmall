@@ -51,23 +51,6 @@
       </router-link>
     </div>
 
-    <!-- Token（用于登录商家后台/运营后台） -->
-    <div class="token-section">
-      <p class="section-label">
-        <router-link to="/token" style="color:inherit;text-decoration:none">{{ $t('profile.copyToken') }}</router-link>
-      </p>
-      <div v-if="userStore.token" class="token-row">
-        <code class="token-text">{{ maskedToken }}</code>
-        <button class="copy-btn" @click="copyToken">{{ copied ? $t('profile.tokenCopied') : $t('profile.copy') }}</button>
-      </div>
-      <div v-else class="token-empty">
-        <p>{{ $t('profile.tokenHelp') }}</p>
-        <button class="login-btn" @click="doManualLogin" :disabled="loginLoading">
-          {{ loginLoading ? '...' : $t('profile.retryLogin') }}
-        </button>
-      </div>
-    </div>
-
     <!-- 语言切换 -->
     <div class="lang-section">
       <p class="section-label">{{ $t('profile.language') }}</p>
@@ -88,7 +71,6 @@ import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
-import { telegramLogin } from '@/api/auth';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
@@ -104,119 +86,3 @@ const langs = [
 const addresses = ref([]);
 const showAddresses = ref(false);
 const showAddrForm = ref(false);
-const copied = ref(false);
-const loginLoading = ref(false);
-const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
-const addressCount = computed(() => addresses.value.length);
-
-// Token 遮罩显示 + 一键复制
-const maskedToken = computed(() => {
-  const t = userStore.token;
-  if (!t) return '';
-  return t.length > 20 ? t.slice(0, 12) + '...' + t.slice(-8) : t;
-});
-
-async function doManualLogin() {
-  loginLoading.value = true;
-  try {
-    const tg = window.Telegram?.WebApp;
-    if (!tg || !tg.initData) {
-      alert('请在 Telegram 中打开此页面');
-      return;
-    }
-    const res = await telegramLogin(tg.initData);
-    const payload = res?.data || res;
-    if (payload?.token) {
-      userStore.setAuth(payload.token, payload.user || {});
-    } else {
-      alert('登录失败，请关闭 Mini App 后重试');
-    }
-  } catch (e) {
-    alert('登录失败: ' + (e?.response?.data?.error?.message || e.message));
-  } finally {
-    loginLoading.value = false;
-  }
-}
-
-async function copyToken() {
-  if (!userStore.token) return;
-  try {
-    await navigator.clipboard.writeText(userStore.token);
-    copied.value = true;
-    setTimeout(() => { copied.value = false; }, 2000);
-  } catch {
-    // fallback
-    const ta = document.createElement('textarea');
-    ta.value = userStore.token;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    copied.value = true;
-    setTimeout(() => { copied.value = false; }, 2000);
-  }
-}
-
-function switchLang(code) {
-  locale.value = code;
-  languageStore.setLanguage(code);
-}
-
-async function loadAddresses() {
-  try { const res = await getAddresses(); addresses.value = res.data; }
-  catch { addresses.value = []; }
-}
-
-async function handleSaveAddr() {
-  try {
-    await createAddress({ ...addrForm });
-    Object.assign(addrForm, { recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
-    showAddrForm.value = false;
-    await loadAddresses();
-  } catch (e) { alert(e?.response?.data?.error?.message || t('profile.saveFailed')); }
-}
-
-async function handleDeleteAddr(id) {
-  if (!confirm(t('profile.confirmDelete'))) return;
-  try { await deleteAddress(id); await loadAddresses(); }
-  catch (e) { alert(t('profile.deleteFailed')); }
-}
-
-onMounted(loadAddresses);
-</script>
-
-<style scoped>
-.page { max-width: var(--max-width); margin: 0 auto; padding: var(--space-lg); padding-bottom: 100px; min-height: 100vh; background: var(--bg); }
-.profile-header { display: flex; align-items: center; gap: 16px; padding: 24px 0; }
-.avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
-.user-name { font-size: 18px; font-weight: 700; }
-.user-phone { font-size: 13px; color: var(--muted); margin-top: 4px; }
-.menu-list { margin-bottom: 24px; }
-.menu-item { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 14px; text-decoration: none; color: inherit; cursor: pointer; }
-.menu-item .arrow { margin-left: auto; color: var(--muted); }
-.address-list { padding-left: 32px; margin: 8px 0 16px; }
-.addr-card { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-.addr-text { color: var(--muted); font-size: 12px; margin-top: 2px; }
-.default-tag { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: #fff; margin-top: 4px; }
-.del-btn { color: var(--accent-red); font-size: 12px; }
-.add-addr-btn { color: var(--accent); font-size: 13px; margin-top: 8px; padding: 8px 0; display: block; }
-.addr-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.addr-form input { padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; }
-.default-check { font-size: 13px; display: flex; align-items: center; gap: 6px; }
-.form-actions { display: flex; gap: 8px; }
-.form-actions button { flex: 1; padding: 10px; border-radius: var(--radius-sm); font-size: 13px; }
-.btn-save { background: var(--accent); color: #fff; }
-.token-section { margin-bottom: 20px; }
-.token-empty { padding: 10px; background: #fff8e1; border: 1px solid #ffecb3; border-radius: var(--radius-sm); }
-.token-empty p { font-size: 12px; color: #f57f17; margin: 0 0 8px 0; line-height: 1.6; }
-.login-btn { font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; }
-.login-btn:disabled { opacity: 0.5; }
-.token-row { display: flex; gap: 8px; align-items: center; }
-.token-text { flex: 1; font-size: 11px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); word-break: break-all; color: var(--muted); }
-.copy-btn { font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; cursor: pointer; white-space: nowrap; }
-.lang-section { margin-bottom: 24px; }
-.section-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-.lang-btns { display: flex; gap: 8px; }
-.lang-btn { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--border); font-size: 13px; background: var(--surface); }
-.lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-</style>
