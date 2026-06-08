@@ -11,10 +11,18 @@
   },
   "dashboard": {
     "title": "数据看板",
+    "today": "今日",
+    "thisMonth": "本月",
+    "trend7d": "近 7 天趋势",
     "totalOrders": "订单总数",
     "totalRevenue": "总收入",
     "totalUsers": "用户总数",
     "totalMerchants": "商家总数",
+    "pendingOrders": "待处理",
+    "totalProducts": "商品总数",
+    "todayRevenue": "今日收入",
+    "lowStock": "库存不足",
+    "recent7Days": "近 7 天收入",
     "noData": "暂无数据"
   },
   "merchants": {

@@ -11,10 +11,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "today": "Today",
+    "thisMonth": "This Month",
+    "trend7d": "7-Day Trend",
     "totalOrders": "Total Orders",
     "totalRevenue": "Total Revenue",
     "totalUsers": "Total Users",
     "totalMerchants": "Total Merchants",
+    "pendingOrders": "Pending",
+    "totalProducts": "Total Products",
+    "todayRevenue": "Today's Revenue",
+    "lowStock": "Low Stock",
+    "recent7Days": "Last 7 Days Revenue",
     "noData": "No data yet"
   },
   "merchants": {

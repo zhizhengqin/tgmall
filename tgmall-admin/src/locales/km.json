@@ -11,10 +11,18 @@
   },
   "dashboard": {
     "title": "ផ្ទាំងទិន្នន័យ",
+    "today": "ថ្ងៃនេះ",
+    "thisMonth": "ខែនេះ",
+    "trend7d": "និន្នាការ ៧ ថ្ងៃ",
     "totalOrders": "កម្មងសរុប",
     "totalRevenue": "ចំណូលសរុប",
     "totalUsers": "អ្នកប្រើសរុប",
     "totalMerchants": "ហាងសរុប",
+    "pendingOrders": "រង់ចាំដំណើរការ",
+    "totalProducts": "ទំនិញសរុប",
+    "todayRevenue": "ចំណូលថ្ងៃនេះ",
+    "lowStock": "ទំនិញជិតអស់",
+    "recent7Days": "ចំណូល ៧ ថ្ងៃចុងក្រោយ",
     "noData": "មិនទាន់មានទិន្នន័យ"
   },
   "merchants": {
