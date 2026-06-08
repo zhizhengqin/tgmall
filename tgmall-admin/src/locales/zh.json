@@ -84,7 +84,7 @@
   },
   "products": {
     "title": "商品管理", "add": "+ 添加商品", "name": "名称",
-    "priceUsd": "USD", "priceKhr": "KHR", "stock": "库存",
+    "priceUsd": "美元价格", "priceKhr": "瑞尔价格", "stock": "库存",
     "status": "状态", "category": "品类", "active": "上架",
     "inactive": "下架", "edit": "编辑", "images": "图片",
     "createTitle": "添加商品", "editTitle": "编辑商品",
