@@ -6,7 +6,7 @@
       </div>
       <el-table :data="items" v-loading="loading" stripe>
         <el-table-column prop="nameKm" :label="$t('products.name')" min-width="150" />
-        <el-table-column label="USD" width="80"><template #default="{row}">${{row.priceUsd}}</template></el-table-column>
+        <el-table-column :label="$t('products.priceUsd')" width="100"><template #default="{row}">${{row.priceUsd}}</template></el-table-column>
         <el-table-column prop="stock" :label="$t('products.stock')" width="80" />
         <el-table-column :label="$t('products.status')" width="80">
           <template #default="{row}"><el-switch :model-value="row.status==='active'" @change="toggle(row.id)" /></template>
