@@ -4,11 +4,10 @@
     <el-menu-item index="/dashboard"><el-icon><DataAnalysis /></el-icon><span>{{ $t('nav.dashboard') }}</span></el-menu-item>
     <el-menu-item index="/products"><el-icon><Goods /></el-icon><span>{{ $t('nav.products') }}</span></el-menu-item>
     <el-menu-item index="/orders"><el-icon><List /></el-icon><span>{{ $t('nav.orders') }}</span></el-menu-item>
-    <el-menu-item index="/merchants"><el-icon><Shop /></el-icon><span>{{ $t('nav.merchants') }}</span></el-menu-item>
     <el-menu-item index="/users"><el-icon><User /></el-icon><span>{{ $t('nav.users') }}</span></el-menu-item>
   </el-menu>
 </template>
-<script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, Shop, User, Goods, List } from '@element-plus/icons-vue'; const route = useRoute();</script>
+<script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, User, Goods, List } from '@element-plus/icons-vue'; const route = useRoute();</script>
 <style scoped>
 .sidebar { width: 220px; min-height: 100vh; position: fixed; left: 0; top: 0; border-right: none; }
 .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.1); }

@@ -3,8 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 const routes = [
   { path: '/login', name: 'Login', component: () => import('@/pages/LoginPage.vue') },
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/pages/DashboardPage.vue'), meta: { requiresAuth: true } },
-  { path: '/merchants', name: 'Merchants', component: () => import('@/pages/MerchantsPage.vue'), meta: { requiresAuth: true } },
-  { path: '/merchants/:id', name: 'MerchantDetail', component: () => import('@/pages/MerchantDetailPage.vue'), meta: { requiresAuth: true }, props: true },
   { path: '/users', name: 'Users', component: () => import('@/pages/UsersPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings', name: 'Settings', component: () => import('@/pages/SettingsPage.vue'), meta: { requiresAuth: true } },
   { path: '/products', name: 'Products', component: () => import('@/pages/ProductsPage.vue'), meta: { requiresAuth: true } },
