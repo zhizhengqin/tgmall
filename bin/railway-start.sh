@@ -71,7 +71,7 @@ ${LISTEN_DIRECTIVES}
 
     # ── 商家后台 → 301 重定向到运营后台 ──
     location /merchant/ {
-        return 301 /admin/\$is_args\$args;
+        return 301 \$scheme://\$host/admin/\$is_args\$args;
     }
 
     # ── 运营后台 ──
