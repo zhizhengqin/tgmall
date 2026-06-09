@@ -6,7 +6,15 @@
       <div class="user-info">
         <p class="user-name">{{ userStore.user?.firstName || $t('profile.guest') }}</p>
         <p class="user-phone">{{ userStore.user?.phone || $t('profile.noPhone') }}</p>
+        <p v-if="!userStore.user?.firstName" class="debug-hint" @click="showDebug = !showDebug">
+          {{ hasTelegram ? '✅ TG' : '❌ 非TG' }} | initData: {{ initDataLen }}
+        </p>
       </div>
+    </div>
+    <div v-if="showDebug" class="debug-box">
+      <p>hasTelegram: {{ hasTelegram }}</p>
+      <p>initData 长度: {{ initDataLen }}</p>
+      <p>user 存在: {{ !!tgUser }}</p>
     </div>
 
     <div class="menu-list">
@@ -70,6 +78,12 @@ const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
+// Debug
+const showDebug = ref(false);
+const hasTelegram = computed(() => !!window.Telegram?.WebApp);
+const initDataLen = computed(() => window.Telegram?.WebApp?.initData?.length || 0);
+const tgUser = computed(() => window.Telegram?.WebApp?.initDataUnsafe?.user);
+
 const langs = [
   { code: 'km', label: 'ភាសាខ្មែរ' },
   { code: 'en', label: 'English' },
@@ -111,6 +125,8 @@ onMounted(loadAddresses);
 .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
 .user-name { font-size: 18px; font-weight: 700; }
 .user-phone { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.debug-hint { font-size: 10px; color: #aaa; margin-top: 2px; cursor: pointer; }
+.debug-box { padding: 8px; background: #f0f0f0; border-radius: 6px; font-size: 11px; margin-bottom: 12px; }
 .menu-list { margin-bottom: 24px; }
 .menu-item { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 14px; text-decoration: none; color: inherit; cursor: pointer; }
 .menu-item .arrow { margin-left: auto; color: var(--muted); }
