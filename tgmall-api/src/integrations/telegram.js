@@ -302,7 +302,7 @@ export async function setMiniAppMenuButton() {
   const menuBody = {
     menu_button: {
       type: 'web_app',
-      text: '🛒 ចូលទៅហាង',
+      text: '🛒 Tgmall',
       web_app: { url: miniAppUrl },
     },
   };
