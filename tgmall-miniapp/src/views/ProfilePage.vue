@@ -80,8 +80,9 @@ const userStore = useUserStore();
 
 // Debug
 const showDebug = ref(false);
-const hasTelegram = computed(() => !!window.Telegram?.WebApp);
-const initDataLen = computed(() => window.Telegram?.WebApp?.initData?.length || 0);
+const tgCheck = window.__tgCheck || {};
+const hasTelegram = computed(() => tgCheck.hasTelegram || !!window.Telegram?.WebApp);
+const initDataLen = computed(() => tgCheck.initDataLen || window.Telegram?.WebApp?.initData?.length || 0);
 const tgUser = computed(() => window.Telegram?.WebApp?.initDataUnsafe?.user);
 
 const langs = [

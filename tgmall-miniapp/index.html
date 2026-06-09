@@ -5,10 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>TG Mall</title>
   <link rel="icon" href="/favicon.ico" />
-  <!-- Noto Sans Khmer: 高棉语字体 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    // 在 Vue 加载前检测 Telegram 环境
+    window.__tgCheck = { hasTelegram: false, hasInitData: false, initDataLen: 0 };
+    var checkTg = function() {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (tg) {
+        window.__tgCheck.hasTelegram = true;
+        window.__tgCheck.initDataLen = (tg.initData || '').length;
+        window.__tgCheck.hasInitData = !!tg.initData;
+        tg.ready();
+        tg.expand();
+      }
+    };
+    checkTg();
+    // 如果第一次没检测到，延迟再试（SDK 可能异步注入）
+    if (!window.__tgCheck.hasTelegram) {
+      setTimeout(checkTg, 500);
+      setTimeout(checkTg, 1500);
+    }
+  </script>
 </head>
 <body>
   <div id="app"></div>
