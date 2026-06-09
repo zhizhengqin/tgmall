@@ -18,47 +18,39 @@ const userStore = useUserStore();
 
 onMounted(async () => {
   const tg = window.Telegram?.WebApp;
-  if (!tg) {
-    console.warn('非 Telegram Mini App 环境');
-    return;
-  }
+  if (!tg) return;
 
   tg.ready();
   tg.expand();
 
-  // 始终从 Telegram SDK 获取用户信息（不管是否有 token）
-  const tgUser = tg.initDataUnsafe?.user
-    || (tg.initData ? JSON.parse(new URLSearchParams(tg.initData).get('user') || 'null') : null);
-  if (tgUser) {
+  // 直接设置用户信息
+  if (tg.initDataUnsafe?.user) {
+    const u = tg.initDataUnsafe.user;
     userStore.user = {
-      telegramId: tgUser.id,
-      firstName: tgUser.first_name,
-      lastName: tgUser.last_name,
-      username: tgUser.username,
-      languageCode: tgUser.language_code || 'km',
+      telegramId: u.id,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      username: u.username,
+      languageCode: u.language_code || 'km',
     };
   }
 
-  // 如果有 token 且用户信息已有，跳过登录 API
-  if (userStore.token && userStore.user) return;
-
-  // 通过 API 认证获取 JWT
-  if (!tg.initData) return;
-  try {
-    const res = await telegramLogin(tg.initData);
-    const payload = res?.data || res;
-    if (payload?.token) {
-      userStore.setAuth(payload.token, payload.user || userStore.user);
+  // 异步 API 认证
+  if (tg.initData) {
+    try {
+      const res = await telegramLogin(tg.initData);
+      const data = res?.data || res;
+      if (data?.token) {
+        userStore.setAuth(data.token, data.user || userStore.user);
+      }
+    } catch (e) {
+      // 静默失败，用户信息已从 SDK 获取
     }
-  } catch (err) {
-    console.error('Telegram 登录失败:', err);
   }
 });
 </script>
 
 <style>
-.fade-enter-active,
-.fade-leave-active { transition: opacity 0.15s ease; }
-.fade-enter-from,
-.fade-leave-to { opacity: 0; }
+.fade-enter-active,.fade-leave-active{transition:opacity .15s ease}
+.fade-enter-from,.fade-leave-to{opacity:0}
 </style>
