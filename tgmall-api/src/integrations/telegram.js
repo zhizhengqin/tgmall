@@ -32,6 +32,7 @@ export function verifyInitData(initData) {
     lastName: user.last_name,
     username: user.username,
     languageCode: user.language_code || 'km',
+    photoUrl: user.photo_url || null,
   };
 }
 

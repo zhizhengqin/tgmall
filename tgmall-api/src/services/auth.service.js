@@ -33,8 +33,17 @@ export async function telegramLogin(initData) {
         lastName: userData.lastName,
         username: userData.username,
         language: inferredLang,
+        avatarUrl: userData.photoUrl || null,
       },
     });
+  } else {
+    // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
+    if (userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: userData.photoUrl },
+      });
+    }
   }
 
   // 3. 签发 JWT

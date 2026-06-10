@@ -2,9 +2,17 @@
 <template>
   <div class="page">
     <div class="profile-header">
-      <div class="avatar">👤</div>
+      <div class="avatar">
+        <img
+          v-if="userStore.user?.photoUrl || userStore.user?.avatarUrl"
+          :src="userStore.user?.photoUrl || userStore.user?.avatarUrl"
+          alt="avatar"
+          class="avatar-img"
+        />
+        <span v-else>👤</span>
+      </div>
       <div class="user-info">
-        <p class="user-name">{{ userStore.user?.firstName || $t('profile.guest') }}</p>
+        <p class="user-name">{{ displayName }}</p>
         <p class="user-phone">{{ userStore.user?.phone || $t('profile.noPhone') }}</p>
       </div>
     </div>
@@ -70,6 +78,12 @@ const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
+const displayName = computed(() => {
+  const u = userStore.user;
+  if (!u) return t('profile.guest');
+  return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || t('profile.guest');
+});
+
 const langs = [
   { code: 'km', label: 'ភាសាខ្មែរ' },
   { code: 'en', label: 'English' },
@@ -108,7 +122,8 @@ onMounted(loadAddresses);
 <style scoped>
 .page { max-width: var(--max-width); margin: 0 auto; padding: var(--space-lg); padding-bottom: 100px; min-height: 100vh; background: var(--bg); }
 .profile-header { display: flex; align-items: center; gap: 16px; padding: 24px 0; }
-.avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 .user-name { font-size: 18px; font-weight: 700; }
 .user-phone { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .menu-list { margin-bottom: 24px; }

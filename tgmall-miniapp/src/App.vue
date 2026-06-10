@@ -16,37 +16,63 @@ import { telegramLogin } from '@/api/auth';
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
-onMounted(async () => {
-  const tg = window.Telegram?.WebApp;
-  if (!tg) return;
+onMounted(() => {
+  // 轮询等待 Telegram WebApp SDK 就绪（最大 5 秒）
+  let attempts = 0;
+  const maxAttempts = 50; // 50 × 100ms = 5s
 
-  tg.ready();
-  tg.expand();
+  const timer = setInterval(async () => {
+    attempts++;
+    const tg = window.Telegram?.WebApp;
 
-  // 直接设置用户信息
-  if (tg.initDataUnsafe?.user) {
-    const u = tg.initDataUnsafe.user;
-    userStore.user = {
-      telegramId: u.id,
-      firstName: u.first_name,
-      lastName: u.last_name,
-      username: u.username,
-      languageCode: u.language_code || 'km',
-    };
-  }
+    if (tg) {
+      clearInterval(timer);
 
-  // 异步 API 认证
-  if (tg.initData) {
-    try {
-      const res = await telegramLogin(tg.initData);
-      const data = res?.data || res;
-      if (data?.token) {
-        userStore.setAuth(data.token, data.user || userStore.user);
+      tg.ready();
+      tg.expand();
+
+      // 从 SDK 读取用户信息（优先 initDataUnsafe，fallback 解析 initData）
+      let u = tg.initDataUnsafe?.user;
+      if (!u && tg.initData) {
+        try {
+          u = JSON.parse(new URLSearchParams(tg.initData).get('user') || 'null');
+        } catch { /* ignore */ }
       }
-    } catch (e) {
-      // 静默失败，用户信息已从 SDK 获取
+
+      if (u) {
+        userStore.user = {
+          telegramId: u.id,
+          firstName: u.first_name,
+          lastName: u.last_name,
+          username: u.username,
+          languageCode: u.language_code || 'km',
+          photoUrl: u.photo_url || null,
+        };
+      }
+
+      // 异步 API 认证获取 JWT + 持久化用户信息
+      if (tg.initData) {
+        try {
+          const res = await telegramLogin(tg.initData);
+          const data = res?.data || res;
+          if (data?.token) {
+            // 合并 SDK 原始数据（photoUrl）与后端持久化数据（avatarUrl 等）
+            const mergedUser = { ...userStore.user, ...(data.user || {}) };
+            userStore.setAuth(data.token, mergedUser);
+          }
+        } catch {
+          // 静默失败：基础信息已从 SDK 获取，仍可展示
+        }
+      }
+
+      return;
     }
-  }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(timer);
+      // 超时：非 Telegram 环境或 SDK 注入异常
+    }
+  }, 100);
 });
 </script>
 
