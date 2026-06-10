@@ -4,12 +4,13 @@
     <div class="profile-header">
       <div class="avatar">
         <img
-          v-if="userStore.user?.photoUrl || userStore.user?.avatarUrl"
+          v-if="(userStore.user?.photoUrl || userStore.user?.avatarUrl) && !avatarError"
           :src="userStore.user?.photoUrl || userStore.user?.avatarUrl"
           alt="avatar"
           class="avatar-img"
+          @error="avatarError = true"
         />
-        <span v-else>👤</span>
+        <span v-else class="avatar-fallback">{{ avatarInitials }}</span>
       </div>
       <div class="user-info">
         <p class="user-name">{{ displayName }}</p>
@@ -95,6 +96,15 @@ const showAddresses = ref(false);
 const showAddrForm = ref(false);
 const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
 const addressCount = computed(() => addresses.value.length);
+const avatarError = ref(false);
+
+const avatarInitials = computed(() => {
+  const u = userStore.user;
+  if (!u) return '👤';
+  const first = (u.firstName || '').charAt(0).toUpperCase();
+  const last = (u.lastName || '').charAt(0).toUpperCase();
+  return (first + last) || (u.username || '').charAt(0).toUpperCase() || '👤';
+});
 
 function switchLang(code) { locale.value = code; languageStore.setLanguage(code); }
 
@@ -124,6 +134,7 @@ onMounted(loadAddresses);
 .profile-header { display: flex; align-items: center; gap: 16px; padding: 24px 0; }
 .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; }
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-fallback { font-size: 20px; font-weight: 600; color: var(--fg); }
 .user-name { font-size: 18px; font-weight: 700; }
 .user-phone { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .menu-list { margin-bottom: 24px; }

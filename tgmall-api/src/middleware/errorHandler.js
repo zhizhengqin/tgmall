@@ -21,12 +21,13 @@ export function errorHandler(err, req, res, _next) {
     });
   }
 
-  // 未知错误不泄露详情
+  // 未知错误 — 临时暴露详情用于诊断（生产环境应关闭）
   return res.status(500).json({
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: getLocalizedMessage('INTERNAL_ERROR', req.headers['accept-language'] || 'km'),
+      message: err.message || getLocalizedMessage('INTERNAL_ERROR', req.headers['accept-language'] || 'km'),
+      detail: process.env.NODE_ENV !== 'production' ? err.stack?.split('\n').slice(0, 3) : undefined,
     },
   });
 }

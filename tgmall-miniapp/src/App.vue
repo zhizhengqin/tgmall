@@ -97,7 +97,11 @@ onMounted(() => {
             userStore.setAuth(data.token, mergedUser);
           }
         } catch (e) {
-          debugInfo.storeUser += ' | API_ERR:' + (e?.message || 'unknown');
+          const errDetail = e?.response?.data?.error;
+          const errMsg = errDetail
+            ? `${errDetail.code}: ${errDetail.message}${errDetail.detail ? ' | ' + JSON.stringify(errDetail.detail) : ''}`
+            : (e?.message || 'unknown');
+          debugInfo.storeUser += ' | API_ERR:' + errMsg;
         }
       }
 
