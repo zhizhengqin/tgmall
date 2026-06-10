@@ -5,16 +5,41 @@
       <component :is="Component" />
     </transition>
   </router-view>
+
+  <!-- 调试浮层：点击右下角 "DBG" 切换显示 -->
+  <div v-if="showDebug" class="debug-panel">
+    <h4>🔧 调试信息 (v20250610-3)</h4>
+    <p><b>TG.SDK:</b> {{ debugInfo.hasTg }}</p>
+    <p><b>initData:</b> {{ debugInfo.initDataLen }} chars</p>
+    <p><b>initDataUnsafe.user:</b> {{ debugInfo.hasUser }}</p>
+    <p><b>user.id:</b> {{ debugInfo.userId }}</p>
+    <p><b>user.first_name:</b> {{ debugInfo.firstName }}</p>
+    <p><b>user.photo_url:</b> {{ debugInfo.photoUrl }}</p>
+    <p><b>轮询次数:</b> {{ debugInfo.attempts }}</p>
+    <p><b>userStore.user:</b> {{ debugInfo.storeUser }}</p>
+  </div>
+  <div class="debug-trigger" @click="showDebug = !showDebug">DBG</div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref, reactive } from 'vue';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { telegramLogin } from '@/api/auth';
 
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
+const showDebug = ref(false);
+const debugInfo = reactive({
+  hasTg: false,
+  initDataLen: 0,
+  hasUser: false,
+  userId: '-',
+  firstName: '-',
+  photoUrl: '-',
+  attempts: 0,
+  storeUser: null,
+});
 
 onMounted(() => {
   // 轮询等待 Telegram WebApp SDK 就绪（最大 5 秒）
@@ -23,6 +48,7 @@ onMounted(() => {
 
   const timer = setInterval(async () => {
     attempts++;
+    debugInfo.attempts = attempts;
     const tg = window.Telegram?.WebApp;
 
     if (tg) {
@@ -31,6 +57,9 @@ onMounted(() => {
       tg.ready();
       tg.expand();
 
+      debugInfo.hasTg = true;
+      debugInfo.initDataLen = (tg.initData || '').length;
+
       // 从 SDK 读取用户信息（优先 initDataUnsafe，fallback 解析 initData）
       let u = tg.initDataUnsafe?.user;
       if (!u && tg.initData) {
@@ -38,6 +67,11 @@ onMounted(() => {
           u = JSON.parse(new URLSearchParams(tg.initData).get('user') || 'null');
         } catch { /* ignore */ }
       }
+
+      debugInfo.hasUser = !!u;
+      debugInfo.userId = u?.id || '-';
+      debugInfo.firstName = u?.first_name || '-';
+      debugInfo.photoUrl = u?.photo_url ? '✅' : '❌';
 
       if (u) {
         userStore.user = {
@@ -50,6 +84,8 @@ onMounted(() => {
         };
       }
 
+      debugInfo.storeUser = JSON.stringify(userStore.user);
+
       // 异步 API 认证获取 JWT + 持久化用户信息
       if (tg.initData) {
         try {
@@ -60,8 +96,8 @@ onMounted(() => {
             const mergedUser = { ...userStore.user, ...(data.user || {}) };
             userStore.setAuth(data.token, mergedUser);
           }
-        } catch {
-          // 静默失败：基础信息已从 SDK 获取，仍可展示
+        } catch (e) {
+          debugInfo.storeUser += ' | API_ERR:' + (e?.message || 'unknown');
         }
       }
 
@@ -70,6 +106,8 @@ onMounted(() => {
 
     if (attempts >= maxAttempts) {
       clearInterval(timer);
+      debugInfo.hasTg = false;
+      debugInfo.storeUser = 'TIMEOUT: Telegram SDK not found';
       // 超时：非 Telegram 环境或 SDK 注入异常
     }
   }, 100);
@@ -79,4 +117,9 @@ onMounted(() => {
 <style>
 .fade-enter-active,.fade-leave-active{transition:opacity .15s ease}
 .fade-enter-from,.fade-leave-to{opacity:0}
+.debug-panel{position:fixed;top:10px;left:10px;right:10px;z-index:9999;background:rgba(0,0,0,.88);color:#0f0;font-family:monospace;font-size:12px;padding:12px;border-radius:8px;max-height:80vh;overflow:auto;word-break:break-all}
+.debug-panel h4{margin:0 0 8px;color:#ff0;font-size:13px}
+.debug-panel p{margin:4px 0}
+.debug-trigger{position:fixed;bottom:80px;right:10px;z-index:9999;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;opacity:.5}
+.debug-trigger:active{opacity:1}
 </style>
