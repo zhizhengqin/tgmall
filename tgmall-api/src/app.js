@@ -12,13 +12,6 @@ import routes from './routes/index.js';
 registerBigIntSerializer();
 
 const app = express();
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import { errorHandler } from './middleware/errorHandler.js';
-import routes from './routes/index.js';
-
-const app = express();
 
 // 1. 安全头（关闭 CSP，落地页 /go 有内联样式和脚本）
 app.use(helmet({
