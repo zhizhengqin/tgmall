@@ -3,6 +3,18 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import { registerBigIntSerializer } from './utils/jsonSerializer.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import routes from './routes/index.js';
+
+// Prisma 的 telegramId 等字段使用 BigInt，Express res.json() 默认无法序列化。
+// 在应用最顶层注册 toJSON，使所有 JSON.stringify 统一把 BigInt 输出为字符串。
+registerBigIntSerializer();
+
+const app = express();
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 
