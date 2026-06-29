@@ -1,13 +1,13 @@
 <!-- 购物车页 — Sprint 2 -->
 <template>
   <div class="page">
-    <h2 class="page-title">购物车</h2>
+    <h2 class="page-title">{{ $t('cart.title') }}</h2>
 
-    <div v-if="loading">加载中...</div>
+    <div v-if="loading">{{ $t('common.loading') }}</div>
 
     <div v-else-if="!groups.length" class="empty-cart">
-      <p>购物车是空的</p>
-      <router-link to="/" class="go-shop">去逛逛</router-link>
+      <p>{{ $t('cart.empty') }}</p>
+      <router-link to="/" class="go-shop">{{ $t('cart.goShopping') }}</router-link>
     </div>
 
     <div v-else>
@@ -27,19 +27,19 @@
                 <button @click="increaseQty(item)">+</button>
               </div>
             </div>
-            <p v-if="item.stockStatus === 'low_stock'" class="stock-warn">仅剩 {{ item.maxQuantity }} 件</p>
-            <p v-if="item.stockStatus === 'insufficient'" class="stock-warn">库存不足!最大 {{ item.maxQuantity }} 件</p>
+            <p v-if="item.stockStatus === 'low_stock'" class="stock-warn">{{ $t('cart.stockLeft', { count: item.maxQuantity }) }}</p>
+            <p v-if="item.stockStatus === 'insufficient'" class="stock-warn">{{ $t('cart.insufficient', { count: item.maxQuantity }) }}</p>
           </div>
         </div>
       </div>
 
       <div class="cart-footer">
-        <label class="select-all"><input type="checkbox" :checked="allChecked" @change="toggleAll" /> 全选</label>
+        <label class="select-all"><input type="checkbox" :checked="allChecked" @change="toggleAll" /> {{ $t('cart.selectAll') }}</label>
         <div class="footer-right">
-          <span class="total-label">合计</span>
+          <span class="total-label">{{ $t('cart.total') }}</span>
           <PriceDisplay :priceUsd="checkedTotalUsd" :priceKhr="checkedTotalKhr" />
           <button class="checkout-btn" @click="goCheckout" :disabled="checkedIds.length === 0">
-            结算({{ checkedIds.length }})
+            {{ $t('cart.checkoutCount', { count: checkedIds.length }) }}
           </button>
         </div>
       </div>
@@ -103,7 +103,7 @@ function toggleAll() {
 
 async function decreaseQty(item) {
   if (item.quantity <= 1) {
-    if (confirm('确定删除此商品?')) {
+    if (confirm($t('cart.confirmRemove'))) {
       await removeCartItem(item.productId);
       await loadCart();
     }
