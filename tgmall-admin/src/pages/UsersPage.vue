@@ -16,7 +16,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'; import { getAdminUsers } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
 const items = ref([]); const loading = ref(false); const page = ref(1); const total = ref(0); const search = ref('');
-async function load() { loading.value = true; const r = await getAdminUsers({ page: page.value, q: search.value || undefined }); items.value = r.data; total.value = r.meta?.total||0; loading.value = false; }
+async function load() {
+  loading.value = true;
+  try {
+    const r = await getAdminUsers({ page: page.value, q: search.value || undefined });
+    items.value = r.data;
+    total.value = r.meta?.total || 0;
+  } catch (e) {
+    console.error('加载用户列表失败', e);
+    items.value = [];
+    total.value = 0;
+  } finally {
+    loading.value = false;
+  }
+}
 onMounted(load);
 </script>
 <style scoped>.page{min-height:100vh;background:#f5f5f5}.main{margin-left:220px;padding:20px}</style>
