@@ -97,20 +97,20 @@ async function main() {
   }
 
   // ---- 默认 Banner ----
-  await prisma.banner.upsert({
-    where: { id: '00000000-0000-0000-0000-000000000002' },
-    update: {},
-    create: {
-      id: '00000000-0000-0000-0000-000000000002',
-      titleKm: 'ប្រូម៉ូសិនពិសេស',
-      titleEn: 'Special Promotion',
-      titleZh: '特价促销',
-      imageUrl: 'https://placehold.co/800x400/c4932a/white?text=Promo',
-      linkType: 'url',
-      linkTarget: 'https://t.me/xhzmall_bot',
-      sortOrder: 1,
-      status: 'active',
-    },
+  await prisma.banner.createMany({
+    data: [
+      {
+        titleKm: 'ប្រូម៉ូសិនពិសេស',
+        titleEn: 'Special Promotion',
+        titleZh: '特价促销',
+        imageUrl: 'https://placehold.co/800x400/c4932a/white?text=Promo',
+        linkType: 'url',
+        linkTarget: 'https://t.me/xhzmall_bot',
+        sortOrder: 1,
+        status: 'active',
+      },
+    ],
+    skipDuplicates: false,
   });
 
   // ---- 默认客服 ----
@@ -131,11 +131,9 @@ async function main() {
     },
   });
 
-  // 2. 创建测试商家（使用 upsert 保证可重复执行）
-  const merchant1 = await prisma.merchant.upsert({
-    where: { phone: '+85512345001' },
-    update: {},
-    create: {
+  // 2. 创建测试商家
+  const merchant1 = await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង សំលៀកបំពាក់ សុភាព',
       nameEn: 'Sopheap Fashion',
       ownerName: 'Sopheap Kong',
@@ -147,10 +145,8 @@ async function main() {
     },
   });
 
-  const merchant2 = await prisma.merchant.upsert({
-    where: { phone: '+85512345003' },
-    update: {},
-    create: {
+  const merchant2 = await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង គ្រឿងសម្អាង ស្រីស្អាត',
       nameEn: 'Srey Saat Beauty',
       ownerName: 'Chantrea Mey',
@@ -162,10 +158,8 @@ async function main() {
     },
   });
 
-  const merchant3 = await prisma.merchant.upsert({
-    where: { phone: '+85512345004' },
-    update: {},
-    create: {
+  const merchant3 = await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង បច្ចេកវិទ្យា សុវណ្ណ',
       nameEn: 'Sovann Tech',
       ownerName: 'Sovann Heng',
@@ -177,10 +171,8 @@ async function main() {
     },
   });
 
-  const merchant4 = await prisma.merchant.upsert({
-    where: { phone: '+85512345005' },
-    update: {},
-    create: {
+  const merchant4 = await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង ម្ហូបអាហារ ម៉ាក់ណាំ',
       nameEn: 'Mak Nam Food',
       ownerName: 'Sreymom Ly',
@@ -192,10 +184,8 @@ async function main() {
     },
   });
 
-  const merchant5 = await prisma.merchant.upsert({
-    where: { phone: '+85512345006' },
-    update: {},
-    create: {
+  const merchant5 = await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង ប្រដាប់ប្រើប្រាស់ គេហដ្ឋាន',
       nameEn: 'HomePlus Cambodia',
       ownerName: 'Vuthy Chea',
@@ -208,10 +198,8 @@ async function main() {
   });
 
   // 测试：一个 pending 状态的商家（模拟待审核场景）
-  await prisma.merchant.upsert({
-    where: { phone: '+85512345007' },
-    update: {},
-    create: {
+  await prisma.merchant.create({
+    data: {
       nameKm: 'ហាង គ្រឿងអលង្ការ ពេជ្រសុវណ្ណ',
       nameEn: 'Sovann Jewelry',
       ownerName: 'Bopha Keo',
@@ -653,7 +641,7 @@ async function main() {
         phone: '+85512345001',
         province: 'សៀមរាប',
         district: 'ក្រុងសៀមរាប',
-        cityCode: 'siem_reap',
+        cityCode: 'phnom_penh',
         detail: 'ផ្ទះលេខ 78 ផ្លូវជាតិលេខ 6',
         isDefault: false,
       },
