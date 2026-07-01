@@ -5,6 +5,7 @@ import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
 import { sendOrderNotification, sendMerchantOrderNotification } from '../integrations/telegram.js';
+import { calculateShippingFee } from './shopConfig.service.js';
 
 export async function createOrder(userId, body) {
   const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
@@ -53,6 +54,11 @@ export async function createOrder(userId, body) {
         }
       }
 
+      // 1.1 校验地址城市与配送规则
+      const cityCode = address.cityCode || normalizeProvinceToCityCode(address.province);
+      const deliveryRule = await prisma.deliveryRule.findFirst({ where: { cityCode, status: 'active' } });
+      if (!deliveryRule) throw new AppError('当前地址暂不支持配送', 400, 'DELIVERY_NOT_AVAILABLE');
+
       // 3b. 校验优惠券
       let discountUsd = 0;
       let selectedCouponId = couponId;
@@ -100,10 +106,16 @@ export async function createOrder(userId, body) {
         });
       }
 
+      const shippingFeeUsd = calculateShippingFee(totalUsd, deliveryRule);
+      const minOrderAmountUsd = Number(deliveryRule.minOrderAmountUsd);
+      if (totalUsd < minOrderAmountUsd) {
+        throw new AppError(`订单金额未满 $${minOrderAmountUsd} 起送`, 400, 'ORDER_MIN_AMOUNT_NOT_MET');
+      }
+
       // 3d. 创建订单 — 折扣按原价比例分摊，确保总额精确
       const orderNumber = generateOrderNumber();
-      const finalTotalUsd = Math.round((totalUsd - discountUsd) * 100) / 100;
-      const finalTotalKhr = Math.round(totalKhr - (discountUsd * 4000));
+      const finalTotalUsd = Math.round((totalUsd - discountUsd + shippingFeeUsd) * 100) / 100;
+      const finalTotalKhr = Math.round(totalKhr - (discountUsd * 4000) + (shippingFeeUsd * 4000));
 
       // 按原价比例分摊折扣金额
       const discountPerUsd = totalUsd > 0 ? discountUsd / totalUsd : 0;
@@ -155,6 +167,7 @@ export async function createOrder(userId, body) {
           totalUsd: finalTotalUsd,
           totalKhr: finalTotalKhr,
           discountUsd,
+          shippingFeeUsd,
           status: paymentMethod === 'cod' ? 'paid' : 'pending_payment',
           paymentMethod,
           paymentTimeout: paymentMethod !== 'cod' ? new Date(Date.now() + 15 * 60 * 1000) : null,
@@ -179,7 +192,7 @@ export async function createOrder(userId, body) {
         },
       });
 
-      return order;
+      return { ...order, shippingFeeUsd };
     });
 
     // 4. 清除购物车
@@ -214,7 +227,7 @@ export async function createOrder(userId, body) {
       console.error('[Bot] 通知查询失败:', e.message);
     }
 
-    return order;
+    return { ...order, shippingFeeUsd: Number(order.shippingFeeUsd) };
   } finally {
     // 安全释放锁：只有持有自己 token 时才删除
     const currentToken = await redis.get(lockKey);
@@ -384,4 +397,17 @@ export async function confirmOrder(userId, orderId) {
     where: { id: orderId },
     data: { status: 'completed', completedAt: new Date() },
   });
+}
+
+function normalizeProvinceToCityCode(province) {
+  if (!province) return null;
+  const map = {
+    'phnom penh': 'phnom_penh',
+    'ភ្នំពេញ': 'phnom_penh',
+    '金边': 'phnom_penh',
+    'siem reap': 'siem_reap',
+    'សៀមរាប': 'siem_reap',
+    '暹粒': 'siem_reap',
+  };
+  return map[province.trim().toLowerCase()] || null;
 }

@@ -641,7 +641,7 @@ async function main() {
         phone: '+85512345001',
         province: 'សៀមរាប',
         district: 'ក្រុងសៀមរាប',
-        cityCode: 'phnom_penh',
+        cityCode: 'siem_reap',
         detail: 'ផ្ទះលេខ 78 ផ្លូវជាតិលេខ 6',
         isDefault: false,
       },
