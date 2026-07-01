@@ -449,7 +449,7 @@
         total: final,
         payment: selectedPay,
         createdAt: new Date().toISOString(),
-        status: 'pending_payment',
+        status: selectedPay === 'cod' ? 'confirmed' : 'pending_payment',
       };
       // Save order
       const orders = JSON.parse(localStorage.getItem('tgm_orders') || '[]');

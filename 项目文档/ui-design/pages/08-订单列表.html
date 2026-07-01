@@ -119,6 +119,7 @@
       padding: 3px 10px; border-radius: 999px;
     }
     .status-pending_payment { background: oklch(60% 0.15 60 / 0.12); color: oklch(55% 0.14 65); }
+    .status-confirmed { background: oklch(58% 0.16 200 / 0.1); color: oklch(50% 0.14 205); }
     .status-paid { background: oklch(58% 0.16 255 / 0.1); color: var(--accent-blue); }
     .status-shipped { background: oklch(58% 0.16 155 / 0.1); color: var(--accent-green); }
     .status-completed { background: oklch(50% 0.01 80 / 0.08); color: var(--muted); }
@@ -233,6 +234,9 @@
     <div class="status-tab" data-status="pending_payment">
       <span data-i18n="pending">មិនទាន់បង់</span> <span class="count" id="countPending">1</span>
     </div>
+    <div class="status-tab" data-status="confirmed">
+      <span data-i18n="confirmed">បានបញ្ជាក់</span> <span class="count" id="countConfirmed">0</span>
+    </div>
     <div class="status-tab" data-status="paid">
       <span data-i18n="paid">បានបង់</span> <span class="count" id="countPaid">1</span>
     </div>
@@ -289,9 +293,9 @@
       noOrders: { km: 'គ្មានការបញ្ជាទិញ', zh: '暂无订单', en: 'No orders' },
       cancelOrder: { km: 'លុបចោល', zh: '取消', en: 'Cancel' },
       payNow: { km: 'បង់ឥឡូវ', zh: '去支付', en: 'Pay' },
-      confirmReceived: { km: 'បញ្ជាក់ទទួល', zh: '确认收货', en: 'Confirm' },
+      confirmReceived: { km: 'បញ្ជាក់ទទួល', zh: '确认收货', en: 'Confirm receipt' },
+      confirmed: { km: 'បានបញ្ជាក់', zh: '已确认', en: 'Confirmed' },
       cancelled: { km: 'ការបញ្ជាទិញត្រូវបានលុបចោល', zh: '订单已取消', en: 'Order cancelled' },
-      confirmed: { km: 'បានបញ្ជាក់ទទួល', zh: '已确认收货', en: 'Confirmed receipt' },
       navHome: { km: 'ទំព័រដើម', zh: '首页', en: 'Home' },
       navCat: { km: 'ប្រភេទ', zh: '分类', en: 'Category' },
       navCart: { km: 'កន្ត្រក', zh: '购物车', en: 'Cart' },
@@ -348,6 +352,7 @@
       // Update counts
       document.getElementById('countAll').textContent = orders.length;
       document.getElementById('countPending').textContent = orders.filter(o => o.status === 'pending_payment').length;
+      document.getElementById('countConfirmed').textContent = orders.filter(o => o.status === 'confirmed').length;
       document.getElementById('countPaid').textContent = orders.filter(o => o.status === 'paid').length;
       document.getElementById('countShipped').textContent = orders.filter(o => o.status === 'shipped').length;
       document.getElementById('countCompleted').textContent = orders.filter(o => o.status === 'completed').length;
@@ -361,6 +366,7 @@
 
       const statusLabels = {
         pending_payment: currentLang === 'km' ? 'មិនទាន់បង់' : currentLang === 'zh' ? '待付款' : 'Pending',
+        confirmed: currentLang === 'km' ? 'បានបញ្ជាក់' : currentLang === 'zh' ? '已确认' : 'Confirmed',
         paid: currentLang === 'km' ? 'បានបង់' : currentLang === 'zh' ? '已付款' : 'Paid',
         shipped: currentLang === 'km' ? 'កំពុងដឹក' : currentLang === 'zh' ? '已发货' : 'Shipped',
         completed: currentLang === 'km' ? 'បានបញ្ចប់' : currentLang === 'zh' ? '已完成' : 'Completed',
