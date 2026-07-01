@@ -6,14 +6,21 @@ import { getPagination } from '../utils/pagination.js';
 // ---------- Categories ----------
 
 export async function listCategories({ page = 1, limit = 20, status } = {}) {
-  const { skip, take } = getPagination({ page, limit });
+  const { page: normalizedPage, limit: normalizedLimit, skip, take } = getPagination({ page, limit });
   const where = {};
   if (status) where.status = status;
   const [items, total] = await Promise.all([
     prisma.category.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take }),
     prisma.category.count({ where }),
   ]);
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total };
+  return {
+    items,
+    total,
+    page: normalizedPage,
+    limit: normalizedLimit,
+    totalPages: Math.ceil(total / normalizedLimit),
+    hasNext: normalizedPage * normalizedLimit < total,
+  };
 }
 
 export async function createCategory(data) {
@@ -41,14 +48,21 @@ export async function listActiveCategories(clientPrisma = prisma) {
 // ---------- Banners ----------
 
 export async function listBanners({ page = 1, limit = 20, status } = {}) {
-  const { skip, take } = getPagination({ page, limit });
+  const { page: normalizedPage, limit: normalizedLimit, skip, take } = getPagination({ page, limit });
   const where = {};
   if (status) where.status = status;
   const [items, total] = await Promise.all([
     prisma.banner.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take }),
     prisma.banner.count({ where }),
   ]);
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total };
+  return {
+    items,
+    total,
+    page: normalizedPage,
+    limit: normalizedLimit,
+    totalPages: Math.ceil(total / normalizedLimit),
+    hasNext: normalizedPage * normalizedLimit < total,
+  };
 }
 
 export async function createBanner(data) {
@@ -67,10 +81,12 @@ export async function toggleBanner(id) {
 }
 
 export async function listActiveBanners(clientPrisma = prisma, cityCode, now = new Date()) {
+  const cityOr = [{ cityCode: null }];
+  if (cityCode) cityOr.push({ cityCode });
   const items = await clientPrisma.banner.findMany({
     where: {
       status: 'active',
-      OR: [{ cityCode: null }, { cityCode: cityCode }],
+      OR: cityOr,
       AND: [
         { OR: [{ startAt: null }, { startAt: { lte: now } }] },
         { OR: [{ endAt: null }, { endAt: { gte: now } }] },
@@ -112,14 +128,16 @@ export async function updateCity(code, data) {
 }
 
 export async function toggleCity(code) {
-  const city = await prisma.city.findUnique({ where: { code } });
-  if (!city) throw new AppError('城市不存在', 404, 'NOT_FOUND');
-  const activeCount = await prisma.city.count({ where: { status: 'active' } });
-  if (city.status === 'active' && activeCount <= 1) {
-    throw new AppError('至少保留一个启用城市', 400, 'VALIDATION_ERROR');
-  }
-  const nextStatus = city.status === 'active' ? 'inactive' : 'active';
-  return prisma.city.update({ where: { code }, data: { status: nextStatus } });
+  return prisma.$transaction(async (tx) => {
+    const city = await tx.city.findUnique({ where: { code } });
+    if (!city) throw new AppError('城市不存在', 404, 'NOT_FOUND');
+    const activeCount = await tx.city.count({ where: { status: 'active' } });
+    if (city.status === 'active' && activeCount <= 1) {
+      throw new AppError('至少保留一个启用城市', 400, 'VALIDATION_ERROR');
+    }
+    const nextStatus = city.status === 'active' ? 'inactive' : 'active';
+    return tx.city.update({ where: { code }, data: { status: nextStatus } });
+  });
 }
 
 // ---------- Delivery Rules ----------
@@ -183,6 +201,8 @@ export async function toggleCustomerService(id) {
 }
 
 export async function setDefaultCustomerService(id) {
+  const cs = await prisma.customerService.findUnique({ where: { id } });
+  if (!cs) throw new AppError('客服账号不存在', 404, 'NOT_FOUND');
   return prisma.$transaction(async (tx) => {
     await tx.customerService.updateMany({ data: { isDefault: false } });
     return tx.customerService.update({ where: { id }, data: { isDefault: true, status: 'active' } });
