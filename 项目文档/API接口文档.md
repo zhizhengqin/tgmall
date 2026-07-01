@@ -165,7 +165,8 @@ limit  = 20     # 每页数量，默认 20，最大 100
 | **Token 类型** | JWT（JSON Web Token） |
 | **签发算法** | HS256 |
 | **有效期** | 24 小时（`exp` 声明） |
-| **Payload** | `{ user_id, telegram_id, role, iat, exp }` |
+| **Payload（消费者 Token）** | `{ user_id, telegram_id, role, iat, exp }` |
+| **Payload（管理员 Token）** | `{ admin_user_id, role, iat, exp }` |
 | **刷新** | Token 过期后，前端用 `POST /auth/refresh` 刷新（需旧 Token 未过期 30 天） |
 | **存储** | 前端存在 `localStorage`（Mini App 中如被清除则重新登录） |
 
