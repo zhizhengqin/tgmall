@@ -390,7 +390,7 @@ POST /api/v1/auth/telegram
 3. Bot 会回复你的用户信息，包含 `Id: 123456789`
 4. 把这个数字复制到 `ADMIN_TELEGRAM_IDS`
 
-> 这个 ID 决定了谁是平台管理员。只有这个 ID 的用户才能审核商家、查看大盘数据。
+> 这个 ID 决定了谁是平台管理员。只有这个 ID 的用户才能查看大盘数据、管理商品/订单/用户。
 
 ### 4.7 全部添加完成后的样子
 
@@ -469,15 +469,13 @@ Railway 的默认域名比较长，你可以设置一个短的：
 2. 执行 5 个构建阶段：
    - 安装后端依赖 + 生成 Prisma 代码
    - 构建 Mini App 前端（Vue → HTML/JS/CSS）
-   - 构建商家后台
-   - 构建运营后台
+   - 构建管理员后台
    - 组装 Nginx + Node.js + 所有静态文件到最终镜像
 3. 启动容器后，`railway-start.sh` 先运行数据库迁移，然后同时启动 Nginx 和 Node.js
 4. Nginx 监听 8080 端口（Railway 对外暴露的端口），路由规则：
    - `/api/*` → 转发给 Node.js:3000
    - `/` → Mini App 前端页面
-   - `/merchant/*` → 商家后台
-   - `/admin/*` → 运营后台
+   - `/admin/*` → 管理员后台
 </details>
 
 ---
@@ -520,26 +518,18 @@ API 启动时会自动调用 `setChatMenuButton`，所有用户打开你的 Bot 
 https://t.me/xhzmall_bot?startapp=shop
 ```
 
-#### 带店铺参数的链接（不同商家不同二维码）
-
-```
-https://t.me/xhzmall_bot?startapp=shop_001   ← 商家A
-https://t.me/xhzmall_bot?startapp=shop_002   ← 商家B
-https://t.me/xhzmall_bot?startapp=flyer_01   ← 传单A版
-```
-
 #### 生成 QR 码
 
 **快速验证**：把链接贴到 [qr-code-generator.com](https://www.qr-code-generator.com/) 生成 QR 码，打印测试。
 
-**代码自动生成**（商家后台功能）：
+**代码自动生成**（管理员后台功能）：
 ```js
 import QRCode from 'qrcode';
 
-// 生成店铺专属二维码
-const shopUrl = `https://t.me/xhzmall_bot?startapp=shop_${shopId}`;
+// 生成平台推广二维码
+const shopUrl = 'https://t.me/xhzmall_bot?startapp=shop';
 const qrImage = await QRCode.toDataURL(shopUrl);
-// qrImage → base64 图片，商家下载打印
+// qrImage → base64 图片，下载打印
 ```
 
 ### 6.4 用户扫码后的体验
@@ -554,7 +544,7 @@ const qrImage = await QRCode.toDataURL(shopUrl);
 
 ### 6.5 柬埔寨线下推广物料模板
 
-给商家提供的标准 QR 码贴纸：
+平台推广 QR 码：
 
 ```
 ┌─────────────────────────────┐
@@ -591,11 +581,11 @@ const qrImage = await QRCode.toDataURL(shopUrl);
 | 结算 | 进入购物车 → 结算 | 跳转结算页 |
 | 下单 | 填写地址 → 提交 | 跳转支付页或结果页 |
 
-### 7.3 商家后台测试
+### 7.3 管理员后台测试
 
-1. 先用管理员 Token 登录商家后台
-2. 访问：`https://你的域名.up.railway.app/merchant/`
-3. 输入商家 JWT Token → 登录 → 看到看板
+1. 先用管理员 Token 登录管理员后台
+2. 访问：`https://你的域名.up.railway.app/admin/`
+3. 输入管理员 JWT Token → 登录 → 看到看板
 
 ### 7.4 手机调试技巧
 
@@ -729,9 +719,8 @@ curl https://你的域名.up.railway.app/api/v1/health
 ```
 Stage 1: api-build     → 安装后端依赖 + 生成 Prisma 代码
 Stage 2: miniapp-build → npm ci + vite build → dist/
-Stage 3: merchant-build → npm ci + vite build → dist/
-Stage 4: admin-build   → npm ci + vite build → dist/
-Stage 5: 最终镜像       → Nginx + Node.js + 所有 dist/
+Stage 3: admin-build   → npm ci + vite build → dist/
+Stage 4: 最终镜像       → Nginx + Node.js + 所有 dist/
 ```
 
 **为什么分阶段？** 每个阶段可以并行缓存。如果只改了后端代码，前端阶段会直接用缓存，构建速度从 8 分钟降到 2 分钟。
@@ -741,7 +730,6 @@ Stage 5: 最终镜像       → Nginx + Node.js + 所有 dist/
 ```
 用户请求 → Nginx (8080) → 判断 URL 路径
                           ├── /api/*    → 转发 Node.js:3000
-                          ├── /merchant/ → 静态文件
                           ├── /admin/   → 静态文件
                           └── /         → Mini App 前端
 ```
