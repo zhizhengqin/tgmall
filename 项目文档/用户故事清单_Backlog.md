@@ -1199,9 +1199,10 @@
 
 **验收标准**
 
-- [ ] **AC1：COD 下单** — 选择 COD 支付方式时，订单状态变为 `confirmed`，`payment_status` 为 `pending_cod`，`payment_timeout` 为 `null`；骑手送达收款后由运营改为 `paid` / `success`
+- [ ] **AC1：COD 下单** — 选择 COD 支付方式时，订单状态变为 `confirmed`，`payment_status` 为 `pending_cod`，`payment_timeout` 为 `null`
 - [ ] **AC2：COD 订单标记** — COD 订单在运营后台有特殊标识（"COD — 货到付款"）
 - [ ] **AC3：金额上限** — COD 订单金额超过 $100 时提示"大额订单建议使用在线支付"
+- [ ] **AC4：COD 收款确认** — `shipped` 状态的 COD 订单可通过 `POST /api/v1/admin/orders/{id}/collect-cod` 确认收款，状态变为 `paid`，`payment_status` 变为 `success`，`paid_at` 记录为确认时间；非 COD 订单或非 `shipped` 状态调用返回 400
 
 ---
 

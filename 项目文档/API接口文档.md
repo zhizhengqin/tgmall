@@ -1578,6 +1578,7 @@ GET /payments/status/{orderId}
 | `GET` | `/admin/orders` | 平台订单列表 | JWT (admin) |
 | `GET` | `/admin/orders/{id}` | 平台订单详情 | JWT (admin) |
 | `POST` | `/admin/orders/{id}/ship` | 确认发货 | JWT (admin) |
+| `POST` | `/admin/orders/{id}/collect-cod` | COD 收款确认 | JWT (admin) |
 | `GET` | `/admin/users` | 用户列表 | JWT (admin) |
 
 ### 8.2 管理员认证说明
@@ -1994,7 +1995,69 @@ POST /admin/orders/{id}/ship
 
 ---
 
-### 接口 36：用户列表（管理员）
+### 接口 36：COD 收款确认
+
+```
+POST /admin/orders/{id}/collect-cod
+```
+
+**说明**：COD 订单送达后，运营人员确认已收款，将订单状态从 `shipped` 推进到 `paid`。支持记录实际收款金额与收款时间，便于对账。
+
+**请求体**（可选）：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `collectedAmountUsd` | `decimal` | 否 | 实际收取的 USD 金额 |
+| `collectedAmountKhr` | `decimal` | 否 | 实际收取的 KHR 金额 |
+| `collectedAt` | `string` | 否 | 实际收款时间，ISO 8601 格式；默认当前时间 |
+| `note` | `string` | 否 | 收款备注 |
+
+**请求示例**：
+
+```json
+{
+  "collectedAmountUsd": 12.50,
+  "collectedAmountKhr": 51000,
+  "collectedAt": "2026-06-05T16:30:00.000Z",
+  "note": "ទទួលប្រាក់ពីអ្នកដឹកជញ្ជូន / 已从骑手处收款"
+}
+```
+
+**校验规则**：
+
+- 订单必须存在；
+- 订单 `paymentMethod` 必须为 `cod`；
+- 订单当前状态必须为 `shipped`。
+
+**成功响应** `200`：
+
+```json
+{
+  "success": true,
+  "data": {
+    "order_number": "ORD-20260605-A1B2C3",
+    "status": "paid",
+    "payment_status": "success",
+    "paid_at": "2026-06-05T16:30:00.000Z",
+    "collected_amount_usd": 12.50,
+    "collected_amount_khr": 51000,
+    "note": "ទទួលប្រាក់ពីអ្នកដឹកជញ្ជូន / 已从骑手处收款"
+  }
+}
+```
+
+**错误响应**：
+
+| 状态码 | error.code | 说明 |
+|--------|------------|------|
+| `400` | `ORDER_NOT_COD` | 仅 `paymentMethod === 'cod'` 的订单可收款确认 |
+| `400` | `ORDER_CANNOT_COLLECT_COD` | 仅 `shipped` 状态的 COD 订单可收款确认 |
+| `404` | `ORDER_NOT_FOUND` | 订单不存在 |
+| `403` | `FORBIDDEN` | 当前管理员无权限 |
+
+---
+
+### 接口 37：用户列表（管理员）
 
 ```
 GET /admin/users
@@ -2047,7 +2110,7 @@ GET /admin/users
 
 ---
 
-### 接口 37：可领取优惠券列表
+### 接口 38：可领取优惠券列表
 
 ```
 GET /coupons
@@ -2093,7 +2156,7 @@ GET /coupons
 
 ---
 
-### 接口 38：领取优惠券
+### 接口 39：领取优惠券
 
 ```
 POST /coupons/{id}/claim
@@ -2134,7 +2197,7 @@ POST /coupons/{id}/claim
 
 ---
 
-### 接口 39：我的优惠券
+### 接口 40：我的优惠券
 
 ```
 GET /users/me/coupons
@@ -2173,7 +2236,7 @@ GET /users/me/coupons
 
 ## 十、文件上传模块
 
-### 接口 40：上传图片
+### 接口 41：上传图片
 
 ```
 POST /upload/image
@@ -2222,7 +2285,7 @@ POST /upload/image
 
 ## 十一、Webhook 回调
 
-### 接口 41：支付回调（统一入口）
+### 接口 42：支付回调（统一入口）
 
 ```
 POST /webhooks/payment
@@ -2264,7 +2327,7 @@ POST /webhooks/payment
 
 ## 十二、公共接口
 
-### 接口 42：健康检查
+### 接口 43：健康检查
 
 ```
 GET /health
@@ -2289,7 +2352,7 @@ GET /health
 
 ---
 
-### 接口 43：汇率查询
+### 接口 44：汇率查询
 
 ```
 GET /utils/exchange-rate
@@ -2311,7 +2374,7 @@ GET /utils/exchange-rate
 
 ---
 
-### 接口 44：柬埔寨省市列表
+### 接口 45：柬埔寨省市列表
 
 ```
 GET /utils/provinces
