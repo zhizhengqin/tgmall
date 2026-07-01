@@ -46,3 +46,29 @@ export const toggleProduct = (id) => api.post(`/admin/products/${id}/toggle`);
 export const getOrders = (params) => api.get('/admin/orders', { params });
 export const getOrderDetail = (id) => api.get(`/admin/orders/${id}`);
 export const shipOrder = (id, data) => api.post(`/admin/orders/${id}/ship`, data);
+
+// ── 运营配置 ──
+export const getCategories = (params) => api.get('/admin/categories', { params });
+export const createCategory = (data) => api.post('/admin/categories', data);
+export const updateCategory = (code, data) => api.put(`/admin/categories/${code}`, data);
+export const toggleCategory = (code) => api.post(`/admin/categories/${code}/toggle`);
+
+export const getBanners = (params) => api.get('/admin/banners', { params });
+export const createBanner = (data) => api.post('/admin/banners', data);
+export const updateBanner = (id, data) => api.put(`/admin/banners/${id}`, data);
+export const toggleBanner = (id) => api.post(`/admin/banners/${id}/toggle`);
+
+export const getCities = (params) => api.get('/admin/cities', { params });
+export const createCity = (data) => api.post('/admin/cities', data);
+export const updateCity = (code, data) => api.put(`/admin/cities/${code}`, data);
+export const toggleCity = (code) => api.post(`/admin/cities/${code}/toggle`);
+
+export const getDeliveryRules = () => api.get('/admin/delivery-rules');
+export const updateDeliveryRule = (cityCode, data) => api.put(`/admin/delivery-rules/${cityCode}`, data);
+export const toggleDeliveryRule = (id) => api.post(`/admin/delivery-rules/${id}/toggle`);
+
+export const getCustomerServices = (params) => api.get('/admin/customer-services', { params });
+export const createCustomerService = (data) => api.post('/admin/customer-services', data);
+export const updateCustomerService = (id, data) => api.put(`/admin/customer-services/${id}`, data);
+export const toggleCustomerService = (id) => api.post(`/admin/customer-services/${id}/toggle`);
+export const setDefaultCustomerService = (id) => api.post(`/admin/customer-services/${id}/set-default`);
