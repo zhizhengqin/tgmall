@@ -1050,8 +1050,8 @@ DELETE /cart
 |--------|-------------|------|-----------|
 | `pending_payment` | 待付款 | 🟠 橙色 | 去支付、取消订单 |
 | `confirmed` | 已确认（COD 订单创建后） | 🔵 蓝色 | 查看（等待平台发货） |
-| `paid` | 已付款 | 🔵 蓝色 | 查看（等待平台发货） |
-| `shipped` | 已发货 | 🟢 绿色 | 确认收货、查看物流 |
+| `paid` | 已付款 | 🔵 蓝色 | 在线支付订单等待发货；COD 订单收款确认后可确认收货 |
+| `shipped` | 已发货 | 🟢 绿色 | 在线支付订单可确认收货、查看物流；COD 订单等待收款确认 |
 | `completed` | 已完成 | ⚫ 灰色 | 查看（不可操作） |
 | `cancelled` | 已取消 | 🔴 红色 | 查看（不可操作） |
 
@@ -1390,7 +1390,7 @@ POST /orders/{id}/confirm
 
 | 状态码 | error.code | 说明 |
 |--------|------------|------|
-| `400` | `ORDER_CANNOT_CONFIRM` | 只有 `shipped` 状态可确认收货 |
+| `400` | `ORDER_CANNOT_CONFIRM` | 在线支付订单仅 `shipped` 状态可确认收货；COD 订单仅 `paid` 状态可确认收货 |
 
 ---
 
@@ -1580,6 +1580,10 @@ GET /payments/status/{orderId}
 | `POST` | `/admin/orders/{id}/ship` | 确认发货 | JWT (admin) |
 | `POST` | `/admin/orders/{id}/collect-cod` | COD 收款确认 | JWT (admin) |
 | `GET` | `/admin/users` | 用户列表 | JWT (admin) |
+| `GET` | `/admin/coupons` | 优惠券列表（管理） | JWT (admin) |
+| `POST` | `/admin/coupons` | 创建优惠券 | JWT (admin) |
+| `GET` | `/admin/shop-config` | 商城配置 | JWT (admin) |
+| `PUT` | `/admin/shop-config` | 更新商城配置 | JWT (admin) |
 
 ### 8.2 管理员认证说明
 
@@ -2001,7 +2005,7 @@ POST /admin/orders/{id}/ship
 POST /admin/orders/{id}/collect-cod
 ```
 
-**说明**：COD 订单送达后，运营人员确认已收款，将订单状态从 `shipped` 推进到 `paid`。支持记录实际收款金额与收款时间，便于对账。
+**说明**：COD 订单送达后，运营人员确认已收款，将订单状态从 `shipped` 推进到 `paid`。接口记录实际收款金额、收款时间、备注到 `cod_collection_info` JSONB 字段，用于对账与审计。
 
 **请求体**（可选）：
 
@@ -2039,9 +2043,12 @@ POST /admin/orders/{id}/collect-cod
     "status": "paid",
     "payment_status": "success",
     "paid_at": "2026-06-05T16:30:00.000Z",
-    "collected_amount_usd": 12.50,
-    "collected_amount_khr": 51000,
-    "note": "ទទួលប្រាក់ពីអ្នកដឹកជញ្ជូន / 已从骑手处收款"
+    "cod_collection_info": {
+      "collected_amount_usd": 12.50,
+      "collected_amount_khr": 51000,
+      "collected_at": "2026-06-05T16:30:00.000Z",
+      "note": "ទទួលប្រាក់ពីអ្នកដឹកជញ្ជូន / 已从骑手处收款"
+    }
   }
 }
 ```
@@ -2444,7 +2451,7 @@ GET /utils/provinces
 | `400` | `COUPON_MIN_SPEND` | 未达到最低消费门槛 |
 | `400` | `ORDER_NOT_PAYABLE` | 订单状态不支持支付 |
 | `400` | `ORDER_CANNOT_CANCEL` | 订单状态不允许取消 |
-| `400` | `ORDER_CANNOT_CONFIRM` | 订单状态不允许确认收货 |
+| `400` | `ORDER_CANNOT_CONFIRM` | 在线支付订单 `shipped` / COD 订单 `paid` 状态方可确认收货 |
 | `400` | `ORDER_CANNOT_SHIP` | 订单状态不允许发货 |
 | `400` | `ORDER_ALREADY_PAID` | 订单已支付 |
 | `400` | `ORDER_CANCELLED` | 订单已取消 |

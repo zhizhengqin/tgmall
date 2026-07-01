@@ -267,7 +267,7 @@ Docker 镜像是什么？你可以理解为一个"打包好的运行环境"—�
 | `BOT_USERNAME` | `xhzmall_bot` | Telegram Bot 用户名（不含@） | 看下方 4.4 |
 | `MINI_APP_URL` | `https://xxx.up.railway.app` | Mini App 公网地址 | 看下方 4.3.1 |
 | `JWT_SECRET` | `a1b2c3d4...` | JWT 签名密钥 | 看下方 4.5 |
-| `ADMIN_TELEGRAM_IDS` | `你的Telegram ID` | 管理员白名单 | 看下方 4.6 |
+| `ADMIN_PASSWORD` | `your-secure-password` | 默认管理员 `admin` 的登录密码 | 看下方 4.6 |
 | `NODE_ENV` | `production` | 生产模式 | 直接填写 |
 
 > ⚠️ **重要**：`BOT_TOKEN` 直接控制着你的 Telegram Bot，**绝对不要**分享给别人或在公开场合展示。
@@ -383,14 +383,17 @@ POST /api/v1/auth/telegram
 
 **类比**：JWT_SECRET 就像你家门锁的钥匙。如果钥匙是 "1234"（弱密码），小偷试几次就进来了。如果是随机生成的 256 位密钥，就等于一把无法复制的锁。
 
-### 4.6 获取你的 Telegram ID
+### 4.6 设置管理员密码
 
-1. 在 Telegram 搜索 **@userinfobot**
-2. 点击 **"Start"**
-3. Bot 会回复你的用户信息，包含 `Id: 123456789`
-4. 把这个数字复制到 `ADMIN_TELEGRAM_IDS`
+管理后台使用用户名 `admin` + 密码登录。`ADMIN_PASSWORD` 是默认管理员账号的密码来源：
 
-> 这个 ID 决定了谁是平台管理员。只有这个 ID 的用户才能查看大盘数据、管理商品/订单/用户。
+1. 在 Railway 项目 → Variables 里添加 `ADMIN_PASSWORD`。
+2. 填写一个**强密码**（建议 16 位以上，包含大小写字母、数字和符号）。
+3. 首次部署时，种子脚本（`prisma/seed.js`）会自动创建默认管理员用户 `admin`，并使用 `ADMIN_PASSWORD` 的 bcrypt 哈希作为密码。
+
+> ⚠️ **重要**：`ADMIN_PASSWORD` 直接决定谁能进入管理后台。请使用强密码，且**不要**在公开场合展示。
+> 
+> 如果忘记密码，只需在 Railway Variables 中修改 `ADMIN_PASSWORD` 的值，然后重新部署；种子脚本会在启动时更新 `admin` 用户的密码哈希。
 
 ### 4.7 全部添加完成后的样子
 
@@ -403,7 +406,7 @@ BOT_TOKEN              1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
 BOT_USERNAME           xhzmall_bot
 MINI_APP_URL           https://tgmall-production-xxxx.up.railway.app
 JWT_SECRET             a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a
-ADMIN_TELEGRAM_IDS     123456789
+ADMIN_PASSWORD         your-secure-password
 NODE_ENV               production
 
 # 可选：支付密钥（接入真实支付前可不填）
