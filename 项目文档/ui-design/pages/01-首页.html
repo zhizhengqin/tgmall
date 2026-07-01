@@ -291,11 +291,6 @@
       font-size: 11px;
       color: var(--muted);
     }
-    .product-card .shop {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
 
     /* ============================================================
        Skeleton loading
@@ -479,18 +474,18 @@
     // Product data — realistic Cambodia marketplace items
     // ============================================================
     const PRODUCTS = [
-      { id: 1, cat: 'fashion', name: { km: 'អាវយឺតកប្បាសសុទ្ធ', zh: '纯棉短袖T恤', en: 'Pure Cotton T-Shirt' }, priceUsd: 12.99, priceKhr: '៛52,000', img: '👕', shop: 'Phnom Penh Style', badge: 'Hot' },
-      { id: 2, cat: 'beauty', name: { km: 'ក្រែមលាបមុខវីតាមីន C', zh: 'VC亮肤精华面霜', en: 'Vitamin C Brightening Cream' }, priceUsd: 24.50, priceKhr: '៛98,000', img: '✨', shop: 'Khmer Beauty', badge: null },
-      { id: 3, cat: 'electronics', name: { km: 'កាសឥតខ្សែប៊្លូធូស', zh: '蓝牙无线耳机', en: 'Bluetooth Wireless Earbuds' }, priceUsd: 18.99, priceKhr: '៛76,000', img: '🎧', shop: 'Tech Zone KH', badge: 'New' },
-      { id: 4, cat: 'home', name: { km: 'ខ្នើយតុបតែងបែបបុរាណ', zh: '高棉传统装饰抱枕', en: 'Khmer Traditional Cushion' }, priceUsd: 15.00, priceKhr: '៛60,000', img: '🛋️', shop: 'Angkor Home', badge: null },
-      { id: 5, cat: 'fashion', name: { km: 'ស្បែកជើងប៉ាតាស្ត្រី', zh: '女士运动休闲鞋', en: "Women's Casual Sneakers" }, priceUsd: 32.00, priceKhr: '៛128,000', img: '👟', shop: 'Phnom Penh Style', badge: 'Sale' },
-      { id: 6, cat: 'beauty', name: { km: 'ក្រែមការពារកម្តៅថ្ងៃ SPF50', zh: 'SPF50 防晒霜', en: 'SPF50 Sunscreen Lotion' }, priceUsd: 9.99, priceKhr: '៛40,000', img: '☀️', shop: 'Khmer Beauty', badge: 'Hot' },
-      { id: 7, cat: 'electronics', name: { km: 'ឆ្នាំងសាកថ្មចល័ត 20000mAh', zh: '20000毫安充电宝', en: '20000mAh Power Bank' }, priceUsd: 22.00, priceKhr: '៛88,000', img: '🔋', shop: 'Tech Zone KH', badge: null },
-      { id: 8, cat: 'home', name: { km: 'ចានសេរ៉ាមិចធ្វើដោយដៃ', zh: '手工陶瓷餐具套装', en: 'Handmade Ceramic Dinner Set' }, priceUsd: 28.50, priceKhr: '៛114,000', img: '🍽️', shop: 'Angkor Home', badge: 'New' },
-      { id: 9, cat: 'fashion', name: { km: 'កាបូបស្ពាយស្បែក', zh: '真皮双肩背包', en: 'Leather Backpack' }, priceUsd: 45.00, priceKhr: '៛180,000', img: '🎒', shop: 'Phnom Penh Style', badge: 'Sale' },
-      { id: 10, cat: 'beauty', name: { km: 'ក្រែមលាបមាត់ពណ៌ធម្មជាតិ', zh: '天然植物口红', en: 'Natural Lipstick Set' }, priceUsd: 16.99, priceKhr: '៛68,000', img: '💄', shop: 'Khmer Beauty', badge: null },
-      { id: 11, cat: 'electronics', name: { km: 'ទូរស័ព្ទស្មាតហ្វូនស៊េរីថ្មី', zh: '新款智能手机', en: 'Latest Smartphone' }, priceUsd: 199.00, priceKhr: '៛796,000', img: '📱', shop: 'Tech Zone KH', badge: 'Hot' },
-      { id: 12, cat: 'home', name: { km: 'ចង្កៀងតុធ្វើពីឫស្សី', zh: '手工竹编台灯', en: 'Handwoven Bamboo Lamp' }, priceUsd: 19.99, priceKhr: '៛80,000', img: '💡', shop: 'Angkor Home', badge: null },
+      { id: 1, cat: 'fashion', name: { km: 'អាវយឺតកប្បាសសុទ្ធ', zh: '纯棉短袖T恤', en: 'Pure Cotton T-Shirt' }, priceUsd: 12.99, priceKhr: '៛52,000', img: '👕', badge: 'Hot' },
+      { id: 2, cat: 'beauty', name: { km: 'ក្រែមលាបមុខវីតាមីន C', zh: 'VC亮肤精华面霜', en: 'Vitamin C Brightening Cream' }, priceUsd: 24.50, priceKhr: '៛98,000', img: '✨', badge: null },
+      { id: 3, cat: 'electronics', name: { km: 'កាសឥតខ្សែប៊្លូធូស', zh: '蓝牙无线耳机', en: 'Bluetooth Wireless Earbuds' }, priceUsd: 18.99, priceKhr: '៛76,000', img: '🎧', badge: 'New' },
+      { id: 4, cat: 'home', name: { km: 'ខ្នើយតុបតែងបែបបុរាណ', zh: '高棉传统装饰抱枕', en: 'Khmer Traditional Cushion' }, priceUsd: 15.00, priceKhr: '៛60,000', img: '🛋️', badge: null },
+      { id: 5, cat: 'fashion', name: { km: 'ស្បែកជើងប៉ាតាស្ត្រី', zh: '女士运动休闲鞋', en: "Women's Casual Sneakers" }, priceUsd: 32.00, priceKhr: '៛128,000', img: '👟', badge: 'Sale' },
+      { id: 6, cat: 'beauty', name: { km: 'ក្រែមការពារកម្តៅថ្ងៃ SPF50', zh: 'SPF50 防晒霜', en: 'SPF50 Sunscreen Lotion' }, priceUsd: 9.99, priceKhr: '៛40,000', img: '☀️', badge: 'Hot' },
+      { id: 7, cat: 'electronics', name: { km: 'ឆ្នាំងសាកថ្មចល័ត 20000mAh', zh: '20000毫安充电宝', en: '20000mAh Power Bank' }, priceUsd: 22.00, priceKhr: '៛88,000', img: '🔋', badge: null },
+      { id: 8, cat: 'home', name: { km: 'ចានសេរ៉ាមិចធ្វើដោយដៃ', zh: '手工陶瓷餐具套装', en: 'Handmade Ceramic Dinner Set' }, priceUsd: 28.50, priceKhr: '៛114,000', img: '🍽️', badge: 'New' },
+      { id: 9, cat: 'fashion', name: { km: 'កាបូបស្ពាយស្បែក', zh: '真皮双肩背包', en: 'Leather Backpack' }, priceUsd: 45.00, priceKhr: '៛180,000', img: '🎒', badge: 'Sale' },
+      { id: 10, cat: 'beauty', name: { km: 'ក្រែមលាបមាត់ពណ៌ធម្មជាតិ', zh: '天然植物口红', en: 'Natural Lipstick Set' }, priceUsd: 16.99, priceKhr: '៛68,000', img: '💄', badge: null },
+      { id: 11, cat: 'electronics', name: { km: 'ទូរស័ព្ទស្មាតហ្វូនស៊េរីថ្មី', zh: '新款智能手机', en: 'Latest Smartphone' }, priceUsd: 199.00, priceKhr: '៛796,000', img: '📱', badge: 'Hot' },
+      { id: 12, cat: 'home', name: { km: 'ចង្កៀងតុធ្វើពីឫស្សី', zh: '手工竹编台灯', en: 'Handwoven Bamboo Lamp' }, priceUsd: 19.99, priceKhr: '៛80,000', img: '💡', badge: null },
     ];
 
     // ============================================================
@@ -509,7 +504,7 @@
       addToCart: { km: '✓ បានដាក់ចូលកន្ត្រក', zh: '✓ 已加入购物车', en: '✓ Added to cart' },
       banner1: { km: '🛍️ បញ្ចុះតម្លៃធំ', zh: '🛍️ 大促', en: '🛍️ Mega Sale' },
       banner2: { km: '📦 ដឹកជញ្ជូនឥតគិតថ្លៃ', zh: '📦 免运费', en: '📦 Free Shipping' },
-      banner3: { km: '🆕 ម៉ាកថ្មីមកដល់', zh: '🆕 新品牌入驻', en: '🆕 New Brands' },
+      banner3: { km: '🆕 ម៉ាកថ្មីមកដល់', zh: '🆕 新品上架', en: '🆕 New Arrivals' },
       catAll: { km: 'ទាំងអស់', zh: '全部', en: 'All' },
       catFashion: { km: 'ម៉ូត', zh: '时尚', en: 'Fashion' },
       catBeauty: { km: 'សម្រស់', zh: '美妆', en: 'Beauty' },
@@ -612,7 +607,6 @@
               <span class="price-usd">$${p.priceUsd.toFixed(2)}</span>
               <span class="price-khr">${p.priceKhr}</span>
             </div>
-            <div class="shop">${p.shop}</div>
           </div>
         </div>
       `).join('');
