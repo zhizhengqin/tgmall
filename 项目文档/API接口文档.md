@@ -2326,7 +2326,7 @@ GET /utils/provinces
 
 ## 十三、错误码速查表
 
-### 14.1 通用错误码
+### 13.1 通用错误码
 
 | HTTP | error.code | 默认消息（英语） |
 |------|------------|-----------------|
@@ -2343,7 +2343,7 @@ GET /utils/provinces
 | `500` | `INTERNAL_ERROR` | Internal server error |
 | `503` | `SERVICE_UNAVAILABLE` | Service temporarily unavailable |
 
-### 14.2 业务错误码
+### 13.2 业务错误码
 
 | HTTP | error.code | 说明 |
 |------|------------|------|
