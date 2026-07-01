@@ -1,4 +1,5 @@
 // 运营配置服务
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
 import { getPagination } from '../utils/pagination.js';
@@ -6,11 +7,11 @@ import { getPagination } from '../utils/pagination.js';
 // ---------- Categories ----------
 
 export async function listCategories({ page = 1, limit = 20, status } = {}) {
-  const { page: normalizedPage, limit: normalizedLimit, skip, take } = getPagination({ page, limit });
+  const { page: normalizedPage, limit: normalizedLimit, skip } = getPagination({ page, limit });
   const where = {};
   if (status) where.status = status;
   const [items, total] = await Promise.all([
-    prisma.category.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take }),
+    prisma.category.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take: normalizedLimit }),
     prisma.category.count({ where }),
   ]);
   return {
@@ -48,11 +49,11 @@ export async function listActiveCategories(clientPrisma = prisma) {
 // ---------- Banners ----------
 
 export async function listBanners({ page = 1, limit = 20, status } = {}) {
-  const { page: normalizedPage, limit: normalizedLimit, skip, take } = getPagination({ page, limit });
+  const { page: normalizedPage, limit: normalizedLimit, skip } = getPagination({ page, limit });
   const where = {};
   if (status) where.status = status;
   const [items, total] = await Promise.all([
-    prisma.banner.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take }),
+    prisma.banner.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take: normalizedLimit }),
     prisma.banner.count({ where }),
   ]);
   return {
@@ -131,6 +132,13 @@ export async function toggleCity(code) {
   return prisma.$transaction(async (tx) => {
     const city = await tx.city.findUnique({ where: { code } });
     if (!city) throw new AppError('城市不存在', 404, 'NOT_FOUND');
+
+    // 若准备禁用城市，先对当前所有启用城市加行锁，防止并发下同时禁用最后一个启用城市。
+    // 注意：该锁依赖 PostgreSQL 的 SELECT FOR UPDATE，仅在事务内生效。
+    if (city.status === 'active') {
+      await tx.$queryRaw(Prisma.sql`SELECT * FROM "cities" WHERE status = 'active' FOR UPDATE`);
+    }
+
     const activeCount = await tx.city.count({ where: { status: 'active' } });
     if (city.status === 'active' && activeCount <= 1) {
       throw new AppError('至少保留一个启用城市', 400, 'VALIDATION_ERROR');
@@ -201,9 +209,9 @@ export async function toggleCustomerService(id) {
 }
 
 export async function setDefaultCustomerService(id) {
-  const cs = await prisma.customerService.findUnique({ where: { id } });
-  if (!cs) throw new AppError('客服账号不存在', 404, 'NOT_FOUND');
   return prisma.$transaction(async (tx) => {
+    const cs = await tx.customerService.findUnique({ where: { id } });
+    if (!cs) throw new AppError('客服账号不存在', 404, 'NOT_FOUND');
     await tx.customerService.updateMany({ data: { isDefault: false } });
     return tx.customerService.update({ where: { id }, data: { isDefault: true, status: 'active' } });
   });
