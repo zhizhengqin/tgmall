@@ -24,11 +24,29 @@ export async function listCategories({ page = 1, limit = 20, status } = {}) {
   };
 }
 
-export async function createCategory(data) {
+export async function createCategory(input) {
+  const data = {
+    code: input.code,
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    iconUrl: input.icon_url,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.category.create({ data });
 }
 
-export async function updateCategory(code, data) {
+export async function updateCategory(code, input) {
+  const data = {
+    code: input.code,
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    iconUrl: input.icon_url,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.category.update({ where: { code }, data });
 }
 
@@ -66,11 +84,37 @@ export async function listBanners({ page = 1, limit = 20, status } = {}) {
   };
 }
 
-export async function createBanner(data) {
+export async function createBanner(input) {
+  const data = {
+    titleKm: input.title_km,
+    titleEn: input.title_en,
+    titleZh: input.title_zh,
+    imageUrl: input.image_url,
+    linkType: input.link_type,
+    linkTarget: input.link_target,
+    cityCode: input.city_code,
+    sortOrder: input.sort_order,
+    status: input.status,
+    startAt: input.start_at,
+    endAt: input.end_at,
+  };
   return prisma.banner.create({ data });
 }
 
-export async function updateBanner(id, data) {
+export async function updateBanner(id, input) {
+  const data = {
+    titleKm: input.title_km,
+    titleEn: input.title_en,
+    titleZh: input.title_zh,
+    imageUrl: input.image_url,
+    linkType: input.link_type,
+    linkTarget: input.link_target,
+    cityCode: input.city_code,
+    sortOrder: input.sort_order,
+    status: input.status,
+    startAt: input.start_at,
+    endAt: input.end_at,
+  };
   return prisma.banner.update({ where: { id }, data });
 }
 
@@ -107,7 +151,15 @@ export async function listCities({ status } = {}) {
   return prisma.city.findMany({ where, orderBy: { sortOrder: 'asc' } });
 }
 
-export async function createCity(data) {
+export async function createCity(input) {
+  const data = {
+    code: input.code,
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.$transaction(async (tx) => {
     const city = await tx.city.create({ data });
     await tx.deliveryRule.create({
@@ -124,7 +176,15 @@ export async function createCity(data) {
   });
 }
 
-export async function updateCity(code, data) {
+export async function updateCity(code, input) {
+  const data = {
+    code: input.code,
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.city.update({ where: { code }, data });
 }
 
@@ -157,7 +217,14 @@ export async function listDeliveryRules() {
   });
 }
 
-export async function upsertDeliveryRule(cityCode, data) {
+export async function upsertDeliveryRule(cityCode, input) {
+  const data = {
+    minOrderAmountUsd: input.min_order_amount_usd,
+    shippingFeeUsd: input.shipping_fee_usd,
+    freeShippingThresholdUsd: input.free_shipping_threshold_usd,
+    estimatedDeliveryDays: input.estimated_delivery_days,
+    status: input.status,
+  };
   return prisma.deliveryRule.upsert({
     where: { cityCode },
     update: data,
@@ -193,11 +260,31 @@ export async function listCustomerServices({ status } = {}) {
   return prisma.customerService.findMany({ where, orderBy: { sortOrder: 'asc' } });
 }
 
-export async function createCustomerService(data) {
+export async function createCustomerService(input) {
+  const data = {
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    telegramUsername: input.telegram_username,
+    phone: input.phone,
+    workHours: input.work_hours,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.customerService.create({ data });
 }
 
-export async function updateCustomerService(id, data) {
+export async function updateCustomerService(id, input) {
+  const data = {
+    nameKm: input.name_km,
+    nameEn: input.name_en,
+    nameZh: input.name_zh,
+    telegramUsername: input.telegram_username,
+    phone: input.phone,
+    workHours: input.work_hours,
+    sortOrder: input.sort_order,
+    status: input.status,
+  };
   return prisma.customerService.update({ where: { id }, data });
 }
 
