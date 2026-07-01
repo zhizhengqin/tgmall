@@ -4,7 +4,7 @@
 
 > **文档版本**：V2.0  
 > **编制日期**：2026 年 6 月 9 日
-> **V2 变更**：切换为公司自营模式；原商户端路由已统一改为 `/admin/*` 由平台管理
+> **V2 变更**：切换为公司自营模式；原后台路由已统一为 `/admin/*` 由平台管理
 > **Base URL**：`https://api.shop.xinhua-tech.kh/api/v1`  
 > **协议**：HTTPS only  
 > **内容格式**：`application/json`（文件上传除外）  
@@ -1049,6 +1049,7 @@ DELETE /cart
 | 状态值 | 前端显示标签 | 颜色 | 可执行操作 |
 |--------|-------------|------|-----------|
 | `pending_payment` | 待付款 | 🟠 橙色 | 去支付、取消订单 |
+| `confirmed` | 已确认（COD 订单创建后） | 🔵 蓝色 | 查看（等待平台发货） |
 | `paid` | 已付款 | 🔵 蓝色 | 查看（等待平台发货） |
 | `shipped` | 已发货 | 🟢 绿色 | 确认收货、查看物流 |
 | `completed` | 已完成 | ⚫ 灰色 | 查看（不可操作） |
@@ -1110,6 +1111,28 @@ POST /orders
     "status": "pending_payment",
     "payment_method": "khqr",
     "payment_timeout": "2026-06-05T08:45:00.000Z",
+    "total_usd": 54.99,
+    "total_khr": 220000,
+    "discount_usd": 5.00,
+    "shipping_fee_usd": 0,
+    "item_count": 3,
+    "created_at": "2026-06-05T08:30:00.000Z"
+  }
+}
+```
+
+**COD 成功响应** `201`（`payment_method: "cod"`）：
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "order-uuid-002",
+    "order_number": "ORD-20260605-D4E5F6",
+    "status": "confirmed",
+    "payment_status": "pending_cod",
+    "payment_method": "cod",
+    "payment_timeout": null,
     "total_usd": 54.99,
     "total_khr": 220000,
     "discount_usd": 5.00,
@@ -1299,7 +1322,7 @@ GET /orders/{id}
 POST /orders/{id}/cancel
 ```
 
-**说明**：取消待付款的订单。取消后释放库存、退还优惠券。
+**说明**：取消待付款或已确认（COD）的订单。取消后释放库存、退还优惠券。
 
 **路径参数**：
 
@@ -1332,7 +1355,7 @@ POST /orders/{id}/cancel
 
 | 状态码 | error.code | 说明 |
 |--------|------------|------|
-| `400` | `ORDER_CANNOT_CANCEL` | 订单状态不允许取消（只有 `pending_payment` 可取消） |
+| `400` | `ORDER_CANNOT_CANCEL` | 订单状态不允许取消（只有 `pending_payment` 或 `confirmed` 可取消） |
 
 ---
 

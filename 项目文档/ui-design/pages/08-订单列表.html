@@ -398,6 +398,9 @@
                 <button class="order-btn btn-danger-o" onclick="cancelOrder('${order.id}')">${I18N.cancelOrder[currentLang]}</button>
                 <button class="order-btn btn-fill" onclick="payOrder('${order.id}')">${I18N.payNow[currentLang]}</button>
               ` : ''}
+              ${order.status === 'confirmed' ? `
+                <button class="order-btn btn-danger-o" onclick="cancelOrder('${order.id}')">${I18N.cancelOrder[currentLang]}</button>
+              ` : ''}
               ${order.status === 'shipped' ? `
                 <button class="order-btn btn-fill" onclick="confirmOrder('${order.id}')">${I18N.confirmReceived[currentLang]}</button>
               ` : ''}

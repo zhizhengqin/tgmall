@@ -429,7 +429,7 @@ US-003 验收标准：
 - user_id: 下单用户
 - total_usd: 订单总额（USD）
 - total_khr: 订单总额（KHR）
-- status: 状态（待付款/已付款/已发货/已完成/已取消）
+- status: 状态（待付款/已确认/已付款/已发货/已完成/已取消）
 - payment_method: 支付方式（khqr/aba_pay/wing_pay/cod）
 - payment_status: 支付状态
 - shipping_address: 配送地址
@@ -569,7 +569,7 @@ POST   /api/v1/messages/telegram      → 发送 Telegram 通知
 - 实现：KHQR 支付码生成（对接 Bakong 或模拟）
 - 实现：ABA Pay 支付集成
 - 实现：Telegram Bot 订单通知（推送给平台管理员和消费者）
-- 实现：订单状态流转（待付款→已付款→已发货→已完成）
+- 实现：订单状态流转（在线支付：待付款→已付款→已发货→已完成；COD：已确认→已发货→已付款→已完成）
 - 产出：可演示的"完整交易闭环"（含支付和通知）
 
 **Sprint 4（第 11 周）：平台运营与完善**
