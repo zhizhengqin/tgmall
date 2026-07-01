@@ -73,7 +73,7 @@ model Product {
   stock         Int      @default(0)
   images        Json     @default("[]") @db.JsonB
   specs         Json     @default("[]") @db.JsonB
-  category      String   @db.VarChar(50)
+  category      String   @db.VarChar(50) // 对应 categories.code，应用层校验
   status        String   @default("active") @db.VarChar(20)
   salesCount    Int      @default(0) @map("sales_count")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -189,6 +189,8 @@ model Address {
   phone         String    @db.VarChar(20)
   province      String    @db.VarChar(50)
   district      String    @db.VarChar(50)
+  cityCode      String?   @map("city_code") @db.VarChar(50)
+  city          City?     @relation(fields: [cityCode], references: [code])
   detail        String    @db.VarChar(200)
   isDefault     Boolean   @default(false) @map("is_default")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
@@ -229,4 +231,92 @@ model AdminUser {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("admin_users")
+}
+
+model Category {
+  code       String   @id @db.VarChar(50)
+  nameKm     String   @map("name_km") @db.VarChar(100)
+  nameEn     String?  @map("name_en") @db.VarChar(100)
+  nameZh     String?  @map("name_zh") @db.VarChar(100)
+  iconUrl    String?  @map("icon_url") @db.Text
+  sortOrder  Int      @default(0) @map("sort_order")
+  status     String   @default("active") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status, sortOrder])
+  @@map("categories")
+}
+
+model Banner {
+  id          String    @id @default(uuid()) @db.Uuid
+  titleKm     String    @map("title_km") @db.VarChar(200)
+  titleEn     String?   @map("title_en") @db.VarChar(200)
+  titleZh     String?   @map("title_zh") @db.VarChar(200)
+  imageUrl    String    @map("image_url") @db.Text
+  linkType    String    @map("link_type") @db.VarChar(20)
+  linkTarget  String    @map("link_target") @db.VarChar(255)
+  cityCode    String?   @map("city_code") @db.VarChar(50)
+  sortOrder   Int       @default(0) @map("sort_order")
+  status      String    @default("active") @db.VarChar(20)
+  startAt     DateTime? @map("start_at") @db.Timestamptz()
+  endAt       DateTime? @map("end_at") @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status, sortOrder])
+  @@index([cityCode, status, sortOrder])
+  @@index([startAt, endAt])
+  @@map("banners")
+}
+
+model City {
+  code       String   @id @db.VarChar(50)
+  nameKm     String   @map("name_km") @db.VarChar(100)
+  nameEn     String?  @map("name_en") @db.VarChar(100)
+  nameZh     String?  @map("name_zh") @db.VarChar(100)
+  sortOrder  Int      @default(0) @map("sort_order")
+  status     String   @default("active") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  deliveryRule DeliveryRule?
+  addresses    Address[]
+
+  @@index([status, sortOrder])
+  @@map("cities")
+}
+
+model DeliveryRule {
+  id                       String   @id @default(uuid()) @db.Uuid
+  cityCode                 String   @unique @map("city_code") @db.VarChar(50)
+  city                     City     @relation(fields: [cityCode], references: [code])
+  minOrderAmountUsd        Decimal  @default(4.00) @map("min_order_amount_usd") @db.Decimal(10,2)
+  shippingFeeUsd           Decimal  @default(1.00) @map("shipping_fee_usd") @db.Decimal(10,2)
+  freeShippingThresholdUsd Decimal  @default(0) @map("free_shipping_threshold_usd") @db.Decimal(10,2)
+  estimatedDeliveryDays    Int      @default(2) @map("estimated_delivery_days")
+  status                   String   @default("active") @db.VarChar(20)
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status])
+  @@map("delivery_rules")
+}
+
+model CustomerService {
+  id               String   @id @default(uuid()) @db.Uuid
+  nameKm           String   @map("name_km") @db.VarChar(100)
+  nameEn           String?  @map("name_en") @db.VarChar(100)
+  nameZh           String?  @map("name_zh") @db.VarChar(100)
+  telegramUsername String   @map("telegram_username") @db.VarChar(100)
+  phone            String?  @db.VarChar(20)
+  workHours        String?  @map("work_hours") @db.VarChar(100)
+  isDefault        Boolean  @default(false) @map("is_default")
+  sortOrder        Int      @default(0) @map("sort_order")
+  status           String   @default("active") @db.VarChar(20)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status, isDefault])
+  @@map("customer_services")
 }
