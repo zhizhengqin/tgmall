@@ -1,11 +1,13 @@
 # CLAUDE.md — TG Mall 柬埔寨 Telegram 电商平台
 
 ## 项目概述
-- **名称**：TG Mall — 柬埔寨 Telegram Mini App 社交电商平台
-- **技术栈**：Vue.js 3 + Vite（前端）· Node.js + Express + Prisma（后端）· PostgreSQL 15 + Redis 7（数据层）
-- **部署**：AWS 新加坡区域 · Docker Compose · CloudFlare CDN
-- **目标用户**：柬埔寨消费者（550 万 Telegram 用户）+ 本地中小商家 + 平台运营
-- **MVP 目标**：核心交易闭环（浏览→加购→下单→KHQR/ABA Pay/Wing Pay/COD 支付→Bot 通知）
+
+- **名称**：TG Mall — 柬埔寨 Telegram Mini App 电商平台
+- **模式**：公司自营（无商家入驻，商品/订单/运营由平台统一管理）
+- **技术栈**：Vue.js 3 + Vite · Node.js + Express + Prisma · PostgreSQL + Redis
+- **部署**：Railway · CloudFlare CDN
+- **目标用户**：柬埔寨 Telegram 消费者 + 平台运营团队
+- **MVP**：浏览 → 加购 → 下单 → KHQR/ABA Pay/Wing Pay/COD 支付 → Bot 通知
 
 ## 双框架开发模式：gstack + Superpowers
 
@@ -14,6 +16,7 @@
 详细对比参见：`项目文档/Claude_Code_框架对比报告_Superpowers_vs_gstack.md` 第六章"双框架结合使用方案"。
 
 ### gstack 命令（流程层，手动触发）
+
 | 阶段 | 命令 | 用途 |
 |------|------|------|
 | 思考 | `/office-hours` | 产品方向拷问，大功能前必用 |
@@ -25,6 +28,7 @@
 | 维护 | `/retro`、`/learn`、`/document-release` | 每周复盘、知识积累、文档更新 |
 
 ### Superpowers 纪律（编码层，自动触发）
+
 - **brainstorming**：编码前需求细化
 - **test-driven-development**：强制 RED-GREEN-REFACTOR
 - **subagent-driven-development**：大任务拆分子代理隔离执行
@@ -68,65 +72,23 @@
 ## 编码纪律（Superpowers 风格，强制）
 
 ### 1. 测试驱动开发
+
 - **RED**：先写失败测试 → **GREEN**：最小实现 → **REFACTOR**：优化
 - 严禁在测试之前写实现代码。核心交易链路（订单/支付）覆盖率 ≥ 80%。
 
 ### 2. YAGNI + 任务粒度
+
 - 不实现当前 Sprint 未规划的功能。重复出现 3 次才抽象。
 - 每个微任务 2-5 分钟可完成，明确文件路径和验证方法。
 
 ### 3. 安全红线（和钱相关，绝对禁止触碰）
+
 - 支付回调必须验签 + 幂等处理。库存必须 SELECT FOR UPDATE + 事务。
 - 用户输入永不做 SQL/HTML 拼接。所有敏感数据（手机号）加密存储。
 - 涉及支付/用户数据的代码变更 → 必须运行 `/cso`。
 
 ### 4. 柬埔寨本地化
+
 - 所有用户界面必须三语支持（高棉语/英语/中文），默认高棉语。
 - 所有价格必须 USD/KHR 双币种同时显示。手机号 +855 格式校验。
 - 弱网环境适配：图片 WebP + CDN + 懒加载，首屏 < 3 秒（4G），< 5 秒（3G）。
-
-## 项目初始化命令
-
-```bash
-# 安装 gstack
-git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
-cd ~/.claude/skills/gstack && ./setup
-
-# 安装 Superpowers（通过 Claude Code 插件市场）
-
-# 初始化前端项目
-npm create vite@latest tgmall-miniapp -- --template vue
-cd tgmall-miniapp && npm install
-
-# 初始化后端项目
-mkdir tgmall-api && cd tgmall-api && npm init -y
-npm install express prisma @prisma/client jsonwebtoken bullmq ioredis sharp helmet cors express-rate-limit winston zod
-
-# 数据库 Migration
-npx prisma migrate dev --name init
-
-# 启动开发环境
-docker compose up -d postgres redis   # 数据库 + 缓存
-npm run dev                           # 前端 (Vite)
-npm run dev                           # 后端 (Nodemon)
-```
-
-## 常用命令
-
-```bash
-# 前端
-npm run dev          # 开发服务器
-npm run build        # 生产构建（验证包体积 < 2MB）
-npm run test:unit    # 单元测试 (Vitest)
-npm run lint         # ESLint + Prettier
-
-# 后端
-npm run dev          # 开发服务器 (Nodemon)
-npm test             # 单元测试 (Jest) + 覆盖率
-npx prisma studio    # 数据库可视化管理
-
-# 数据库
-npx prisma migrate dev   # 生成 Migration
-npx prisma db seed       # 填充测试数据
-docker compose up -d     # 启动 PostgreSQL + Redis
-```
