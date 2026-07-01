@@ -466,7 +466,7 @@ Railway 的默认域名比较长，你可以设置一个短的：
 <summary>点击展开：部署过程发生了什么？</summary>
 
 1. Railway 读取 `Dockerfile.railway`
-2. 执行 5 个构建阶段：
+2. 执行 4 个构建阶段：
    - 安装后端依赖 + 生成 Prisma 代码
    - 构建 Mini App 前端（Vue → HTML/JS/CSS）
    - 构建管理员后台
