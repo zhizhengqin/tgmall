@@ -1,0 +1,731 @@
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:393:> 这个 ID 决定了谁是平台管理员。只有这个 ID 的用户才能审核商家、查看大盘数据。
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:472:   - 构建商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:479:   - `/merchant/*` → 商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:520:https://t.me/xhzmall_bot?startapp=shop
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:523:#### 带店铺参数的链接（不同商家不同二维码）
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:526:https://t.me/xhzmall_bot?startapp=shop_001   ← 商家A
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:527:https://t.me/xhzmall_bot?startapp=shop_002   ← 商家B
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:535:**代码自动生成**（商家后台功能）：
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:539:// 生成店铺专属二维码
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:540:const shopUrl = `https://t.me/xhzmall_bot?startapp=shop_${shopId}`;
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:541:const qrImage = await QRCode.toDataURL(shopUrl);
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:542:// qrImage → base64 图片，商家下载打印
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:557:给商家提供的标准 QR 码贴纸：
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:594:### 7.3 商家后台测试
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:596:1. 先用管理员 Token 登录商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:597:2. 访问：`https://你的域名.up.railway.app/merchant/`
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:598:3. 输入商家 JWT Token → 登录 → 看到看板
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:732:Stage 3: merchant-build → npm ci + vite build → dist/
+/Users/qinzz/Desktop/telegrammall/项目文档/Railway部署实施方案.md:744:                          ├── /merchant/ → 静态文件
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:95:| 8 | 用户恶意输入：商家名含 HTML | ✅ PASS | <1ms |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:105:### 3.1 商家后台（tgmall-merchant）
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:145:| 商家服务 | 0 | 16 | 0% |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:173:商家服务     ░░░░░░░░░░░░░░░░░░░░  0/16    (0%)
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:217:| 6 | 商家后台组件测试（TC-F-001~017） | 5 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试执行报告_2026-06-06.md:249:3. **Sprint 5 W2**：补齐 Bot 通知 + 商家服务测试 + 安全测试
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:20:- [五、Sprint 4：商家入驻与完善（第 11 周）](#五sprint-4商家入驻与完善第-11-周)
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:37:| **EPIC-05** | 商家系统 | 入驻审核、商品管理、订单处理、数据看板 | S3, S4 | 13 | 52 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:39:| **EPIC-07** | 平台运营 | 商家审核、大盘数据、系统配置、用户管理 | S4 | 7 | 26 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:116:- [ ] **AC5：域名** — Staging 环境域名解析到 EC2（如 `staging.shop.xinhua-tech.kh`）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:140:- [ ] **AC2：Bot 基础配置** — 设置 Bot 名称、头像、描述（三语）、命令列表（/start、/help、/shop）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:227:- [ ] **AC2：商家表（merchants）** — `id`、`name_km`、`name_en`、`owner_name`、`phone`、`address`、`status`（pending/active/suspended）、`commission_rate`、`created_at`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:228:- [ ] **AC3：商品表（products）** — `id`、`merchant_id`（外键）、`name_km`、`name_en`、`name_zh`、`description_km`、`description_en`、`description_zh`、`price_usd`、`price_khr`、`stock`、`images`（JSONB）、`category`、`specs`（JSONB，可选）、`status`（draft/active/inactive/sold_out）、`created_at`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:229:- [ ] **AC4：订单表（orders）** — `id`、`user_id`、`merchant_id`、`total_usd`、`total_khr`、`status`（pending_payment/paid/shipped/completed/cancelled）、`payment_method`、`payment_status`、`shipping_address`（JSONB）、`created_at`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:231:- [ ] **AC6：优惠券表（coupons）** — `id`、`merchant_id`（可为空=平台券）、`title_km`、`title_en`、`title_zh`、`type`（fixed/discount/free_shipping）、`value`、`min_spend`、`total_qty`、`used_count`、`start_date`、`end_date`、`status`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:262:- [ ] **AC6：响应格式** — 每条商品返回：`id`、`name`（根据请求 `Accept-Language` 头返回对应语言）、`thumbnail`（第一张图片）、`price_usd`、`price_khr`、`merchant_name`、`category`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:288:- [ ] **AC2：商品卡片** — 主图（60% 面积）、名称、USD 价格（大字）、KHR 价格（小字灰色）、商家名称
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:411:#### S1-13：商家入驻申请表单（前端）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:421:> **作为** 商家申请人
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:422:> **我想** 在网页上看到清晰的三语入驻表单，填写店铺信息提交申请  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:423:> **以便** 开启我在平台上的线上店铺
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:429:- [ ] **AC1：表单字段** — 店铺名称（高棉语必填+英语必填）、老板姓名、手机号（+855 格式校验）、详细地址、主营品类（下拉选择）、店铺简介（选填）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:438:#### S1-14：商家入驻 API
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:449:> **我想** 接收商家入驻申请，验证数据完整性后存入数据库  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:456:- [ ] **AC1：接口定义** — `POST /api/v1/merchants/register`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:460:- [ ] **AC5：Bot 通知** — 提交成功后向平台运营发送 Telegram 通知："[新入驻申请] {店铺名称} 申请入驻，请审核"
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:483:- [ ] **AC2：返回字段** — 商品全量信息：`id`、三语名称、三语描述、`price_usd`、`price_khr`、`stock`、`images`（所有图片 URL 数组）、`specs`（JSON）、`category`、`merchant`（商家名称+ID）、`status`、`created_at`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:501:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:656:- [ ] **AC4：商品信息** — 商品名称（显示用户语言）、USD 价格（大字）、KHR 价格（小字灰色）、商家名称（点击可进入商家店铺页，暂为占位）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:786:> **我想** 把喜欢的不同商家的商品加入购物车，随时查看、调整数量、删除  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:794:- [ ] **AC2：购物车列表** — 按商家分组显示（同一商家的商品在一起），每组显示商家名称 + 商品列表
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:796:- [ ] **AC4：全选/单选** — 每个商家组有全选框，每件商品有单选框；默认全选
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:826:- [ ] **AC5：返回格式** — 购物车数据返回时附带商品最新价格和库存（防价格变更），按商家 ID 分组
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1257:- [ ] **AC2：COD 订单标记** — COD 订单在商家后台有特殊标识（"COD — 货到付款"）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1334:- [ ] **AC2：支付成功通知** — "✅ 支付成功！\n订单号：ORD-...\n金额：$29.99\n商家将尽快为您发货"
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1340:#### S3-09：Bot 通知 — 商家订单通知
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1350:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1374:> **作为** 商家申请人
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1375:> **我想** 入驻审核通过或驳回时在 Telegram 收到通知  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1382:- [ ] **AC1：审核通过通知** — "🎉 恭喜！您的店铺「{店铺名称}」审核已通过！\n现在可以登录后台开始上架商品了\n[进入商家后台]"
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1383:- [ ] **AC2：审核驳回通知** — "您的店铺「{店铺名称}」审核未通过。\n原因：{驳回原因}\n请修改后重新提交申请"
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1390:#### S3-11：订单状态流转 — 商家发货
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1400:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1408:- [ ] **AC1：接口定义** — `POST /api/v1/merchants/orders/{id}/ship`，参数：`logistics_company`（必填，下拉选项）、`tracking_number`（必填）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1459:- [ ] **AC1：支付全流程测试** — KHQR 支付（含模拟回调）→ 支付成功页 → 消费者收到 Bot 通知 → 商家收到 Bot 通知 → 订单状态正确
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1495:#### S3-15：商家入驻审核 — 运营后台前端
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1506:> **我想** 在运营后台上看到待审核的商家列表，查看详情后通过或驳回  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1507:> **以便** 管理平台商家质量
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1513:- [ ] **AC1：审核列表** — 待审核/已通过/已驳回 Tab，列表显示商家名称、品类、申请时间
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1514:- [ ] **AC2：审核详情** — 点击查看商家提交的所有信息
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1517:- [ ] **AC5：状态管理** — 已通过商家可在商家管理中查看、暂停、恢复
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1521:#### S3-16：商家入驻审核 — API
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1532:> **我想** 提供商家审核操作的 API  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1539:- [ ] **AC1：接口定义** — `POST /api/v1/admin/merchants/{id}/approve`、`POST /api/v1/admin/merchants/{id}/reject`（含 `reason` 字段）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1540:- [ ] **AC2：权限校验** — 仅 admin 角色可调用，商家和普通用户返回 403
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1546:#### S3-17：商家登录
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1556:> **作为** 已审核通过的商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1557:> **我想** 通过 Telegram 授权登录商家后台  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1558:> **以便** 管理我的店铺
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1564:- [ ] **AC1：登录入口** — 商家后台登录页（Web）："使用 Telegram 登录"按钮 → 跳转 Telegram OAuth → 回跳商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1565:- [ ] **AC2：权限校验** — 仅审核通过（status=active）的商家可登录，待审核驳回/未申请者显示相应提示
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1570:#### S3-18：商家后台商品管理 — 前端
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1580:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1644:## 五、Sprint 4：商家入驻与完善（第 11 周）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1646:> **Sprint 目标**：商家入驻全流程，三语双币种完善，可给种子商家试用的 Alpha 版本。  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1647:> **Demo 产出**：种子商家可入驻 → 上架商品 → 接单 → 发货的完整商家端闭环。
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1657:#### S4-01：商家数据看板 — 前端
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1667:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1669:> **以便** 快速了解店铺经营状况
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1677:- [ ] **AC3：热销榜** — 店铺内 TOP 10 热销商品排行（商品名+销量数）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1679:- [ ] **AC5：空数据** — 新商家无数据时显示引导："上架您的第一件商品吧！"
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1683:#### S4-02：商家数据看板 — API
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1694:> **我想** 提供商家数据看板所需的所有聚合数据 API  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1701:- [ ] **AC1：接口定义** — `GET /api/v1/merchants/dashboard?period=7d/30d`
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1704:- [ ] **AC4：权限** — 仅商家本人可查看自己店铺数据
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1708:#### S4-03：商家后台订单管理 — 前端
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1718:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1745:> **我想** 看到全平台的核心数据（订单量、GMV、用户数、商家数、支付成功率）  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1752:- [ ] **AC1：核心指标卡片** — 今日/昨日：订单量、GMV（USD+KHR）、新增用户数、新增商家数、支付成功率
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1754:- [ ] **AC3：商户排行** — TOP 20 商家按销售额排行
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1822:> **我想** Mini App 和商家后台的所有页面切换高棉语后文字没有截断、乱码、溢出  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1829:- [ ] **AC1：全页面覆盖** — 消费者端 10 个页面 + 商家端 6 个页面 + 运营端 6 个页面，逐页切换三语验证
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1855:- [ ] **AC1：全页面覆盖** — 商品卡片、商品详情、购物车、结算、订单、商家后台等所有显示价格的地方双币种验证
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1933:- [ ] **AC2：生产域名** — 购买并配置正式域名（如 `shop.xinhua-tech.kh`），DNS 解析正确
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1965:#### S4-13：种子商家数据准备
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1976:> **我想** 在平台正式开放前，让首批 20 家种子商家入驻并上架商品  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1983:- [ ] **AC1：商家录入** — 20 家种子商家信息录入（如手动创建或引导商家自行注册）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:1984:- [ ] **AC2：商品上架** — 每家商家至少上架 5 个商品（共 ≥ 100 个商品）
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2014:#### S4-15：商家操作手册
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2024:> **作为** 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2025:> **我想** 有一份清晰的图文操作手册，告诉我怎样入驻、上架商品、处理订单  
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2032:- [ ] **AC1：手册内容** — 入驻流程、商品上架流程、订单处理流程、常见问题 FAQ
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2035:- [ ] **AC4：发放方式** — 商家入驻通过后通过 Bot 自动发送手册链接
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2057:- [ ] **AC1：测试用例执行** — 执行全部 MVP 测试用例（≥ 50 条），覆盖消费端、商家端、运营端全部 P0 功能
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2146:| **V2-03** | 增长引擎 | 商家回复评价——商家可对评价进行回复 | 3 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2151:| **V2-08** | 增长引擎 | Telegram Channels 集成——商家可将商品一键发布到关联的 Telegram Channel | 5 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2154:| **V2-11** | 商家系统 | 商家店铺装修——自定义 Banner、店铺简介、商品分类 | 5 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2155:| **V2-12** | 商家系统 | 批量导入商品——CSV/Excel 批量导入商品 | 5 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2165:| **V3-01** | 生态扩展 | 直播购物——商家在 Mini App 内发起直播，消费者边看边买 | 21 | P0 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2168:| **V3-04** | 生态扩展 | 完整广告系统——商家竞价投放（搜索广告、推荐位广告），CPC/CPM 计费 | 13 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2169:| **V3-05** | 生态扩展 | 供应链金融——基于商家交易数据的信用评估和小额贷款 | 21 | P2 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2172:| **V3-08** | 生态扩展 | 多语言自动翻译——商家填一种语言，自动翻译为另外两种 | 5 | P1 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2186:| **Sprint 4** | 第 11 周 | 19 | **73** | Alpha 版本，种子商家可试用 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2211:| EPIC-05 商家系统 | 13 | 52 | 入驻审核、商品管理、订单处理、数据看板 |
+/Users/qinzz/Desktop/telegrammall/项目文档/用户故事清单_Backlog.md:2212:| EPIC-06 消息通知 | 6 | 22 | Bot 通知框架、消费者通知、商家通知 |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:7:> **V2 变更**：移除商家多租户 → 公司自营；管理后台认证 Telegram JWT → 用户名密码；新增 AdminUser 表  
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:38:构建一个**低成本、高可靠、易扩展**的 Telegram Mini App 社交电商平台。首期支撑 10 万用户 + 500 商家 + 日均 500 单，架构预留平滑扩展至百万用户 + 万级商家的能力。
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:120:| **为什么 PostgreSQL？** | ① 电商数据高度关系型（用户→订单→商品→商家），SQL 是最优解；② JSONB 列支持灵活的商品规格（如 `{"color":"red","size":"L"}`）；③ 高棉语 Unicode 支持成熟（`UTF-8` 编码，`km_KH` Collation）；④ 全文搜索支持三语（`tsvector` + GIN 索引）；⑤ 开源免费，AWS RDS 或自建均可 |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:140:用户上传图片 (商家后台)
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:234:│  │   Telegram Mini App          │    │  商家 Web 后台 │   │ 运营 Web 后台 │   │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:237:│  │  消费者端                     │    │  商家端        │   │  平台端        │   │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:238:│  │  - 商品浏览/搜索              │    │  - 商品管理    │   │  - 商家审核    │   │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:272:│  │  │Payment │ │Merchant│ │Coupon│ │  │  └─────────────────────────┘  │    │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:296:│  │  • 商家数据      │  │  • Token 黑名单    │  │  • 商家资质文件           │    │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:457:tgmall-merchant/                     # 商家后台 (SPA)
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:472:│   │   └── StoreSettings.vue        # 店铺设置
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:481:│   │   ├── MerchantReview.vue       # 商家审核
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:482:│   │   ├── MerchantList.vue         # 商家管理
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:613:  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.shop.xinhua-tech.kh',
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:708:│   │   ├── merchantAuth.js         # 商家权限中间件
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:721:│   │   ├── merchant.routes.js      # /api/v1/merchants/*
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:733:│   │   ├── merchant.controller.js
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:744:│   │   ├── merchant.service.js
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:767:│       └── merchant.schema.js
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:835:// 2. CORS 跨域配置（商家/运营后台跨域访问 API）
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:838:    'https://shop.xinhua-tech.kh',         // Mini App 域名
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:839:    'https://merchant.xinhua-tech.kh',      // 商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:886:        SELECT stock, price_usd, price_khr, merchant_id
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:934:        merchantId: items[0].merchantId, // MVP 一期：一个订单只能来自一个商家
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:967:    merchantId: order.merchantId
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1001:           │ recipient_name│  │ merchant_id(FK)│  │ received_at   │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1011:                              │ shipped_at     │  │ merchant_id   │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1033:                              │ merchant_id(FK)│
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1052:                              │   merchants    │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1092:#### 6.2.2 merchants（商家表）
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1095:CREATE TABLE merchants (
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1097:  name_km         VARCHAR(200) NOT NULL,              -- 店铺名（高棉语）
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1098:  name_en         VARCHAR(200),                       -- 店铺名（英语）
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1112:CREATE INDEX idx_merchants_status ON merchants(status);
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1113:CREATE INDEX idx_merchants_category ON merchants(category);
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1114:CREATE INDEX idx_merchants_phone ON merchants(phone);
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1122:  merchant_id     UUID NOT NULL REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1141:CREATE INDEX idx_products_merchant ON products(merchant_id);
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1166:  merchant_id       UUID NOT NULL REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1189:CREATE INDEX idx_orders_merchant ON orders(merchant_id);
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1219:  merchant_id UUID REFERENCES merchants(id),          -- NULL = 平台券
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1271:  merchant_id UUID REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1324:model Merchant {
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1344:  @@map("merchants")
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1349:  merchantId    String   @map("merchant_id") @db.Uuid
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1350:  merchant      Merchant @relation(fields: [merchantId], references: [id])
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1370:  @@index([merchantId])
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1388:| **Base URL** | `https://api.shop.xinhua-tech.kh/api/v1` |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1488:| **Merchants** | | | |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1489:| POST | `/merchants/register` | 商家入驻申请 | 无 |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1490:| GET | `/merchants/dashboard` | 商家数据看板 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1491:| GET | `/merchants/products` | 商家商品列表 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1492:| POST | `/merchants/products` | 商家上架商品 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1493:| PUT | `/merchants/products/{id}` | 编辑商品 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1494:| POST | `/merchants/products/{id}/toggle` | 上架/下架商品 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1495:| GET | `/merchants/orders` | 商家订单列表 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1496:| POST | `/merchants/orders/{id}/ship` | 确认发货 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1502:| POST | `/upload/image` | 上传图片 | JWT (Merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1504:| POST | `/admin/merchants/{id}/approve` | 审核通过 | JWT (Admin) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1505:| POST | `/admin/merchants/{id}/reject` | 审核驳回 | JWT (Admin) |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1533:                          └─ 商家后台标注 COD
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1578:      merchantId: order.merchantId
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1665:│  • 角色基础访问控制 (RBAC): user / merchant / admin │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1667:│  • 订单/商品/店铺 归属校验（用户只能看自己的订单）     │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1763:    │ shop.xxx.kh  │  │merchant.xxx  │  │ admin.xxx    │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:1912:│  • 实时 GMV、订单量、新增用户、新增商家                         │
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:2054:| TD-002 | 商家数据看板直接 SQL 聚合，未做物化视图 | 中 | S4 | V2 |
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:2085:BAKONG_MERCHANT_ID=your-merchant-id
+/Users/qinzz/Desktop/telegrammall/项目文档/系统架构设计说明书.md:2090:CDN_BASE_URL=https://cdn.shop.xinhua-tech.kh
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:18:  - [1.4 商家服务](#14-商家服务)
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:53:| **Mock 数据** | 商品：`{ id: "prod-1", nameKm: "ទឹកក្រូចដូង", priceUsd: 2.50, priceKhr: 10000, stock: 10, status: "active", merchantId: "merchant-1" }` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:59:**TC-O-002：正常下单（多商品，同商家）**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:65:| **Mock 数据** | prod-1: `{ priceUsd: 10, priceKhr: 40000 }`, prod-2: `{ priceUsd: 5, priceKhr: 20000 }`，同一 merchant |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:71:**TC-O-003：跨商家下单拒绝**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:76:| **输入** | `items: [{ productId: "prod-1" (merchant-A) }, { productId: "prod-3" (merchant-B) }]` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:77:| **预期输出** | 抛出 `AppError("一个订单只能包含同一商家的商品", 400, "VALIDATION_ERROR")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:158:**TC-O-011：优惠券不匹配商家拒绝**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:164:| **Mock 数据** | 优惠券 merchantId = "merchant-other"（非当前商品商家） |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:165:| **预期输出** | 抛出 `AppError("该优惠券不适用于此商家的商品", 400, "INVALID_COUPON")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:513:**TC-N-007：商家新订单通知不受频率限制**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:518:| **输入** | 连续 10 个新订单通知给同一商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:563:### 1.4 商家服务
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:565:#### 测试套件：`tests/unit/merchant-service.test.js`
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:569:**TC-M-001：商家入驻申请**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:575:| **预期输出** | `merchant.status === "pending"`, `merchant.nameKm === "សៀង ហាង"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:585:| **预期输出** | 抛出 `AppError("您的入驻申请正在审核中，请勿重复提交", 409, "DUPLICATE_MERCHANT")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:595:| **预期输出** | 抛出 `AppError("该手机号对应的商家已存在", 409, "DUPLICATE_MERCHANT")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:599:**TC-M-004：商家登录成功（active）**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:604:| **输入** | 有效 `initData`, 商家 `status = "active"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:605:| **预期输出** | `token` 非空, `token.role === "merchant"`, `token.merchantId` 非空 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:609:**TC-M-005：商家登录拒绝（pending）**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:614:| **输入** | 商家 `status = "pending"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:615:| **预期输出** | 抛出 `AppError("您的商家账号正在审核中", 403, "FORBIDDEN")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:619:**TC-M-006：商家登录拒绝（rejected）**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:624:| **输入** | 商家 `status = "rejected"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:625:| **预期输出** | 抛出 `AppError("未找到已激活的商家账号", 404, "NOT_FOUND")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:634:| **输入** | `merchantId: "merchant-1"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:674:| **输入** | `merchantId: "merchant-A"`, `productId: "prod-of-merchant-B"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:675:| **预期输出** | 抛出 `AppError("商品不存在或不属于您的店铺", 404, "NOT_FOUND")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:679:**TC-M-012：商家审核通过**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:684:| **输入** | `merchantId: "merchant-1"`（status = "pending"） |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:694:| **输入** | `merchant.status === "active"`，调用 `approveMerchant` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:695:| **预期输出** | 抛出 `AppError("该商家已通过审核", 400, "ALREADY_APPROVED")` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:704:| **输入** | `merchantId: "merchant-1"`, `reason: "手机号格式不正确"` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:741:| **预期输出** | `gmvToday ≥ 0`, `gmvThisMonth ≥ gmvToday`, `totalMerchants ≥ 0` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:755:**TC-A-003：商家列表筛选**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:827:| **预期输出** | `registerMerchantSchema.safeParse` 返回错误 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:837:| **预期输出** | `registerMerchantSchema.safeParse` 返回成功 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:979:**TC-I-011：商家看板 — merchant Token**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:984:| **请求** | `GET /api/v1/merchants/dashboard` + merchant JWT |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:989:**TC-I-012：商家看板 — user Token 拒绝**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:994:| **请求** | `GET /api/v1/merchants/dashboard` + user JWT (role: "user") |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1034:# 商家后台
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1035:cd tgmall-merchant && npm run test:unit
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1043:### 3.1 商家后台组件测试
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1063:| **Mock** | `api.get('/merchants/dashboard')` 返回 200 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1064:| **预期** | `localStorage` 设置 `merchant_token`，路由跳转 `/dashboard` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1074:| **Mock** | `api.get('/merchants/dashboard')` 返回 401 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1191:| **预期** | `localStorage.setItem("merchant_lang", "en")`，页面 reload |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1201:| **预期** | `localStorage.removeItem("merchant_token")`，重定向 `/login` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1246:| **Mock** | `getAdminDashboard()` 返回 `{ gmvToday: 8500, totalMerchants: 45 }` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1251:**TC-F-020：MerchantsPage — 待审核列表**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1256:| **操作** | 访问 `/merchants`（默认 pending Tab） |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1257:| **Mock** | `getMerchants({ status: "pending" })` 返回 3 条数据 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1262:**TC-F-021：MerchantsPage — 审核通过**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1267:| **操作** | 点击第一个商家的 "អនុម័ត" 按钮 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1268:| **Mock** | `approveMerchant(id)` 返回 200 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1269:| **预期** | 商家从列表消失，`getMerchants` 重新调用 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1273:**TC-F-022：MerchantsPage — 审核驳回**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1279:| **Mock** | `rejectMerchant(id, reason)` 返回 200 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1301:cd tgmall-merchant && npm run build
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1326:**TC-E-002：商家后台发货流程**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1330:| 1 | 打开商家后台登录页 | 显示 Token 输入框 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1331:| 2 | 输入商家 Token → 登录 | 跳转看板，显示统计卡片 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1340:**TC-E-003：管理员审核商家流程**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1344:| 1 | 消费者提交入驻申请 | Mini App 显示 "申请已提交" |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1346:| 3 | 点击 "商家审核" | 待审核列表出现新申请 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1347:| 4 | 点击 "通过" | 商家从待审核消失 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1348:| 5 | Bot 通知商家 | Telegram 收到审核通过消息 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1419:**TC-S-007：A01 — 水平越权（商家商品）**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1424:| **操作** | merchant-A 的 Token 访问 `GET /api/v1/merchants/products/merchant-B-product-id` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1425:| **预期** | 返回 `404`（商品不属于 merchant-A） |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1528:| **操作** | `ab -n 100 -c 10 GET /api/v1/merchants/dashboard` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1553:**TC-PF-007：商家后台 Bundle 大小**
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1558:| **操作** | `cd tgmall-merchant && npm run build` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试用例集.md:1570:| 商家服务 | 16 | 1 | 14 | 1 | 0 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:7:> **V2 变更**：新增 POST /auth/admin-login（用户名密码登录）；移除商家入驻/登录 API；新增 /admin/products 和 /admin/orders 路由  
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:8:> **Base URL**：`https://api.shop.xinhua-tech.kh/api/v1`  
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:13:> **Swagger 地址**：`https://api.shop.xinhua-tech.kh/api-docs`（部署后自动生成）
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:26:- [八、商家模块](#八商家模块)
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:43:| **Base URL** | `https://api.shop.xinhua-tech.kh/api/v1` |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:178:| 商家 | `merchant` | 管理本店商品和订单、查看本店数据 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:179:| 管理员 | `admin` | 审核商家、查看全平台数据、系统配置 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:616:      "merchant_name": "សុភាព ហ្វេសិន",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:627:      "merchant_name": "សុភាព ហ្វេសិន",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:671:    "merchant": {
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:672:      "id": "merchant-uuid-001",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:821:- 购物车按商家分组展示
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:833:**说明**：返回当前用户的购物车内容，按商家分组，显示商品最新价格和库存。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:843:        "merchant_id": "merchant-uuid-001",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:844:        "merchant_name": "សុភាព ហ្វេសិន",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:876:        "merchant_id": "merchant-uuid-002",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:877:        "merchant_name": "ស្រីស្អាត សម្រស់",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1071:| `paid` | 已付款 | 🔵 蓝色 | 查看（等待商家发货） |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1193:      "merchant_name": "សុភាព ហ្វេសិន",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1205:      "merchant_name": "ស្រីស្អាត សម្រស់",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1291:      { "status": "shipped", "label": "商家已发货", "time": "2026-06-05T14:00:00.000Z" }
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1310:| `logistics` | 商家发货后才返回，未发货时为 `null` |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1563:## 八、商家模块
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1569:| `POST` | `/merchants/register` | 商家入驻申请 | 无 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1570:| `GET` | `/merchants/dashboard` | 商家数据看板 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1571:| `GET` | `/merchants/products` | 商家商品列表 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1572:| `POST` | `/merchants/products` | 上架商品 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1573:| `PUT` | `/merchants/products/{id}` | 编辑商品 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1574:| `POST` | `/merchants/products/{id}/toggle` | 上架/下架商品 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1575:| `GET` | `/merchants/orders` | 商家订单列表 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1576:| `GET` | `/merchants/orders/{id}` | 商家订单详情 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1577:| `POST` | `/merchants/orders/{id}/ship` | 确认发货 | JWT (merchant) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1581:### 接口 27：商家入驻申请
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1584:POST /merchants/register
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1587:**说明**：提交商家入驻申请。提交后需等待平台审核。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1593:| `name_km` | `string` | 是 | 店铺名称（高棉语），≤ 200 字符 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1594:| `name_en` | `string` | 否 | 店铺名称（英语），≤ 200 字符 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1597:| `address` | `string` | 是 | 店铺地址 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1599:| `description` | `string` | 否 | 店铺简介 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1621:    "id": "merchant-uuid-003",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1638:### 接口 28：商家数据看板
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1641:GET /merchants/dashboard
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1644:**说明**：返回商家的经营数据概览。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1691:### 接口 29：商家商品列表
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1694:GET /merchants/products
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1697:**说明**：返回当前商家自己的商品列表。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1737:### 接口 30：商家上架商品
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1740:POST /merchants/products
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1743:**说明**：商家新增一个商品。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1811:PUT /merchants/products/{id}
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1821:POST /merchants/products/{id}/toggle
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1849:### 接口 33：商家订单列表
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1852:GET /merchants/orders
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1855:**说明**：返回当前商家收到的订单列表。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1899:### 接口 34：商家订单详情
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1902:GET /merchants/orders/{id}
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1905:**说明**：返回单个订单的完整详情，含商品明细、收货地址、客户信息和全时间戳。商家只能查看归属自己店铺的订单。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1963:| `404` | `NOT_FOUND` | 订单不存在或不属于当前商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1970:POST /merchants/orders/{id}/ship
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:1973:**说明**：商家对已付款订单确认发货，填写物流信息。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2166:**说明**：商家上传商品图片。支持 JPG、PNG、WebP 格式，单张最大 5MB。后端自动压缩并生成 WebP + 缩略图。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2172:| `Authorization` | `Bearer <Token>` | 是（商家角色） |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2188:    "url": "https://cdn.shop.xinhua-tech.kh/products/img-uuid-001.webp",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2189:    "thumb_url": "https://cdn.shop.xinhua-tech.kh/products/img-uuid-001_thumb.webp",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2213:| `POST` | `/admin/merchants/{id}/approve` | 审核通过商家 | JWT (admin) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2214:| `POST` | `/admin/merchants/{id}/reject` | 审核驳回商家 | JWT (admin) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2216:| `GET` | `/admin/merchants` | 商家列表 | JWT (admin) |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2225:### 接口 40：审核通过商家
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2228:POST /admin/merchants/{id}/approve
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2231:**说明**：通过商家的入驻申请，商家状态变为 `active`，可以登录后台。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2237:| `id` | `string` (UUID) | 商家 ID |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2257:    "id": "merchant-uuid-003",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2265:**说明**：审核通过后自动触发 Telegram Bot 通知（"恭喜！您的店铺审核已通过"）。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2269:### 接口 41：审核驳回商家
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2272:POST /admin/merchants/{id}/reject
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2275:**说明**：驳回商家入驻申请。必须填写驳回原因。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2281:| `id` | `string` (UUID) | 商家 ID |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2293:  "reason": "店铺名称与实际经营品类不符，请核实后重新提交"
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2303:    "id": "merchant-uuid-003",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2305:    "reject_reason": "店铺名称与实际经营品类不符，请核实后重新提交",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2338:      "new_merchants": 3,
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2350:    "top_merchants": [
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2351:      { "merchant_id": "merchant-uuid-001", "merchant_name": "សុភាព ហ្វេសិន", "gmv_usd": 1500.00 },
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2352:      { "merchant_id": "merchant-uuid-002", "merchant_name": "ស្រីស្អាត សម្រស់", "gmv_usd": 980.00 }
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2364:### 接口 43：商家列表（管理员）
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2367:GET /admin/merchants
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2370:**说明**：返回全平台商家列表，支持按状态筛选和搜索。
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2377:| `q` | `string` | 否 | 搜索（店铺名称 / 手机号） |
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2388:      "id": "merchant-uuid-001",
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2633:  baseURL: import.meta.env.VITE_API_BASE_URL,  // https://api.shop.xinhua-tech.kh/api/v1
+/Users/qinzz/Desktop/telegrammall/项目文档/API接口文档.md:2705:> **Swagger 地址**：`https://api.shop.xinhua-tech.kh/api-docs`（部署后自动生成）  
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:104:### 2.2 商家端（Web 后台）— 24 项
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:108:| F-M01 | 商家入驻申请表单（三语） | **M** | S1 | 3 | 🟢 | 无入驻=无商家=无商品。表单类，实现简单。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:109:| F-M02 | 商家入驻 API（校验+去重） | **M** | S1 | 3 | 🟢 | 后端 CRUD。手机号去重需注意。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:110:| F-M03 | 商家入驻审核——运营后台 | **M** | S3 | 5 | 🟢 | 平台必须审核商家质量。审核流程（通过/驳回）。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:111:| F-M04 | 商家入驻审核 API | **M** | S3 | 3 | 🟢 | 权限校验（仅 admin）。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:112:| F-M05 | 商家 Telegram 登录 | **M** | S3 | 3 | 🟢 | 复用消费者登录逻辑。Web 端 OAuth 模式。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:113:| F-M06 | 商家后台商品列表 | **M** | S3 | 5 | 🟢 | 商家管理商品的核心页面。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:114:| F-M07 | 商家新增商品（三语名称/描述/图片上传） | **M** | S3 | 8 | 🟡 | 表单字段多，图片上传需压缩，多语言输入需设计好交互。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:115:| F-M08 | 商家编辑商品 | **M** | S3 | 3 | 🟢 | 复用新增商品表单。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:116:| F-M09 | 商家下架/上架商品 | **M** | S3 | 2 | 🟢 | 状态切换，简单。下架后清除缓存。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:117:| F-M10 | 商家后台订单列表（按状态 Tab+日期筛选） | **M** | S3 | 5 | 🟢 | 商家日常运营核心页面。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:118:| F-M11 | 商家确认发货（物流公司+运单号） | **M** | S3 | 5 | 🟢 | 订单流转关键节点。发货后触发消费者通知。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:119:| F-M12 | 商家后台订单详情 | **M** | S3 | 3 | 🟢 | 查看订单完整信息+时间线。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:120:| F-M13 | 商家店铺信息查看与编辑 | **S** | S4 | 3 | 🟢 | 店铺名/联系方式修改。可先不让商家自己改，联系运营。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:121:| F-M14 | 商家数据看板（今日数据+趋势图） | **S** | S4 | 8 | 🟡 | 商家留存的 key value。需聚合查询+图表组件。MVP 可先简单的。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:122:| F-M15 | 商家看板 API（聚合+缓存） | **S** | S4 | 3 | 🟢 | 数据量大时聚合查询注意性能。5min 缓存解决。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:123:| F-M16 | 商家优惠券创建与管理 | **C** | V2 | 5 | 🟡 | 需要设计结算机制（谁承担成本）。MVP 先做平台券。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:124:| F-M17 | 商家批量导入商品（CSV） | **C** | V2 | 5 | 🟡 | 大量商品时才有价值。种子商家手工上架可接受。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:125:| F-M18 | 商家店铺装修（Banner+简介） | **C** | V2 | 5 | 🟡 | 差异化店铺体验。MVP 统一模板足够。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:126:| F-M19 | 商家订单导出 CSV | **C** | V2 | 3 | 🟢 | 对账需求。可先不做，商家截图也行。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:127:| F-M20 | 商家端高棉语优先 | **M** | S3 | 2 | 🟢 | 柬埔寨本地商家第一语言必须是高棉语。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:128:| F-M21 | 图片上传自动压缩（≤5MB→WebP） | **M** | S1 | 5 | 🟢 | 不做=商家上传原图→弱网加载慢→消费者流失。前端+后端双重压缩。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:130:| F-M23 | 商家入驻成功/驳回 Bot 通知 | **M** | S3 | 2 | 🟢 | 复用通知框架。商家必须知道结果。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:137:| F-A01 | 商家入驻审核列表 | **M** | S3 | 5 | 🟢 | 无审核=无商家质量把控。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:139:| F-A03 | 商家管理（查看/暂停/恢复） | **M** | S3 | 3 | 🟢 | 平台需要治理权力。暂停后商品自动下架。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:140:| F-A04 | 平台数据大屏（GMV/订单/用户/商家） | **S** | S4 | 10 | 🟡 | 运营决策依据。初期可用 SQL 查询替代。但长期必做。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:142:| F-A06 | 商户销售额排行榜 | **S** | S4 | 3 | 🟢 | 运营激励商家的依据。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:149:| F-A13 | 平台优惠券发放 | **S** | S2 | 3 | 🟢 | 运营拉新促活的工具。后端逻辑复用商家券。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:158:| F-S01 | Telegram Bot 通知框架（队列+模板） | **M** | S3 | 5 | 🟡 | 商家和消费者的关键通信通道。消息队列设计需提前。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:160:| F-S03 | Bot → 商家订单通知（新订单/已付款） | **M** | S3 | 3 | 🟢 | 复用通知框架。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:161:| F-S04 | Bot → 商家审核结果通知 | **M** | S3 | 2 | 🟢 | 复用通知框架。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:184:| F-S27 | 种子数据 Seeder（50 商品+20 商家） | **M** | S4 | 3 | 🟢 | 开发和测试环境的基础数据。 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:217:商家端核心路径（不可中断）：
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:218:入驻 → 审核通过 → 登录后台 → 上架商品 → 收到新订单通知 → 处理订单 → 发货
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:222:审核商家 → 查看平台数据 → 系统配置
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:245:| 不做 Bot 通知 | 商家不知道有新订单，发货延迟 → 差评 → 流失 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:266:| F-M13 | 商家店铺信息编辑 | 3 | 联系运营修改 | Sprint 4 延期时 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:267:| F-M14 | 商家数据看板 | 8 | 商家看"我的订单"列表手动算 | **最可能被降级的大项** |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:268:| F-M15 | 商家看板 API | 3 | 同 F-M14 | 同 F-M14 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:269:| F-M24 | 商品自动下架（库存=0） | 2 | 商家手动下架 | Sprint 3 时间不够 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:275:> ⚠️ **最可能被降级的大项**：商家数据看板（F-M14, 8 点）和平台数据大屏（F-A04, 10 点）。如果 Sprint 4 时间不够，优先砍这两项——种子商家可以通过"看订单列表"手动了解生意，平台运营可以写 SQL 查询。
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:290:| F-M16 | 商家优惠券 | 5 | V2（第二期） | 平台券验证成功后 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:291:| F-M17 | 商品批量导入（CSV） | 5 | V2（第二期） | 商家数 > 100 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:292:| F-M18 | 商家店铺装修 | 5 | V2（第二期） | 商家有差异化诉求 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:293:| F-M19 | 订单导出 CSV | 3 | V2（第二期） | 商家对账需求 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:301:商家数量 > 100        → 激活 F-M17（批量导入）
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:304:商家提出对账需求 ≥ 3 次 → 激活 F-M19（订单导出）
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:326:依赖用户量/商家量积累，冷启动做没意义：
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:332:  ❌ 批量导入商品（种子商家量少，手工上架可接受）
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:333:  ❌ 店铺装修（统一模板对初期体验足够）
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:393:| 商家数据看板 | ⭐⭐⭐⭐ | 🟡 | 聚合查询+图表，可降级为 Should |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:429:### 8.2 商家端
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:433:| **入驻** | 表单 S1，API S1，审核 S3，登录 S3 | — | — |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:437:| **店铺管理** | — | 信息编辑 S4 | 装修 C.V2，优惠券 C.V2 |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:443:| **商家管理** | 审核 S3，状态管理 S3 | — | — |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:459:| **通知框架** | Bot 框架 S3，消费者通知 S3，商家通知 S3，审核通知 S3，重试 S3，三语 S3 | — | — |
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:508:1. 商家数据看板（F-M14/F-M15）→ 第二期 → 省 11 点
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:512:4. 商家店铺信息编辑（F-M13）→ 联系运营 → 省 3 点
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:515:但砍完后：种子商家后台只有"商品管理+订单处理"两个核心功能。
+/Users/qinzz/Desktop/telegrammall/项目文档/需求优先级矩阵_MoSCoW.md:526:4. 给种子商家+种子消费者提供"先货后款"→ 信任期内过渡
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:9:> **变更说明**：V1.0 多商户平台 → V2.0 公司自营模式。去掉商家入驻/审核，管理后台改为用户名密码登录，商品/订单由公司统一管理。
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:36:Telegram 在柬埔寨拥有约 **550 万活跃用户**，是仅次于 Facebook 和 TikTok 的第三大社交平台。大量中小商家已通过 Telegram 频道和群组进行产品推广，但缺乏专业的电商功能支撑（统一支付、订单管理、物流追踪）。目前柬埔寨市场上**尚无专业的 Telegram 电商 Mini App**，这是一个明确的蓝海市场。
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:62:- ❌ 商家多租户入驻
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:91:- 痛点：Shopee 上商品价格偏高（佣金转嫁），希望找到更便宜的渠道
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:93:**次要画像：金边华人商家兼消费者**
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:102:### 2.3 商家用户画像
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:107:- 店铺：金边俄罗斯市场附近服装店
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:122:│ 商家入驻 → 商品上架 → 订单管理 → Bot 通知     │
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:131:│ 商家店铺装修 · 批量商品导入                    │
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:149:| **M4: Alpha 版本** | Sprint 4（第 11 周） | 商家入驻+后台可用；多语言+双币种；种子商家可试用 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:161:│  消费者端   │   商家端    │  平台运营端 │    公共服务        │
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:164:│ 用户注册/登录│ 商家入驻    │ 商家审核    │ Telegram Bot 通知  │
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:168:│ 下单结算    │ 店铺管理    │ 投诉处理    │ 数据加密与安全     │
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:194:| **业务规则** | ① 默认按"最新上架"排序；② 支持按价格（低→高/高→低）、销量、品类筛选；③ 搜索支持商品名称关键词（高棉语+英语+中文）；④ 商品卡片显示：主图、名称、USD/KHR 双价格、商家名称 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:259:### 4.3 商家端功能（Web 后台）
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:261:#### F-M01: 商家入驻
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:266:| **描述** | 商家在线提交入驻申请，平台审核后开通店铺 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:267:| **关键交互** | 填写店铺信息 → 上传资质（可选）→ 提交申请 → 等待审核 → 审核通过/驳回通知（Telegram Bot） |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:268:| **业务规则** | ① 必填字段：店铺名称（高棉语+英语）、老板姓名、联系电话、地址、主营品类；② 审核流程：待审核 → 审核通过/驳回；③ 驳回时需填写原因，商家可修改后重新提交；④ 入驻成功后自动创建店铺并发送 Bot 通知 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:275:| **描述** | 商家上架、编辑、下架商品 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:293:| **描述** | 商家查看店铺经营数据概览 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:302:| **描述** | 商家创建和管理本店优惠券 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:304:| **业务规则** | ① 商家券仅本店可用；② 需平台审核（可选） |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:308:#### F-A01: 商家审核
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:313:| **描述** | 审核商家入驻申请，管理商家状态 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:314:| **关键交互** | 待审核列表 → 查看商家详情 → 通过/驳回（填写原因）→ 商家列表管理（启用/暂停） |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:315:| **业务规则** | ① 审核后自动发 Telegram Bot 通知；② 暂停商家后其所有商品自动下架 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:323:| **关键交互** | 核心指标卡片（今日订单量、GMV、新增用户、新增商家、支付成功率）→ 趋势图表 → 商户排行榜 → 品类销售占比 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:342:| **描述** | 通过 Telegram Bot 向商家和消费者推送关键通知 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:343:| **通知场景** | ① **消费者**：下单成功、支付成功、已发货（含物流单号）、订单完成、优惠券即将过期；② **商家**：新订单提醒、买家已付款、审核结果通知 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:352:| **业务规则** | ① 默认语言：首次根据 Telegram 用户语言设置推断，可在个人中心切换；② 所有面向用户的文案（包括错误提示）支持三语；③ 商家商品名称和描述支持多语言独立填写；④ 高棉语文字较长，UI 布局需预留 30% 额外宽度 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:360:| **业务规则** | ① 商家填写 USD 价格，KHR 按当日汇率自动换算；② 汇率每日从可靠数据源同步（如 Bakong 官方汇率）；③ 订单以 USD 为结算币种 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:379:- [ ] 商品卡片展示：商品主图、名称（默认高棉语）、USD 价格（大字）、KHR 价格（小字）、商家名称
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:475:### 5.2 商家端用户故事
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:477:#### US-101: 商家入驻
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:481:我想 在线提交入驻申请，审核通过后拥有自己的线上店铺
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:487:- [ ] 入驻表单：店铺名称（高棉语+英语）、老板姓名、电话（+855 格式）、地址、主营品类
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:491:- [ ] 审核通过后，商家可登录后台
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:496:作为 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:514:作为 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:531:作为 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:546:#### US-201: 审核商家
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:550:我想 审核商家入驻申请，通过或驳回
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:551:以便 确保平台商家质量
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:556:- [ ] 商家审核列表：待审核/已通过/已驳回 Tab
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:557:- [ ] 查看商家入驻详情（所有提交信息）
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:560:- [ ] 已通过商家可在商家管理中查看、暂停
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:566:我想 每天早上看到昨日订单量、GMV、新增商家数、支付成功率
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:572:- [ ] 核心指标卡片：昨日订单量、GMV、新增用户、新增商家、支付成功率
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:618:| **操作日志** | 敏感操作（商家审核、佣金修改、系统配置变更）记录完整审计日志 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:626:| **浏览器（商家/运营后台）** | Chrome 90+、Safari 14+、Firefox 90+ |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:674:| **双币种结算** | 商家定价 USD，消费者支付可选 USD 或 KHR，后台以 USD 结算 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:771:| 4 | **商品详情** | 图片轮播（可放大）、商品名称、USD/KHR 价格、规格选择、数量、加购按钮、商家信息 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:779:#### 商家端（Web 后台）
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:787:| 5 | **店铺设置** | 店铺信息编辑、营业状态 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:796:| 3 | **商家管理** | 商家列表、商家详情、审核操作、状态管理 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:816:| F-M01 | 商家入驻与审核 | 商家+平台 | 没有商家就没有商品 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:817:| F-M02 | 商品上架管理 | 商家 | 商家核心操作 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:818:| F-M03 | 订单处理 | 商家 | 商家日常运营核心 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:819:| F-S01 | Telegram Bot 通知 | 公共服务 | 连接商家和消费者的关键通信通道 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:829:| F-M04 | 商家数据看板 | 商家留存的关键价值点 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:837:| F-M05 | 商家优惠券 | 需要设计审核和结算机制，MVP 可先做平台券 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:839:| 批量导入 | 商家批量导入商品 | 种子商家数量少时手工上架可接受 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:861:| 商家入驻数 | 上线 3 个月 ≥ 200 家 | 月度 | 运营后台 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:875:| 活跃商家数 | ≥ 500 家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:880:| 商家月留存率 | ≥ 80% |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:891:| 商家能接受 2-5% 佣金模式 | 商家访谈和入驻转化率跟踪 | 调整佣金策略（先免费再收费） |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:901:| Shopee/Lazada 价格战反击 | 中 | 高 | 差异化定位，不正面竞争；聚焦社交电商和 Telegram 生态 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:902:| 商家招募速度慢于预期 | 中 | 高 | 种子商家优惠计划；地推团队；先做供给端再推广消费端 |
+/Users/qinzz/Desktop/telegrammall/项目文档/产品需求文档_PRD.md:946:- **Shopee 柬埔寨**（shopee.com.kh）：商品浏览、搜索筛选、购物车交互
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:7:> **V2 变更**：新增 AdminUser 表（用户名密码登录）；Merchant 表不再接收新入驻，由 defaultMerchant 中间件自动创建默认商户  
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:38:| **查询性能** | MVP 阶段支撑 10 万用户 + 500 商家 + 10 万商品 + 日均 500 单的查询需求 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:49:| **外键** | `{关联表单数名}_id` | `user_id`、`merchant_id` |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:55:| **外键约束名** | `fk_{表名}_{关联表名}` | `fk_products_merchant` |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:62:| 短文本（≤200 字符） | `VARCHAR(n)` | 店铺名、人名、手机号 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:85:    merchants ||--o{ products : "上架"
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:86:    merchants ||--o{ orders : "收到"
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:87:    merchants ||--o{ coupons : "发放"
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:109:    merchants {
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:128:        uuid merchant_id FK
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:151:        uuid merchant_id FK
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:186:        uuid merchant_id FK "可空=平台券"
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:225:        uuid merchant_id FK
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:246:| `merchants` | `products` | 一对多 | 1 : 0..N | 一个商家可以上架多个商品 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:247:| `merchants` | `orders` | 一对多 | 1 : 0..N | 一个商家可以收到多个订单 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:248:| `merchants` | `coupons` | 一对多 | 1 : 0..N | 一个商家可以发放多张优惠券 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:270:    │     │           └── 归属商家 (merchants)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:278:  商家 (merchants)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:280:    ├── 查看订单 (orders)                ← 商家后台查看
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:352:### 3.2 商家表 `merchants`
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:354:**用途**：存储商家店铺信息。商家需提交入驻申请，审核通过后 `status` 变为 `active`。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:358:| `id` | `UUID` | **PK** | `gen_random_uuid()` | 商家唯一标识 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:359:| `name_km` | `VARCHAR(200)` | `NOT NULL` | — | 店铺名称（高棉语，必填） |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:360:| `name_en` | `VARCHAR(200)` | — | `NULL` | 店铺名称（英语） |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:363:| `address` | `TEXT` | `NOT NULL` | — | 店铺地址 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:365:| `description` | `TEXT` | — | `NULL` | 店铺简介 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:369:| `telegram_id` | `BIGINT` | — | `NULL` | 关联的 Telegram 用户 ID（用于商家登录） |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:376:-- 创建商家表
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:377:-- 说明：商家提交入驻申请后插入，审核通过后 status = 'active'
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:378:-- 审核通过前 telegram_id 可为空，通过后绑定商家 Telegram 账号
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:379:CREATE TABLE merchants (
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:400:CREATE INDEX idx_merchants_status ON merchants(status);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:403:CREATE INDEX idx_merchants_category ON merchants(category);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:406:CREATE INDEX idx_merchants_phone ON merchants(phone);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:409:CREATE INDEX idx_merchants_created ON merchants(created_at DESC);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:421:| `merchant_id` | `UUID` | **FK → merchants, NOT NULL** | — | 归属商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:495:  merchant_id     UUID NOT NULL REFERENCES merchants(id) ON DELETE CASCADE,
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:516:-- 索引：按商家查询（商家后台商品列表）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:517:CREATE INDEX idx_products_merchant ON products(merchant_id);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:548:-- 复合索引：商家 + 状态（商家后台按状态筛选商品）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:549:CREATE INDEX idx_products_merchant_status
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:550:  ON products(merchant_id, status);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:564:| `merchant_id` | `UUID` | **FK → merchants, NOT NULL** | — | 归属商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:599:             │ 商家发货     │
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:627:// logistics_info — 物流信息（商家发货时填写）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:647:  merchant_id       UUID NOT NULL REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:675:-- 索引：按商家查询（商家后台订单列表 —— 第二高频查询）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:676:CREATE INDEX idx_orders_merchant ON orders(merchant_id, created_at DESC);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:688:-- 局部索引：已支付待发货（商家发货提醒）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:713:**价格快照说明**：`price_usd` 和 `price_khr` 存的是**下单那一刻**的商品价格，而不是引用 `products` 表的当前价格。这样即使商家后续调价，历史订单金额不受影响。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:719:-- 说明：价格快照保证历史订单的准确性。即使商家后期调价，订单金额不变。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:743:**用途**：存储优惠券模板。支持平台券（`merchant_id = NULL`）和商家券（`merchant_id` 指向具体商家）。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:748:| `merchant_id` | `UUID` | **FK → merchants** | `NULL` | 发券商家（NULL = 平台券） |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:774:-- 说明：merchant_id 为 NULL 表示平台券，不为 NULL 表示商家券。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:778:  merchant_id UUID REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:800:-- 索引：按商家查询（商家查看自己发的券）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:801:CREATE INDEX idx_coupons_merchant ON coupons(merchant_id);
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:907:| `merchant_id` | `UUID` | **FK → merchants** | `NULL` | 接收通知的商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:923:| `order_created` | 订单已创建 | 消费者 + 商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:924:| `payment_success` | 支付成功 | 消费者 + 商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:927:| `order_cancelled` | 订单已取消 | 消费者 + 商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:928:| `merchant_approved` | 商家审核通过 | 商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:929:| `merchant_rejected` | 商家审核驳回 | 商家 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:937:-- user_id 和 merchant_id 至少有一个非空（通知至少有一个接收方）。
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:941:  merchant_id UUID REFERENCES merchants(id),
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:956:    CHECK (user_id IS NOT NULL OR merchant_id IS NOT NULL)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1025:| `merchants` | 4 | 1 (`phone`) | 0 | 0 | 0 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1053:| **商家订单** | `WHERE merchant_id='xxx' AND status='paid' ORDER BY created_at DESC` | `idx_orders_merchant`（前导列匹配） |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1066:| `merchants` | 200 | 2,000 | 10,000 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1321:| 商家看板数据 | `merchant_dashboard:{id}` | 5 分钟 | 首次查询写入 |
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1354:2.  merchants          ← 无外键依赖
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1355:3.  coupons            ← 依赖 merchants (FK, 可空)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1356:4.  products           ← 依赖 merchants (FK)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1357:5.  orders             ← 依赖 users + merchants + coupons (FK)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1361:9.  notifications      ← 依赖 users + merchants (FK, 可空)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1383:CREATE TRIGGER trg_merchants_updated_at
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1384:  BEFORE UPDATE ON merchants
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1432:-- 插入测试商家（已审核通过）
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1433:INSERT INTO merchants (name_km, name_en, owner_name, phone, address, category, status, commission_rate)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1441:INSERT INTO products (merchant_id, name_km, name_en, name_zh, price_usd, price_khr, stock, category, images)
+/Users/qinzz/Desktop/telegrammall/项目文档/数据库设计说明书.md:1447:FROM merchants m WHERE m.name_en = 'Sopheap Fashion';
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/design-tokens.md:161:| 商家后台 (M1-M4) | — | ❌ 待设计 |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:33:| **店铺设计**   | **系统设计** | 设计师画图纸：门面、货架、收银台布局  |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:60:你请设计师装修店铺，第一步不是买材料，而是坐下来聊：这条街的人流是谁？年轻人还是中老年人？卖什么品类？要不要配沙发？这些"需求"决定了后面的一切。
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:67:- 谁用？（柬埔寨年轻消费者、华人商家、本地小店主）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:76:- ❌ "做一个像 Shopee 那样的系统" → 太模糊，无法执行
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:95:- 系统架构图（店铺有几层、什么结构）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:112:程序员根据设计文档写代码，把图纸变成真店铺。
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:125:店铺装修好了，不能马上正式开业。要先检查：
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:180:- 收集商家反馈（哪个功能不会用？哪里经常出错？）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:208:| **商家**   | 服装店/美妆店/电子店老板   | 上架商品、处理订单、看销售数据 | 中频（每天管理店铺） |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:209:| **平台运营** | 你和你的团队       | 审核商家、看大盘数据、处理投诉  | 中低频        |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:222:├─ 商家入驻与商品上架              ├─ 跨境购
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:223:├─ 商家订单管理后台               ├─ 供应链金融
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:259:US-004：商家上架商品
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:261:我想 在商家后台上传商品图片、填写价格（支持 USD 和 KHR 双币种）、设置库存
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:265:作为 商家
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:271:我想 每天早上一张图表显示：昨日订单量、GMV、新增商家数、支付成功率
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:301:- ✅ **你必须亲自做**：用户故事编写（因为你最懂柬埔寨消费者和商家的需求）、验收标准定义（因为你最清楚什么算"能用"）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:315:3. **模块怎么通信？**（消费者下单后，信息怎么传到商家 Telegram）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:354:│  │ 商家模块  │  │ 优惠券模块│  │ 消息模块  │  │ 物流模块  │     │
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:355:│  │ Merchant │  │ Coupon   │  │ Message  │  │ Logistics│     │
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:385:| **Vue.js / React** | Mini App 前端 | 适合构建单页应用，Telegram Mini App 官方推荐；组件化开发快 | 店铺的门面装修，顾客第一眼看到的 |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:386:| **Node.js / Python** | 后端框架    | JavaScript 全栈统一或 Python 开发快；社区庞大，招聘相对容易   | 店铺的后勤管理系统       |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:389:| **Telegram Mini App** | 消费者端  | 无需下载 App，Telegram 内即点即用；550 万用户基础       | 开在 Telegram 里的店铺分店 |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:390:| **Telegram Bot** | 消息推送    | 订单通知、客服消息；开发简单；免费                  | 店铺的对讲机和广播系统     |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:391:| **AWS 新加坡**     | 云服务器    | 柬埔寨认可的数据存储地；延迟低；稳定                 | 店铺建在靠谱的商业区      |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:406:【商家表】merchants
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:407:- id: 商家编号
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:408:- name: 店铺名称（高棉语+英语）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:417:- merchant_id: 归属商家
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:431:- merchant_id: 归属商家
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:450:- merchant_id: 哪个商家发的（平台券则为空）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:500:【商家模块】
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:501:POST   /api/v1/merchants/register     → 商家入驻申请
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:502:GET    /api/v1/merchants/dashboard     → 商家数据看板
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:503:POST   /api/v1/merchants/products     → 商家上架商品
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:504:GET    /api/v1/merchants/orders        → 商家订单列表
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:505:POST   /api/v1/merchants/orders/{id}/ship → 商家发货
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:516:- **商家后台**：登录页 → 数据看板 → 商品管理 → 订单管理 → 优惠券创建 → 数据统计
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:517:- **平台后台**：商家审核 → 大盘数据 → 系统配置 → 用户管理
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:568:- 实现：订单管理后台（商家查看订单）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:575:- 实现：Telegram Bot 订单通知（推送给商家和消费者）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:579:**Sprint 4（第 11 周）：商家入驻与完善**
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:581:- 实现：商家入驻申请流程
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:582:- 实现：商家后台（商品上架、库存管理）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:585:- 产出：可给种子商家试用的 Alpha 版本
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:609:在正式给柬埔寨商家和消费者用之前，把 Bug 消灭在办公室里。
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:673:□ 域名：已购买（如 shop.xinhua-tech.kh）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:680:□ 商家种子数据：首批 20 家标杆商家信息已录入
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:681:□ 商品种子数据：每家商家至少上架 5 个商品
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:692:第 2-3 天：种子商家（20 家华人商户，你亲自在场支持）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:705:| **《商家操作手册》**  | 给商家看的：怎么入驻、怎么上架商品、怎么处理订单、怎么看数据     | 降低客服压力              | 商家入驻时发放，减少"手把手教"的时间     |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:711:- ✅ **你要在场**：种子商家上线时，你在现场（或线上）观察真实使用情况
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:748:| **《迭代路线图（Roadmap）》** | 未来 3-6 个月的功能计划，标注优先级和预计时间                      | 让团队知道"下一步往哪走" | 每月 Review 一次，根据商家反馈调整优先级 |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:749:| **《数据分析周报》**         | 每周自动生成：新增商家、新增用户、订单量、GMV、支付成功率、复购率           | 用数据驱动决策       | 你根据周报决定：加大推广/优化功能/修复问题 |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:750:| **《商家反馈收集表》**        | 记录商家提出的问题和建议                                 | 防止"拍脑袋做功能"    | 每两周 Review 一次，高频问题优先解决   |
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:754:- ✅ **你必须做**：看数据周报、收集商家反馈、排迭代优先级
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:790:└── 产品 Review：看商家反馈、看数据报告、调整 Roadmap 优先级
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:838:3. 用 1 天时间，确定 MVP 范围（只做：商品浏览、购物车、下单、KHQR/ABA Pay 支付、订单通知、商家入驻、商品上架）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:933:   3.2 商家端功能（Web 后台）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:941:6. 附录：原型草图、参考竞品（Shopee/Lazada 截图）
+/Users/qinzz/Desktop/telegrammall/项目文档/软件工程小白通关手册_柬埔寨Telegram电商平台.md:1025:1. **最懂业务**：你知道柬埔寨消费者真正需要什么、商家真正在乎什么
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:76:### 2.2 前端（tgmall-merchant / tgmall-admin）
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:81:| **测试目录** | `tgmall-merchant/tests/` · `tgmall-admin/tests/` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:111:| T-02 | 多商品下单（同商家） | P0 | 验证多商品总价计算 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:112:| T-03 | 跨商家下单拒绝 | P0 | 验证 `VALIDATION_ERROR` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:150:#### 3.2.4 商家服务测试（`tests/unit/merchant-service.test.js`）
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:154:| T-30 | 商家入驻申请 | P1 | 验证 status=pending |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:155:| T-31 | 重复手机号拒绝 | P1 | 验证 `DUPLICATE_MERCHANT` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:156:| T-32 | 商家登录成功 | P1 | 验证 JWT token + role=merchant |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:157:| T-33 | 非 active 商家拒绝登录 | P1 | 验证 `FORBIDDEN` |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:159:| T-35 | 商品归属校验 | P1 | 验证跨商家商品不可见 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:165:| T-36 | 大盘数据返回 | P2 | 验证 GMV/商家/用户统计 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:166:| T-37 | 商家列表分页 | P2 | 验证 status 筛选 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:187:| I-11 | `/api/v1/merchants/dashboard` | GET | 商家 Token → 200 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:188:| I-12 | `/api/v1/merchants/dashboard` | GET | 无 Token → 401 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:204:### 5.1 商家后台测试（`tgmall-merchant/tests/`）
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:245:| F-21 | `MerchantsPage` | 待审核列表 + 审核操作 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:267:E2E-03: 商家登录后台 → 查看新订单 → 确认发货 → 用户收到发货通知 → 确认收货
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:270:### 6.2 商家运营流程
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:273:E2E-04: 用户入驻申请 → 管理员审核通过 → Bot 通知 → 商家登录 → 上架商品 → 管理订单
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:274:E2E-05: 管理员登录 → 大盘数据 → 审核商家 → 驳回入驻
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:296:| S-07 | A01 访问控制 | 商家 A 不能查看商家 B 的商品 |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:329:| P-08 | Bundle 大小 | tgmall-merchant < 500KB gzip |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:340:| `merchant.service.js` | 0% | 60% | 80% |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:346:| **tgmall-merchant 组件** | 0% | 30% | 50% |
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:395:npm run build --workspace=tgmall-merchant        # 商家后台构建
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:414:# - 2 个测试商家（1 active, 1 pending）
+/Users/qinzz/Desktop/telegrammall/项目文档/测试计划.md:448:      - run: cd tgmall-merchant && npm ci && npm run build
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/README.md:38:├── merchant/               ← 商家 Web 后台页面截图
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/README.md:46:    ├── A2-商家审核.png
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/admin/缺失页面清单.md:3:平台运营后台为桌面 Web 界面，管理所有商家和平台配置。
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/admin/缺失页面清单.md:7:| A1 | 平台大盘 | 全平台 GMV、商家数、用户数、订单趋势、品类分布 | 中 |
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/admin/缺失页面清单.md:8:| A2 | 商家审核 | 商家入驻申请列表 + 审核通过/驳回操作 | 中 |
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/admin/缺失页面清单.md:11:**设计 Token**: 与商家后台共用设计语言，增加深色侧边栏导航。
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:53:| `tgmall-merchant` | 商家 Web 后台 | Vue.js 3 + Vite + Element Plus |
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:99:- 示例：✅ `feature/merchant-product-import` ❌ `feature/商家导入商品功能_v2_final`
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:173:| `merchant` | 商家系统 |
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:340:| **API 端点** | kebab-case | `/merchant-orders`、`/order-items` | 小写+连字符 |
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:756:        merchant: { select: { name: language === 'en' ? 'nameEn' : 'nameKm' } }
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:907:  merchantId    String   @map("merchant_id") @db.Uuid
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:908:  merchant      Merchant @relation(fields: [merchantId], references: [id])
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:925:  @@index([merchantId])
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:956:    merchant: { select: { nameKm: true, phone: true } }
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:980:for (const merchant of merchants) {
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:982:    where: { merchantId: merchant.id }
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:987:  by: ['merchantId'],
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:989:  where: { merchantId: { in: merchantIds } }
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:1067:GET    /api/v1/merchants/{id}/products     # 某商家的商品列表
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:1073:POST   /api/v1/merchants/orders/{id}/ship  # 发货
+/Users/qinzz/Desktop/telegrammall/项目文档/开发规范.md:1238:      merchantId: 'merchant-uuid'
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:66:    .shop-group {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:73:    .shop-header {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:79:    .shop-header input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:207:    <a href="01-home.html" data-i18n="goShop">ទៅទិញឥវ៉ាន់</a>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:225:      title: { km: 'កន្ត្រកទំនិញ', zh: '购物车', en: 'Shopping Cart' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:227:      goShop: { km: 'ទៅទិញឥវ៉ាន់', zh: '去逛逛', en: 'Go Shopping' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:256:      { id: 1, shop: 'Phnom Penh Style', img: '👕', nameKm: 'អាវយឺតកប្បាសសុទ្ធ', nameZh: '纯棉短袖T恤', nameEn: 'Pure Cotton T-Shirt', spec: 'White / M', price: 12.99, qty: 2, stock: 28, checked: true },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:257:      { id: 3, shop: 'Tech Zone KH', img: '🎧', nameKm: 'កាសឥតខ្សែប៊្លូធូស', nameZh: '蓝牙无线耳机', nameEn: 'Bluetooth Earbuds', spec: 'Black', price: 18.99, qty: 1, stock: 15, checked: true },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:258:      { id: 5, shop: 'Phnom Penh Style', img: '👟', nameKm: 'ស្បែកជើងប៉ាតាស្ត្រី', nameZh: '女士运动休闲鞋', nameEn: "Women's Sneakers", spec: 'Size 38', price: 32.00, qty: 1, stock: 5, checked: false },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:287:      // Group by shop
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:288:      const shops = {};
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:290:        if (!shops[item.shop]) shops[item.shop] = [];
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:291:        shops[item.shop].push(item);
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:294:      list.innerHTML = Object.entries(shops).map(([shop, items]) => `
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:295:        <div class="shop-group">
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:296:          <div class="shop-header">
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:297:            <input type="checkbox" onchange="toggleShop('${shop}', this.checked)" ${items.every(i => i.checked) ? 'checked' : ''}>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:298:            <span>${shop}</span>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:350:    function toggleShop(shop, checked) {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/05-购物车.html:351:      cartItems.forEach(i => { if (i.shop === shop) i.checked = checked; });
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/07-支付页(KHQR).html:291:        <a class="btn btn-outline" href="01-home.html" data-i18n="continueShop">បន្តទិញ</a>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/07-支付页(KHQR).html:322:      paySuccessDesc: { km: 'សូមអរគុណ! អ្នកលក់នឹងរៀបចំការដឹកជញ្ជូនឆាប់ៗនេះ', zh: '感谢支付！商家将尽快发货', en: 'Thank you! Seller will ship soon.' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/07-支付页(KHQR).html:323:      continueShop: { km: 'បន្តទិញ', zh: '继续购物', en: 'Continue Shopping' },
+/Users/qinzz/Desktop/telegrammall/项目文档/用户操作手册.md:132:### 2.5 商家管理
+/Users/qinzz/Desktop/telegrammall/项目文档/用户操作手册.md:134:历史审核数据查看（V1 遗留，V2 已不接收新入驻申请）。
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:294:    .product-card .shop {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:482:      { id: 1, cat: 'fashion', name: { km: 'អាវយឺតកប្បាសសុទ្ធ', zh: '纯棉短袖T恤', en: 'Pure Cotton T-Shirt' }, priceUsd: 12.99, priceKhr: '៛52,000', img: '👕', shop: 'Phnom Penh Style', badge: 'Hot' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:483:      { id: 2, cat: 'beauty', name: { km: 'ក្រែមលាបមុខវីតាមីន C', zh: 'VC亮肤精华面霜', en: 'Vitamin C Brightening Cream' }, priceUsd: 24.50, priceKhr: '៛98,000', img: '✨', shop: 'Khmer Beauty', badge: null },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:484:      { id: 3, cat: 'electronics', name: { km: 'កាសឥតខ្សែប៊្លូធូស', zh: '蓝牙无线耳机', en: 'Bluetooth Wireless Earbuds' }, priceUsd: 18.99, priceKhr: '៛76,000', img: '🎧', shop: 'Tech Zone KH', badge: 'New' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:485:      { id: 4, cat: 'home', name: { km: 'ខ្នើយតុបតែងបែបបុរាណ', zh: '高棉传统装饰抱枕', en: 'Khmer Traditional Cushion' }, priceUsd: 15.00, priceKhr: '៛60,000', img: '🛋️', shop: 'Angkor Home', badge: null },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:486:      { id: 5, cat: 'fashion', name: { km: 'ស្បែកជើងប៉ាតាស្ត្រី', zh: '女士运动休闲鞋', en: "Women's Casual Sneakers" }, priceUsd: 32.00, priceKhr: '៛128,000', img: '👟', shop: 'Phnom Penh Style', badge: 'Sale' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:487:      { id: 6, cat: 'beauty', name: { km: 'ក្រែមការពារកម្តៅថ្ងៃ SPF50', zh: 'SPF50 防晒霜', en: 'SPF50 Sunscreen Lotion' }, priceUsd: 9.99, priceKhr: '៛40,000', img: '☀️', shop: 'Khmer Beauty', badge: 'Hot' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:488:      { id: 7, cat: 'electronics', name: { km: 'ឆ្នាំងសាកថ្មចល័ត 20000mAh', zh: '20000毫安充电宝', en: '20000mAh Power Bank' }, priceUsd: 22.00, priceKhr: '៛88,000', img: '🔋', shop: 'Tech Zone KH', badge: null },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:489:      { id: 8, cat: 'home', name: { km: 'ចានសេរ៉ាមិចធ្វើដោយដៃ', zh: '手工陶瓷餐具套装', en: 'Handmade Ceramic Dinner Set' }, priceUsd: 28.50, priceKhr: '៛114,000', img: '🍽️', shop: 'Angkor Home', badge: 'New' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:490:      { id: 9, cat: 'fashion', name: { km: 'កាបូបស្ពាយស្បែក', zh: '真皮双肩背包', en: 'Leather Backpack' }, priceUsd: 45.00, priceKhr: '៛180,000', img: '🎒', shop: 'Phnom Penh Style', badge: 'Sale' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:491:      { id: 10, cat: 'beauty', name: { km: 'ក្រែមលាបមាត់ពណ៌ធម្មជាតិ', zh: '天然植物口红', en: 'Natural Lipstick Set' }, priceUsd: 16.99, priceKhr: '៛68,000', img: '💄', shop: 'Khmer Beauty', badge: null },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:492:      { id: 11, cat: 'electronics', name: { km: 'ទូរស័ព្ទស្មាតហ្វូនស៊េរីថ្មី', zh: '新款智能手机', en: 'Latest Smartphone' }, priceUsd: 199.00, priceKhr: '៛796,000', img: '📱', shop: 'Tech Zone KH', badge: 'Hot' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:493:      { id: 12, cat: 'home', name: { km: 'ចង្កៀងតុធ្វើពីឫស្សី', zh: '手工竹编台灯', en: 'Handwoven Bamboo Lamp' }, priceUsd: 19.99, priceKhr: '៛80,000', img: '💡', shop: 'Angkor Home', badge: null },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:512:      banner3: { km: '🆕 ម៉ាកថ្មីមកដល់', zh: '🆕 新品牌入驻', en: '🆕 New Brands' },
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/01-首页.html:615:            <div class="shop">${p.shop}</div>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/04-商品详情.html:171:    .shop-row {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/04-商品详情.html:178:    .shop-avatar {
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/04-商品详情.html:409:    <div class="shop-row">
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/04-商品详情.html:410:      <div class="shop-avatar">P</div>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/00-项目总览.html:289:          <div class="card-desc">商家分组 · 全选/单选 · 数量+/- · 库存提醒 · 合计结算</div>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/pages/00-项目总览.html:291:            <span>商家分组</span><span>库存校验</span><span>localStorage</span>
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/merchant/缺失页面清单.md:1:# 商家后台 (Merchant Web) — 待设计
+/Users/qinzz/Desktop/telegrammall/项目文档/ui-design/merchant/缺失页面清单.md:3:商家管理后台为桌面 Web 界面，与 Mini App 消费者的设计语言一致（Modern Minimal + 柬埔寨金）。
