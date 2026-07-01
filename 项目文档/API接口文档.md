@@ -4,7 +4,7 @@
 
 > **文档版本**：V2.0  
 > **编制日期**：2026 年 6 月 9 日
-> **V2 变更**：新增 POST /auth/admin-login（用户名密码登录）；移除商家入驻/登录 API；新增 /admin/products 和 /admin/orders 路由  
+> **V2 变更**：切换为公司自营模式；原商户端路由已统一改为 `/admin/*` 由平台管理
 > **Base URL**：`https://api.shop.xinhua-tech.kh/api/v1`  
 > **协议**：HTTPS only  
 > **内容格式**：`application/json`（文件上传除外）  
@@ -23,14 +23,13 @@
 - [五、购物车模块](#五购物车模块)
 - [六、订单模块](#六订单模块)
 - [七、支付模块](#七支付模块)
-- [八、商家模块](#八商家模块)
+- [八、平台运营模块](#八平台运营模块)
 - [九、优惠券模块](#九优惠券模块)
 - [十、文件上传模块](#十文件上传模块)
-- [十一、平台运营模块](#十一平台运营模块)
-- [十二、Webhook 回调](#十二webhook-回调)
-- [十三、公共接口](#十三公共接口)
-- [十四、错误码速查表](#十四错误码速查表)
-- [十五、接口调用示例（前端）](#十五接口调用示例前端)
+- [十一、Webhook 回调](#十一webhook-回调)
+- [十二、公共接口](#十二公共接口)
+- [十三、错误码速查表](#十三错误码速查表)
+- [十四、接口调用示例（前端）](#十四接口调用示例前端)
 
 ---
 
@@ -175,8 +174,7 @@ limit  = 20     # 每页数量，默认 20，最大 100
 | 角色 | `role` 值 | 权限范围 |
 |------|-----------|----------|
 | 消费者 | `user` | 浏览商品、下单、管理自己的订单和地址 |
-| 商家 | `merchant` | 管理本店商品和订单、查看本店数据 |
-| 管理员 | `admin` | 审核商家、查看全平台数据、系统配置 |
+| 管理员 | `admin` | 商品/订单/用户管理、查看全平台数据、系统配置 |
 
 ---
 
@@ -613,7 +611,6 @@ GET /api/v1/products?sort=popular&limit=10
       "price_usd": 29.99,
       "price_khr": 120000,
       "thumbnail": "https://cdn.xxx.com/products/demo-1_thumb.webp",
-      "merchant_name": "សុភាព ហ្វេសិន",
       "category": "fashion",
       "sales_count": 156,
       "created_at": "2026-06-01T08:00:00.000Z"
@@ -624,7 +621,6 @@ GET /api/v1/products?sort=popular&limit=10
       "price_usd": 12.50,
       "price_khr": 50000,
       "thumbnail": "https://cdn.xxx.com/products/demo-2_thumb.webp",
-      "merchant_name": "សុភាព ហ្វេសិន",
       "category": "fashion",
       "sales_count": 89,
       "created_at": "2026-06-03T10:00:00.000Z"
@@ -668,10 +664,6 @@ GET /products/{id}
   "success": true,
   "data": {
     "id": "prod-uuid-001",
-    "merchant": {
-      "id": "merchant-uuid-001",
-      "name": "សុភាព ហ្វេសិន"
-    },
     "name_km": "រ៉ូប ពណ៌ក្រហម",
     "name_en": "Red Dress",
     "name_zh": "红色连衣裙",
@@ -818,7 +810,7 @@ GET /products/categories
 ### 5.2 购物车数据说明
 
 - 购物车数据存储在 **Redis**（`cart:{user_id}`），与后端同步，不受 Mini App localStorage 清除影响
-- 购物车按商家分组展示
+- 购物车直接按商品条目展示
 - 每次进入购物车时，自动校验库存并调整数量（库存不足标记为"库存不足"）
 - 未登录用户的购物车存本地 localStorage，登录后与后端购物车合并（同商品数量相加）
 
@@ -830,7 +822,7 @@ GET /products/categories
 GET /cart
 ```
 
-**说明**：返回当前用户的购物车内容，按商家分组，显示商品最新价格和库存。
+**说明**：返回当前用户的购物车内容，显示商品最新价格和库存。
 
 **成功响应** `200`：
 
@@ -838,58 +830,46 @@ GET /cart
 {
   "success": true,
   "data": {
-    "groups": [
+    "items": [
       {
-        "merchant_id": "merchant-uuid-001",
-        "merchant_name": "សុភាព ហ្វេសិន",
-        "items": [
-          {
-            "id": "cart-item-uuid-001",
-            "product_id": "prod-uuid-001",
-            "product_name": "រ៉ូប ពណ៌ក្រហម",
-            "thumbnail": "https://cdn.xxx.com/products/demo-1_thumb.webp",
-            "spec": { "color": "ក្រហម", "size": "M" },
-            "price_usd": 29.99,
-            "price_khr": 120000,
-            "quantity": 2,
-            "max_quantity": 20,
-            "stock_status": "ok",
-            "subtotal_usd": 59.98
-          },
-          {
-            "id": "cart-item-uuid-002",
-            "product_id": "prod-uuid-003",
-            "product_name": "ស្បែកជើង ស្បែក",
-            "thumbnail": "https://cdn.xxx.com/products/demo-3_thumb.webp",
-            "spec": { "size": "42" },
-            "price_usd": 45.00,
-            "price_khr": 180000,
-            "quantity": 1,
-            "max_quantity": 1,
-            "stock_status": "low_stock",
-            "stock_warning": "仅剩 1 件",
-            "subtotal_usd": 45.00
-          }
-        ]
+        "id": "cart-item-uuid-001",
+        "product_id": "prod-uuid-001",
+        "product_name": "រ៉ូប ពណ៌ក្រហម",
+        "thumbnail": "https://cdn.xxx.com/products/demo-1_thumb.webp",
+        "spec": { "color": "ក្រហម", "size": "M" },
+        "price_usd": 29.99,
+        "price_khr": 120000,
+        "quantity": 2,
+        "max_quantity": 20,
+        "stock_status": "ok",
+        "subtotal_usd": 59.98
       },
       {
-        "merchant_id": "merchant-uuid-002",
-        "merchant_name": "ស្រីស្អាត សម្រស់",
-        "items": [
-          {
-            "id": "cart-item-uuid-003",
-            "product_id": "prod-uuid-010",
-            "product_name": "ក្រែម លាបមុខ",
-            "thumbnail": "https://cdn.xxx.com/products/demo-10_thumb.webp",
-            "spec": null,
-            "price_usd": 15.50,
-            "price_khr": 62000,
-            "quantity": 3,
-            "max_quantity": 50,
-            "stock_status": "ok",
-            "subtotal_usd": 46.50
-          }
-        ]
+        "id": "cart-item-uuid-002",
+        "product_id": "prod-uuid-003",
+        "product_name": "ស្បែកជើង ស្បែក",
+        "thumbnail": "https://cdn.xxx.com/products/demo-3_thumb.webp",
+        "spec": { "size": "42" },
+        "price_usd": 45.00,
+        "price_khr": 180000,
+        "quantity": 1,
+        "max_quantity": 1,
+        "stock_status": "low_stock",
+        "stock_warning": "仅剩 1 件",
+        "subtotal_usd": 45.00
+      },
+      {
+        "id": "cart-item-uuid-003",
+        "product_id": "prod-uuid-010",
+        "product_name": "ក្រែម លាបមុខ",
+        "thumbnail": "https://cdn.xxx.com/products/demo-10_thumb.webp",
+        "spec": null,
+        "price_usd": 15.50,
+        "price_khr": 62000,
+        "quantity": 3,
+        "max_quantity": 50,
+        "stock_status": "ok",
+        "subtotal_usd": 46.50
       }
     ],
     "summary": {
@@ -1068,7 +1048,7 @@ DELETE /cart
 | 状态值 | 前端显示标签 | 颜色 | 可执行操作 |
 |--------|-------------|------|-----------|
 | `pending_payment` | 待付款 | 🟠 橙色 | 去支付、取消订单 |
-| `paid` | 已付款 | 🔵 蓝色 | 查看（等待商家发货） |
+| `paid` | 已付款 | 🔵 蓝色 | 查看（等待平台发货） |
 | `shipped` | 已发货 | 🟢 绿色 | 确认收货、查看物流 |
 | `completed` | 已完成 | ⚫ 灰色 | 查看（不可操作） |
 | `cancelled` | 已取消 | 🔴 红色 | 查看（不可操作） |
@@ -1190,7 +1170,6 @@ GET /api/v1/orders?status=pending_payment&page=1&limit=20
       "total_khr": 220000,
       "item_count": 3,
       "thumbnail": "https://cdn.xxx.com/products/demo-1_thumb.webp",
-      "merchant_name": "សុភាព ហ្វេសិន",
       "created_at": "2026-06-05T08:30:00.000Z"
     },
     {
@@ -1202,7 +1181,6 @@ GET /api/v1/orders?status=pending_payment&page=1&limit=20
       "total_khr": 120000,
       "item_count": 1,
       "thumbnail": "https://cdn.xxx.com/products/demo-3_thumb.webp",
-      "merchant_name": "ស្រីស្អាត សម្រស់",
       "created_at": "2026-06-04T15:20:00.000Z"
     }
   ],
@@ -1288,7 +1266,7 @@ GET /orders/{id}
     "timeline": [
       { "status": "pending_payment", "label": "订单已创建", "time": "2026-06-05T08:30:00.000Z" },
       { "status": "paid", "label": "支付成功", "time": "2026-06-05T08:32:15.000Z" },
-      { "status": "shipped", "label": "商家已发货", "time": "2026-06-05T14:00:00.000Z" }
+      { "status": "shipped", "label": "平台已发货", "time": "2026-06-05T14:00:00.000Z" }
     ],
 
     "actions": {
@@ -1307,7 +1285,7 @@ GET /orders/{id}
 | 字段 | 说明 |
 |------|------|
 | `shipping_address` | 下单时的收货地址**快照**，后续用户修改地址不影响此订单 |
-| `logistics` | 商家发货后才返回，未发货时为 `null` |
+| `logistics` | 平台发货后才返回，未发货时为 `null` |
 | `price_breakdown` | 价格明细：小计 - 优惠券 + 运费 = 实付 |
 | `timeline` | 订单状态变化时间线，按时间倒序 |
 | `actions` | 当前订单状态允许的操作（前端据此显示/隐藏按钮） |
@@ -1560,88 +1538,72 @@ GET /payments/status/{orderId}
 
 ---
 
-## 八、商家模块
+## 八、平台运营模块
 
 ### 8.1 接口清单
 
 | 方法 | 路径 | 说明 | 认证 |
 |------|------|------|------|
-| `POST` | `/merchants/register` | 商家入驻申请 | 无 |
-| `GET` | `/merchants/dashboard` | 商家数据看板 | JWT (merchant) |
-| `GET` | `/merchants/products` | 商家商品列表 | JWT (merchant) |
-| `POST` | `/merchants/products` | 上架商品 | JWT (merchant) |
-| `PUT` | `/merchants/products/{id}` | 编辑商品 | JWT (merchant) |
-| `POST` | `/merchants/products/{id}/toggle` | 上架/下架商品 | JWT (merchant) |
-| `GET` | `/merchants/orders` | 商家订单列表 | JWT (merchant) |
-| `GET` | `/merchants/orders/{id}` | 商家订单详情 | JWT (merchant) |
-| `POST` | `/merchants/orders/{id}/ship` | 确认发货 | JWT (merchant) |
+| `POST` | `/auth/admin-login` | 管理员用户名密码登录 | 无 |
+| `GET` | `/admin/dashboard` | 平台数据大盘 | JWT (admin) |
+| `GET` | `/admin/products` | 平台商品列表 | JWT (admin) |
+| `POST` | `/admin/products` | 平台新增商品 | JWT (admin) |
+| `PUT` | `/admin/products/{id}` | 平台编辑商品 | JWT (admin) |
+| `POST` | `/admin/products/{id}/toggle` | 上架/下架商品 | JWT (admin) |
+| `GET` | `/admin/orders` | 平台订单列表 | JWT (admin) |
+| `GET` | `/admin/orders/{id}` | 平台订单详情 | JWT (admin) |
+| `POST` | `/admin/orders/{id}/ship` | 确认发货 | JWT (admin) |
+| `GET` | `/admin/users` | 用户列表 | JWT (admin) |
 
----
+### 8.2 管理员认证说明
 
-### 接口 27：商家入驻申请
+管理员使用独立的账号密码登录（非 Telegram 登录）。管理接口需要 `role=admin` 的 JWT Token。
+
+### 接口 27：管理员登录
 
 ```
-POST /merchants/register
+POST /auth/admin-login
 ```
 
-**说明**：提交商家入驻申请。提交后需等待平台审核。
+**说明**：管理员使用用户名和密码获取 JWT Token。
 
 **请求体**：
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `name_km` | `string` | 是 | 店铺名称（高棉语），≤ 200 字符 |
-| `name_en` | `string` | 否 | 店铺名称（英语），≤ 200 字符 |
-| `owner_name` | `string` | 是 | 店主姓名，≤ 100 字符 |
-| `phone` | `string` | 是 | 联系电话，+855 格式 |
-| `address` | `string` | 是 | 店铺地址 |
-| `category` | `string` | 是 | 主营品类：`fashion` / `beauty` / `electronics` / `home` / `other` |
-| `description` | `string` | 否 | 店铺简介 |
+| `username` | `string` | 是 | 管理员用户名 |
+| `password` | `string` | 是 | 密码 |
 
 **请求示例**：
 
 ```json
 {
-  "name_km": "ហាង សំលៀកបំពាក់ សុភាព",
-  "name_en": "Sopheap Fashion",
-  "owner_name": "Sopheap Kong",
-  "phone": "+85512345678",
-  "address": "No. 123, Street 456, BKK1, Phnom Penh",
-  "category": "fashion",
-  "description": "ហាងលក់សំលៀកបំពាក់ទាន់សម័យ"
+  "username": "admin",
+  "password": "your-password"
 }
 ```
 
-**成功响应** `201`：
+**成功响应** `200`：
 
 ```json
 {
   "success": true,
   "data": {
-    "id": "merchant-uuid-003",
-    "status": "pending",
-    "message": "申请已提交，预计 1-3 个工作日内审核完成",
-    "created_at": "2026-06-05T09:00:00.000Z"
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "expires_at": "2026-06-06T08:30:00.000Z"
   }
 }
 ```
 
-**错误响应**：
-
-| 状态码 | error.code | 说明 |
-|--------|------------|------|
-| `400` | `VALIDATION_ERROR` | 必填字段缺失或格式错误 |
-| `400` | `PHONE_ALREADY_EXISTS` | 该手机号已提交过申请（同一手机号在待审核状态下不可重复提交） |
-
 ---
 
-### 接口 28：商家数据看板
+### 接口 28：平台数据大盘
 
 ```
-GET /merchants/dashboard
+GET /admin/dashboard
 ```
 
-**说明**：返回商家的经营数据概览。
+**说明**：返回全平台的核心运营数据。
 
 **查询参数**：
 
@@ -1655,52 +1617,46 @@ GET /merchants/dashboard
 {
   "success": true,
   "data": {
-    "today": {
-      "order_count": 12,
-      "revenue_usd": 359.70,
-      "revenue_khr": 1439000,
-      "pending_orders": 3
+    "today_summary": {
+      "order_count": 125,
+      "gmv_usd": 3749.50,
+      "gmv_khr": 15000000,
+      "new_users": 45,
+      "payment_success_rate": 96.5
     },
     "trend": [
-      { "date": "2026-05-30", "order_count": 8, "revenue_usd": 240.00 },
-      { "date": "2026-05-31", "order_count": 15, "revenue_usd": 450.00 },
-      { "date": "2026-06-01", "order_count": 10, "revenue_usd": 299.90 },
-      { "date": "2026-06-02", "order_count": 14, "revenue_usd": 420.00 },
-      { "date": "2026-06-03", "order_count": 11, "revenue_usd": 330.00 },
-      { "date": "2026-06-04", "order_count": 9, "revenue_usd": 270.00 },
-      { "date": "2026-06-05", "order_count": 12, "revenue_usd": 359.70 }
+      { "date": "2026-05-30", "order_count": 98, "gmv_usd": 2940.00 },
+      { "date": "2026-05-31", "order_count": 112, "gmv_usd": 3360.00 },
+      { "date": "2026-06-01", "order_count": 105, "gmv_usd": 3150.00 },
+      { "date": "2026-06-02", "order_count": 130, "gmv_usd": 3900.00 },
+      { "date": "2026-06-03", "order_count": 118, "gmv_usd": 3540.00 },
+      { "date": "2026-06-04", "order_count": 108, "gmv_usd": 3240.00 },
+      { "date": "2026-06-05", "order_count": 125, "gmv_usd": 3749.50 }
     ],
-    "top_products": [
-      { "product_id": "prod-uuid-001", "product_name": "រ៉ូប ពណ៌ក្រហម", "sales_count": 45 },
-      { "product_id": "prod-uuid-003", "product_name": "ស្បែកជើង ស្បែក", "sales_count": 32 },
-      { "product_id": "prod-uuid-005", "product_name": "ខោខូវប៊យ", "sales_count": 28 }
-    ],
-    "order_status_distribution": {
-      "pending_payment": 3,
-      "paid": 5,
-      "shipped": 8,
-      "completed": 120,
-      "cancelled": 15
-    }
+    "category_distribution": [
+      { "category": "fashion", "gmv_usd": 1875.00, "percentage": 50 },
+      { "category": "beauty", "gmv_usd": 750.00, "percentage": 20 }
+    ]
   }
 }
 ```
 
 ---
 
-### 接口 29：商家商品列表
+### 接口 29：平台商品列表
 
 ```
-GET /merchants/products
+GET /admin/products
 ```
 
-**说明**：返回当前商家自己的商品列表。
+**说明**：返回平台全部商品列表，支持按状态筛选和搜索。
 
 **查询参数**：
 
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `status` | `string` | 否 | — | 状态筛选：`draft` / `active` / `inactive` / `sold_out`，不传返回全部 |
+| `q` | `string` | 否 | — | 搜索（商品名称） |
 | `page` | `integer` | 否 | `1` | 页码 |
 | `limit` | `integer` | 否 | `20` | 每页数量 |
 
@@ -1734,13 +1690,13 @@ GET /merchants/products
 
 ---
 
-### 接口 30：商家上架商品
+### 接口 30：平台新增商品
 
 ```
-POST /merchants/products
+POST /admin/products
 ```
 
-**说明**：商家新增一个商品。
+**说明**：平台运营新增一个商品。
 
 **请求体**：
 
@@ -1805,20 +1761,20 @@ POST /merchants/products
 
 ---
 
-### 接口 31：编辑商品
+### 接口 31：平台编辑商品
 
 ```
-PUT /merchants/products/{id}
+PUT /admin/products/{id}
 ```
 
-**说明**：编辑已有商品信息。请求体字段同上架接口，所有字段均可选。
+**说明**：编辑已有商品信息。请求体字段同新增接口，所有字段均可选。
 
 ---
 
 ### 接口 32：上架/下架商品
 
 ```
-POST /merchants/products/{id}/toggle
+POST /admin/products/{id}/toggle
 ```
 
 **说明**：切换商品的上架/下架状态。
@@ -1846,13 +1802,13 @@ POST /merchants/products/{id}/toggle
 
 ---
 
-### 接口 33：商家订单列表
+### 接口 33：平台订单列表
 
 ```
-GET /merchants/orders
+GET /admin/orders
 ```
 
-**说明**：返回当前商家收到的订单列表。
+**说明**：返回平台全部订单列表。
 
 **查询参数**：
 
@@ -1896,13 +1852,13 @@ GET /merchants/orders
 
 ---
 
-### 接口 34：商家订单详情
+### 接口 34：平台订单详情
 
 ```
-GET /merchants/orders/{id}
+GET /admin/orders/{id}
 ```
 
-**说明**：返回单个订单的完整详情，含商品明细、收货地址、客户信息和全时间戳。商家只能查看归属自己店铺的订单。
+**说明**：返回单个订单的完整详情，含商品明细、收货地址、客户信息和全时间戳。
 
 **路径参数**：
 
@@ -1956,21 +1912,15 @@ GET /merchants/orders/{id}
 }
 ```
 
-**错误响应**：
-
-| HTTP | error.code | 说明 |
-|------|------------|------|
-| `404` | `NOT_FOUND` | 订单不存在或不属于当前商家 |
-
 ---
 
 ### 接口 35：确认发货
 
 ```
-POST /merchants/orders/{id}/ship
+POST /admin/orders/{id}/ship
 ```
 
-**说明**：商家对已付款订单确认发货，填写物流信息。
+**说明**：平台对已付款订单确认发货，填写物流信息。
 
 **路径参数**：
 
@@ -2019,6 +1969,47 @@ POST /merchants/orders/{id}/ship
 
 ---
 
+### 接口 36：用户列表（管理员）
+
+```
+GET /admin/users
+```
+
+**说明**：返回全平台用户列表。
+
+**查询参数**：
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| `q` | `string` | 否 | — | 搜索（用户名 / 手机号 / Telegram ID） |
+| `status` | `string` | 否 | `active` / `disabled` |
+| `page` | `integer` | 否 | `1` | 页码 |
+| `limit` | `integer` | 否 | `20` | 每页数量 |
+
+**成功响应** `200`：
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "user-uuid-001",
+      "telegram_id": 123456789,
+      "first_name": "Sopheap",
+      "last_name": "Kong",
+      "username": "sopheap_k",
+      "phone": "+85512345678",
+      "language": "km",
+      "status": "active",
+      "order_count": 12,
+      "total_spent_usd": 359.70,
+      "created_at": "2026-06-01T08:00:00.000Z"
+    }
+  ],
+  "meta": { "total": 5000, "page": 1, "limit": 20, "total_pages": 250, "has_next": true }
+}
+```
+
 ## 九、优惠券模块
 
 ### 9.1 接口清单
@@ -2031,7 +2022,7 @@ POST /merchants/orders/{id}/ship
 
 ---
 
-### 接口 36：可领取优惠券列表
+### 接口 37：可领取优惠券列表
 
 ```
 GET /coupons
@@ -2077,7 +2068,7 @@ GET /coupons
 
 ---
 
-### 接口 37：领取优惠券
+### 接口 38：领取优惠券
 
 ```
 POST /coupons/{id}/claim
@@ -2118,7 +2109,7 @@ POST /coupons/{id}/claim
 
 ---
 
-### 接口 38：我的优惠券
+### 接口 39：我的优惠券
 
 ```
 GET /users/me/coupons
@@ -2157,19 +2148,19 @@ GET /users/me/coupons
 
 ## 十、文件上传模块
 
-### 接口 39：上传图片
+### 接口 40：上传图片
 
 ```
 POST /upload/image
 ```
 
-**说明**：商家上传商品图片。支持 JPG、PNG、WebP 格式，单张最大 5MB。后端自动压缩并生成 WebP + 缩略图。
+**说明**：平台上传商品图片。支持 JPG、PNG、WebP 格式，单张最大 5MB。后端自动压缩并生成 WebP + 缩略图。
 
 **请求头**：
 
 | 参数 | 值 | 必填 |
 |------|-----|------|
-| `Authorization` | `Bearer <Token>` | 是（商家角色） |
+| `Authorization` | `Bearer <Token>` | 是（管理员角色） |
 | `Content-Type` | `multipart/form-data` | 是 |
 
 **请求体**（`multipart/form-data`）：
@@ -2204,252 +2195,9 @@ POST /upload/image
 
 ---
 
-## 十一、平台运营模块
+## 十一、Webhook 回调
 
-### 11.1 接口清单
-
-| 方法 | 路径 | 说明 | 认证 |
-|------|------|------|------|
-| `POST` | `/admin/merchants/{id}/approve` | 审核通过商家 | JWT (admin) |
-| `POST` | `/admin/merchants/{id}/reject` | 审核驳回商家 | JWT (admin) |
-| `GET` | `/admin/dashboard` | 平台数据大盘 | JWT (admin) |
-| `GET` | `/admin/merchants` | 商家列表 | JWT (admin) |
-| `GET` | `/admin/users` | 用户列表 | JWT (admin) |
-
-### 11.2 管理员认证说明
-
-管理员使用独立的账号密码 + OTP 登录（非 Telegram 登录）。管理接口需要 `role=admin` 的 JWT Token。
-
----
-
-### 接口 40：审核通过商家
-
-```
-POST /admin/merchants/{id}/approve
-```
-
-**说明**：通过商家的入驻申请，商家状态变为 `active`，可以登录后台。
-
-**路径参数**：
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `id` | `string` (UUID) | 商家 ID |
-
-**请求体**（可选）：
-
-```json
-{
-  "commission_rate": 3.0
-}
-```
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `commission_rate` | `number` | 否 | 自定义佣金率（默认使用系统默认值 3.0），范围 0-20 |
-
-**成功响应** `200`：
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "merchant-uuid-003",
-    "status": "active",
-    "commission_rate": 3.0,
-    "approved_at": "2026-06-05T10:00:00.000Z"
-  }
-}
-```
-
-**说明**：审核通过后自动触发 Telegram Bot 通知（"恭喜！您的店铺审核已通过"）。
-
----
-
-### 接口 41：审核驳回商家
-
-```
-POST /admin/merchants/{id}/reject
-```
-
-**说明**：驳回商家入驻申请。必须填写驳回原因。
-
-**路径参数**：
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `id` | `string` (UUID) | 商家 ID |
-
-**请求体**：
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `reason` | `string` | 是 | 驳回原因，≤ 500 字符 |
-
-**请求示例**：
-
-```json
-{
-  "reason": "店铺名称与实际经营品类不符，请核实后重新提交"
-}
-```
-
-**成功响应** `200`：
-
-```json
-{
-  "success": true,
-  "data": {
-    "id": "merchant-uuid-003",
-    "status": "rejected",
-    "reject_reason": "店铺名称与实际经营品类不符，请核实后重新提交",
-    "rejected_at": "2026-06-05T10:00:00.000Z"
-  }
-}
-```
-
----
-
-### 接口 42：平台数据大盘
-
-```
-GET /admin/dashboard
-```
-
-**说明**：返回全平台的核心运营数据。
-
-**查询参数**：
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `period` | `string` | 否 | `7d`（默认）/ `30d` |
-
-**成功响应** `200`：
-
-```json
-{
-  "success": true,
-  "data": {
-    "today_summary": {
-      "order_count": 125,
-      "gmv_usd": 3749.50,
-      "gmv_khr": 15000000,
-      "new_users": 45,
-      "new_merchants": 3,
-      "payment_success_rate": 96.5
-    },
-    "trend": [
-      { "date": "2026-05-30", "order_count": 98, "gmv_usd": 2940.00 },
-      { "date": "2026-05-31", "order_count": 112, "gmv_usd": 3360.00 },
-      { "date": "2026-06-01", "order_count": 105, "gmv_usd": 3150.00 },
-      { "date": "2026-06-02", "order_count": 130, "gmv_usd": 3900.00 },
-      { "date": "2026-06-03", "order_count": 118, "gmv_usd": 3540.00 },
-      { "date": "2026-06-04", "order_count": 108, "gmv_usd": 3240.00 },
-      { "date": "2026-06-05", "order_count": 125, "gmv_usd": 3749.50 }
-    ],
-    "top_merchants": [
-      { "merchant_id": "merchant-uuid-001", "merchant_name": "សុភាព ហ្វេសិន", "gmv_usd": 1500.00 },
-      { "merchant_id": "merchant-uuid-002", "merchant_name": "ស្រីស្អាត សម្រស់", "gmv_usd": 980.00 }
-    ],
-    "category_distribution": [
-      { "category": "fashion", "gmv_usd": 1875.00, "percentage": 50 },
-      { "category": "beauty", "gmv_usd": 750.00, "percentage": 20 }
-    ]
-  }
-}
-```
-
----
-
-### 接口 43：商家列表（管理员）
-
-```
-GET /admin/merchants
-```
-
-**说明**：返回全平台商家列表，支持按状态筛选和搜索。
-
-**查询参数**：
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `status` | `string` | 否 | `pending` / `active` / `suspended` / `rejected` |
-| `q` | `string` | 否 | 搜索（店铺名称 / 手机号） |
-| `page` | `integer` | 否 | 页码 |
-| `limit` | `integer` | 否 | 每页数量 |
-
-**成功响应** `200`：
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "merchant-uuid-001",
-      "name_km": "សុភាព ហ្វេសិន",
-      "name_en": "Sopheap Fashion",
-      "owner_name": "Sopheap Kong",
-      "phone": "+85512345678",
-      "category": "fashion",
-      "status": "active",
-      "commission_rate": 3.0,
-      "product_count": 35,
-      "total_orders": 120,
-      "created_at": "2026-06-01T08:00:00.000Z"
-    }
-  ],
-  "meta": { "total": 200, "page": 1, "limit": 20, "total_pages": 10, "has_next": true }
-}
-```
-
----
-
-### 接口 44：用户列表（管理员）
-
-```
-GET /admin/users
-```
-
-**说明**：返回全平台用户列表。
-
-**查询参数**：
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `q` | `string` | 否 | 搜索（用户名 / 手机号 / Telegram ID） |
-| `status` | `string` | 否 | `active` / `disabled` |
-| `page` | `integer` | 否 | 页码 |
-| `limit` | `integer` | 否 | 每页数量 |
-
-**成功响应** `200`：
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "user-uuid-001",
-      "telegram_id": 123456789,
-      "first_name": "Sopheap",
-      "last_name": "Kong",
-      "username": "sopheap_k",
-      "phone": "+85512345678",
-      "language": "km",
-      "status": "active",
-      "order_count": 12,
-      "total_spent_usd": 359.70,
-      "created_at": "2026-06-01T08:00:00.000Z"
-    }
-  ],
-  "meta": { "total": 5000, "page": 1, "limit": 20, "total_pages": 250, "has_next": true }
-}
-```
-
----
-
-## 十二、Webhook 回调
-
-### 接口 45：支付回调（统一入口）
+### 接口 41：支付回调（统一入口）
 
 ```
 POST /webhooks/payment
@@ -2489,9 +2237,9 @@ POST /webhooks/payment
 
 ---
 
-## 十三、公共接口
+## 十二、公共接口
 
-### 接口 46：健康检查
+### 接口 42：健康检查
 
 ```
 GET /health
@@ -2516,7 +2264,7 @@ GET /health
 
 ---
 
-### 接口 47：汇率查询
+### 接口 43：汇率查询
 
 ```
 GET /utils/exchange-rate
@@ -2538,7 +2286,7 @@ GET /utils/exchange-rate
 
 ---
 
-### 接口 48：柬埔寨省市列表
+### 接口 44：柬埔寨省市列表
 
 ```
 GET /utils/provinces
@@ -2576,7 +2324,7 @@ GET /utils/provinces
 
 ---
 
-## 十四、错误码速查表
+## 十三、错误码速查表
 
 ### 14.1 通用错误码
 
@@ -2620,9 +2368,9 @@ GET /utils/provinces
 
 ---
 
-## 十五、接口调用示例（前端）
+## 十四、接口调用示例（前端）
 
-### 15.1 Axios 封装
+### 14.1 Axios 封装
 
 ```javascript
 // api/index.js — 前端 API 请求层封装
@@ -2663,7 +2411,7 @@ api.interceptors.response.use(
 export default api;
 ```
 
-### 15.2 调用示例
+### 14.2 调用示例
 
 ```javascript
 // 获取商品列表
