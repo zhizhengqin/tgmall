@@ -10,10 +10,11 @@
         <el-icon><Setting /></el-icon>
         <span>{{ $t('nav.settings') }}</span>
       </template>
-      <el-menu-item index="/settings/banners">Banner</el-menu-item>
-      <el-menu-item index="/settings/categories">品类</el-menu-item>
-      <el-menu-item index="/settings/cities">城市配送</el-menu-item>
-      <el-menu-item index="/settings/customer-services">客服账号</el-menu-item>
+      <el-menu-item index="/settings/banners">{{ $t('settings.banners') }}</el-menu-item>
+      <el-menu-item index="/settings/categories">{{ $t('settings.categories') }}</el-menu-item>
+      <el-menu-item index="/settings/cities">{{ $t('settings.cities') }}</el-menu-item>
+      <el-menu-item index="/settings/delivery-rules">{{ $t('settings.deliveryRules') }}</el-menu-item>
+      <el-menu-item index="/settings/customer-services">{{ $t('settings.customerServices') }}</el-menu-item>
     </el-sub-menu>
   </el-menu>
 </template>
@@ -24,3 +25,4 @@
 .logo h2 { color: #c4932a; font-size: 18px; margin: 0; }
 .logo span { color: #8b8b9e; font-size: 12px; }
 </style>
+

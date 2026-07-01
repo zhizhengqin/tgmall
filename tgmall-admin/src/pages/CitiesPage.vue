@@ -1,62 +1,70 @@
 <template>
   <div class="page"><TopBar /><Sidebar />
     <div class="main">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1>城市管理</h1>
-        <el-button type="primary" @click="openDialog()">新增城市</el-button>
+      <div class="page-header">
+        <h1>{{ $t('settings.cities') }}</h1>
+        <el-button type="primary" @click="openDialog()">{{ $t('common.create') }}</el-button>
       </div>
       <el-table :data="items" v-loading="loading" stripe>
-        <el-table-column prop="code" label="编码" width="120" />
-        <el-table-column label="名称">
+        <el-table-column prop="code" :label="$t('settings.code')" width="120" />
+        <el-table-column :label="$t('common.name')">
           <template #default="{row}">
             <div>{{ row.nameKm }} / {{ row.nameEn }} / {{ row.nameZh }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="sortOrder" label="排序" width="80" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="sortOrder" :label="$t('settings.sortOrder')" width="80" />
+        <el-table-column :label="$t('common.status')" width="100">
           <template #default="{row}">
             <el-switch :model-value="row.status==='active'" @change="toggle(row.code)" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column :label="$t('common.action')" width="100">
           <template #default="{row}">
-            <el-button size="small" @click="openDialog(row)">编辑</el-button>
+            <el-button size="small" @click="openDialog(row)">{{ $t('common.edit') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-dialog v-model="dialogVisible" :title="form.code ? '编辑城市' : '新增城市'" width="500px">
+      <el-dialog v-model="dialogVisible" :title="form.code ? $t('settings.edit') : $t('settings.create')" width="500px">
         <el-form :model="form" label-width="100px">
-          <el-form-item label="编码"><el-input v-model="form.code" :disabled="!!form.code" /></el-form-item>
-          <el-form-item label="高棉语"><el-input v-model="form.nameKm" /></el-form-item>
-          <el-form-item label="英语"><el-input v-model="form.nameEn" /></el-form-item>
-          <el-form-item label="中文"><el-input v-model="form.nameZh" /></el-form-item>
-          <el-form-item label="排序"><el-input-number v-model="form.sortOrder" :min="0" /></el-form-item>
+          <el-form-item :label="$t('settings.code')"><el-input v-model="form.code" :disabled="!!form.code" /></el-form-item>
+          <el-form-item :label="$t('settings.nameKm')"><el-input v-model="form.nameKm" /></el-form-item>
+          <el-form-item :label="$t('settings.nameEn')"><el-input v-model="form.nameEn" /></el-form-item>
+          <el-form-item :label="$t('settings.nameZh')"><el-input v-model="form.nameZh" /></el-form-item>
+          <el-form-item :label="$t('settings.sortOrder')"><el-input-number v-model="form.sortOrder" :min="0" /></el-form-item>
         </el-form>
         <template #footer>
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="save">保存</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="save" :loading="saving">{{ $t('common.save') }}</el-button>
         </template>
       </el-dialog>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
+import { ElMessage } from 'element-plus';
 import { getCities, createCity, updateCity, toggleCity } from '@/api';
 import Sidebar from '@/components/layout/Sidebar.vue';
 import TopBar from '@/components/layout/TopBar.vue';
 
+const { t } = inject('i18n');
 const items = ref([]);
 const loading = ref(false);
+const saving = ref(false);
 const dialogVisible = ref(false);
 const form = ref({ code: '', nameKm: '', nameEn: '', nameZh: '', sortOrder: 0 });
 
 async function load() {
   loading.value = true;
-  const r = await getCities({ limit: 100 });
-  items.value = r.data || [];
-  loading.value = false;
+  try {
+    const r = await getCities({ limit: 100 });
+    items.value = r.data || [];
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error?.message || t('settings.loadError'));
+  } finally {
+    loading.value = false;
+  }
 }
 
 function openDialog(row) {
@@ -65,20 +73,37 @@ function openDialog(row) {
 }
 
 async function save() {
-  if (form.value.code) {
-    await updateCity(form.value.code, form.value);
-  } else {
-    await createCity(form.value);
+  saving.value = true;
+  try {
+    if (form.value.code) {
+      await updateCity(form.value.code, form.value);
+    } else {
+      await createCity(form.value);
+    }
+    ElMessage.success(t('settings.saveSuccess'));
+    dialogVisible.value = false;
+    load();
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error?.message || t('settings.saveError'));
+  } finally {
+    saving.value = false;
   }
-  dialogVisible.value = false;
-  load();
 }
 
 async function toggle(code) {
-  await toggleCity(code);
-  load();
+  try {
+    await toggleCity(code);
+    ElMessage.success(t('settings.toggleSuccess'));
+    load();
+  } catch (err) {
+    ElMessage.error(err.response?.data?.error?.message || t('settings.toggleError'));
+  }
 }
 
 onMounted(load);
 </script>
-<style scoped>.page{min-height:100vh;background:#f5f5f5}.main{margin-left:220px;padding:20px}</style>
+<style scoped>
+.page{min-height:100vh;background:#f5f5f5}
+.main{margin-left:220px;padding:20px}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+</style>

@@ -5,23 +5,28 @@
       <div class="settings-grid">
         <el-card class="settings-card" @click="$router.push('/settings/banners')">
           <div class="card-icon">🖼️</div>
-          <div class="card-title">Banner 管理</div>
-          <div class="card-desc">首页轮播图配置</div>
+          <div class="card-title">{{ $t('settings.banners') }}</div>
+          <div class="card-desc">{{ $t('settings.banners') }}</div>
         </el-card>
         <el-card class="settings-card" @click="$router.push('/settings/categories')">
           <div class="card-icon">🏷️</div>
-          <div class="card-title">品类管理</div>
-          <div class="card-desc">商品分类与图标</div>
+          <div class="card-title">{{ $t('settings.categories') }}</div>
+          <div class="card-desc">{{ $t('settings.categories') }}</div>
         </el-card>
         <el-card class="settings-card" @click="$router.push('/settings/cities')">
           <div class="card-icon">🚚</div>
-          <div class="card-title">城市配送</div>
-          <div class="card-desc">城市、运费、起送金额</div>
+          <div class="card-title">{{ $t('settings.cities') }}</div>
+          <div class="card-desc">{{ $t('settings.deliveryRules') }}</div>
+        </el-card>
+        <el-card class="settings-card" @click="$router.push('/settings/delivery-rules')">
+          <div class="card-icon">📦</div>
+          <div class="card-title">{{ $t('settings.deliveryRules') }}</div>
+          <div class="card-desc">{{ $t('settings.deliveryRules') }}</div>
         </el-card>
         <el-card class="settings-card" @click="$router.push('/settings/customer-services')">
           <div class="card-icon">💬</div>
-          <div class="card-title">客服账号</div>
-          <div class="card-desc">Telegram 客服配置</div>
+          <div class="card-title">{{ $t('settings.customerServices') }}</div>
+          <div class="card-desc">{{ $t('settings.customerServices') }}</div>
         </el-card>
       </div>
     </div>
