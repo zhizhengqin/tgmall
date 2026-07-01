@@ -1945,7 +1945,7 @@ GET /admin/orders/{id}
 POST /admin/orders/{id}/ship
 ```
 
-**说明**：平台对已付款订单确认发货，填写物流信息。
+**说明**：平台对已付款或已确认（COD）订单确认发货，填写物流信息。
 
 **路径参数**：
 
@@ -1990,7 +1990,7 @@ POST /admin/orders/{id}/ship
 
 | 状态码 | error.code | 说明 |
 |--------|------------|------|
-| `400` | `ORDER_CANNOT_SHIP` | 只有 `paid` 状态的订单可以发货 |
+| `400` | `ORDER_CANNOT_SHIP` | 仅 `paid` 或 `confirmed`（COD）状态的订单可发货 |
 
 ---
 

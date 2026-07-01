@@ -714,7 +714,7 @@ curl https://你的域名.up.railway.app/api/v1/health
 - 前端需要 CDN 加速（柬埔寨用户网络较慢）
 - 需要独立扩容 API 服务
 
-### 10.3 Dockerfile.railway 的 5 个阶段
+### 10.3 Dockerfile.railway 的 4 个阶段
 
 ```
 Stage 1: api-build     → 安装后端依赖 + 生成 Prisma 代码
