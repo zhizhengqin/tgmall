@@ -4,7 +4,6 @@
       <el-tabs v-model="filter" @tab-change="load">
         <el-tab-pane :label="$t('orders.all')" name="" />
         <el-tab-pane :label="$t('orders.pending_payment')" name="pending_payment" />
-        <el-tab-pane :label="$t('orders.confirmed')" name="confirmed" />
         <el-tab-pane :label="$t('orders.paid')" name="paid" />
         <el-tab-pane :label="$t('orders.shipped')" name="shipped" />
         <el-tab-pane :label="$t('orders.completed')" name="completed" />
@@ -26,7 +25,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'; import { getOrders } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
 const items = ref([]); const loading = ref(false); const page = ref(1); const total = ref(0); const filter = ref('');
-function tag(s) { const m={pending_payment:'warning',confirmed:'info',paid:'primary',shipped:'info',completed:'success',cancelled:'danger'}; return m[s]||''; }
+function tag(s) { const m={pending_payment:'warning',paid:'primary',shipped:'info',completed:'success',cancelled:'danger'}; return m[s]||''; }
 async function load() { loading.value = true; const r = await getOrders({ page: page.value, status: filter.value || undefined }); items.value = r.data; total.value = r.meta?.total||0; loading.value = false; }
 onMounted(load);
 </script>

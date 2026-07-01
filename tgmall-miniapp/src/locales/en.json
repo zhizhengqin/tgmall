@@ -38,7 +38,6 @@
     "status": {
       "all": "All",
       "pending_payment": "Pending",
-      "confirmed": "Confirmed",
       "paid": "Paid",
       "shipped": "Shipped",
       "completed": "Completed",

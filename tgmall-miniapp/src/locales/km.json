@@ -38,7 +38,6 @@
     "status": {
       "all": "ទាំងអស់",
       "pending_payment": "រង់ចាំ",
-      "confirmed": "បានបញ្ជាក់",
       "paid": "បានបង់",
       "shipped": "បានដឹក",
       "completed": "បញ្ចប់",

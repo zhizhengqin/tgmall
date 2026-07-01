@@ -135,11 +135,11 @@ const pb = computed(() => {
 });
 
 function statusLabel(s) {
-  const map = { pending_payment: '待付款', confirmed: '已确认', paid: '已付款', shipped: '已发货', completed: '已完成', cancelled: '已取消' };
+  const map = { pending_payment: '待付款', paid: '已付款', shipped: '已发货', completed: '已完成', cancelled: '已取消' };
   return map[s] || s;
 }
 function statusClass(s) {
-  const map = { pending_payment: 's-pending', confirmed: 's-confirmed', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
+  const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
   return map[s] || '';
 }
 function paymentMethodLabel(m) {
@@ -206,7 +206,6 @@ onMounted(async () => {
 .status-bar { padding: 12px 16px; border-radius: var(--radius-md); font-weight: 700; font-size: 15px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
 .status-bar .order-number { font-size: 11px; font-family: monospace; font-weight: 400; }
 .s-pending { background: oklch(64% 0.16 82 / 0.1); color: var(--accent); }
-.s-confirmed { background: oklch(58% 0.16 200 / 0.1); color: oklch(50% 0.14 205); }
 .s-paid { background: oklch(58% 0.16 255 / 0.1); color: var(--accent-blue); }
 .s-shipped { background: oklch(58% 0.16 155 / 0.1); color: var(--accent-green); }
 .s-done { background: oklch(90% 0.005 95); color: var(--muted); }

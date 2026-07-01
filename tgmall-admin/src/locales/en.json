@@ -91,7 +91,7 @@
   },
   "orders": {
     "title": "Orders", "all": "All",
-    "pending_payment": "Pending", "confirmed": "Confirmed", "paid": "Paid",
+    "pending_payment": "Pending", "paid": "Paid",
     "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
     "orderNumber": "Order No.", "amount": "Amount", "customer": "Customer",
     "date": "Date", "detail": "Detail", "items": "Items",
