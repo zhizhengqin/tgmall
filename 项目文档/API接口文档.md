@@ -1145,7 +1145,7 @@ GET /orders
 
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `status` | `string` | 否 | — | 状态筛选：`pending_payment` / `paid` / `shipped` / `completed` / `cancelled`，不传返回全部 |
+| `status` | `string` | 否 | — | 状态筛选：`pending_payment` / `confirmed` / `paid` / `shipped` / `completed` / `cancelled`，不传返回全部 |
 | `page` | `integer` | 否 | `1` | 页码 |
 | `limit` | `integer` | 否 | `20` | 每页数量，最大 50 |
 
@@ -1533,6 +1533,7 @@ GET /payments/status/{orderId}
 | `payment_status` | 含义 | 前端行为 |
 |------------------|------|----------|
 | `pending` | 等待支付 | 继续轮询 |
+| `pending_cod` | 货到付款待收款 | 展示 COD 标识，等待送达收款 |
 | `processing` | 支付处理中 | 继续轮询 |
 | `success` | 支付成功 | 跳转支付成功页 |
 | `failed` | 支付失败 | 显示失败原因，允许重新支付 |

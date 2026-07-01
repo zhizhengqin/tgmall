@@ -225,7 +225,7 @@
 
 - [ ] **AC1：用户表（users）** — `id`、`telegram_id`（唯一索引）、`phone`、`name`、`language`、`created_at`、`updated_at`
 - [ ] **AC2：商品表（products）** — `id`、`name_km`、`name_en`、`name_zh`、`description_km`、`description_en`、`description_zh`、`price_usd`、`price_khr`、`stock`、`images`（JSONB）、`category`、`specs`（JSONB，可选）、`status`（draft/active/inactive/sold_out）、`created_at`
-- [ ] **AC3：订单表（orders）** — `id`、`user_id`、`total_usd`、`total_khr`、`status`（pending_payment/paid/shipped/completed/cancelled）、`payment_method`、`payment_status`、`shipping_address`（JSONB）、`created_at`
+- [ ] **AC3：订单表（orders）** — `id`、`user_id`、`total_usd`、`total_khr`、`status`（pending_payment/confirmed/paid/shipped/completed/cancelled）、`payment_method`、`payment_status`、`shipping_address`（JSONB）、`created_at`
 - [ ] **AC4：订单商品表（order_items）** — `order_id`、`product_id`、`quantity`、`price_usd`、`price_khr`、`spec`（JSONB）
 - [ ] **AC5：优惠券表（coupons）** — `id`、`title_km`、`title_en`、`title_zh`、`type`（fixed/discount/free_shipping）、`value`、`min_spend`、`total_qty`、`used_count`、`start_date`、`end_date`、`status`
 - [ ] **AC6：用户优惠券表（user_coupons）** — `user_id`、`coupon_id`、`received_at`、`used_at`、`status`（unused/used/expired）
@@ -1199,7 +1199,7 @@
 
 **验收标准**
 
-- [ ] **AC1：COD 下单** — 选择 COD 支付方式时，订单状态直接变为 `paid`（无实际收款，标记为货到付款）或新增 COD 标记
+- [ ] **AC1：COD 下单** — 选择 COD 支付方式时，订单状态变为 `confirmed`，`payment_status` 为 `pending_cod`，`payment_timeout` 为 `null`；骑手送达收款后由运营改为 `paid` / `success`
 - [ ] **AC2：COD 订单标记** — COD 订单在运营后台有特殊标识（"COD — 货到付款"）
 - [ ] **AC3：金额上限** — COD 订单金额超过 $100 时提示"大额订单建议使用在线支付"
 
