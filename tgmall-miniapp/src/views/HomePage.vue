@@ -4,7 +4,7 @@
     <!-- 顶部搜索栏 -->
     <header class="top-header">
       <div class="city-entry" @click="$router.push('/cities')">
-        <span class="city-name">{{ cityStore.currentCity.name_km }}</span>
+        <span class="city-name">{{ cityName(cityStore.currentCity) }}</span>
         <span class="city-arrow">▼</span>
       </div>
       <div class="search-bar" @click="$router.push('/search')">
@@ -179,6 +179,10 @@ const trackStyle = computed(() => ({
 
 function bannerTitle(banner) {
   return banner[`title_${locale.value}`] || banner.title_km || '';
+}
+
+function cityName(city) {
+  return city[`name_${locale.value}`] || city.name_km || city.code;
 }
 
 function onTouchStart(e) {

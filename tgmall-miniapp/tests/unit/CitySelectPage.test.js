@@ -146,4 +146,23 @@ describe('CitySelectPage', () => {
     expect(mockLoad).toHaveBeenCalledTimes(1);
     expect(wrapper.findAll('.city-item')).toHaveLength(0);
   });
+
+  it('syncs cities to the store after load resolves', async () => {
+    const cities = [
+      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+    ];
+    mockLoad.mockImplementation(async () => {
+      mockCities.value = cities;
+    });
+
+    wrapper = mountCitySelectPage();
+    await flushPromises();
+
+    const store = useCityStore();
+    expect(store.cities).toEqual(cities);
+    expect(wrapper.findAll('.city-item')).toHaveLength(2);
+    expect(wrapper.findAll('.city-name')[0].text()).toBe('ភ្នំពេញ');
+    expect(wrapper.findAll('.city-name')[1].text()).toBe('សៀមរាប');
+  });
 });

@@ -10,6 +10,7 @@ const mockBanners = ref([]);
 const mockCategories = ref([]);
 const mockCities = ref([]);
 const mockLoad = vi.fn();
+const mockLocale = ref('zh');
 
 const routeQuery = reactive({});
 const routerPush = vi.fn();
@@ -33,7 +34,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
-    locale: ref('zh'),
+    locale: mockLocale,
     t: (key) => key,
   }),
 }));
@@ -57,7 +58,6 @@ vi.mock('@/api/products.js', () => ({
 
 // ---- helpers ----
 function mountHomePage() {
-  setActivePinia(createPinia());
   return mount(HomePage, {
     global: {
       stubs: {
@@ -74,7 +74,7 @@ function mountHomePage() {
   });
 }
 
-describe('HomePage banner carousel', () => {
+describe('HomePage', () => {
   let wrapper;
 
   beforeEach(() => {
@@ -83,6 +83,7 @@ describe('HomePage banner carousel', () => {
     mockBanners.value = [];
     mockCategories.value = [];
     mockCities.value = [];
+    mockLocale.value = 'zh';
     Object.keys(routeQuery).forEach((key) => delete routeQuery[key]);
     getProducts.mockResolvedValue({ data: [], meta: { hasNext: false } });
     mockLoad.mockResolvedValue(undefined);
@@ -98,112 +99,174 @@ describe('HomePage banner carousel', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders banners from useShopConfig().banners', async () => {
-    mockBanners.value = [
-      { id: 'b1', title_km: 'Banner 1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
-      { id: 'b2', title_km: 'Banner 2', image_url: 'https://cdn.test/2.jpg', link_type: 'category', link_target: 'food' },
-    ];
+  describe('banner carousel', () => {
+    it('renders banners from useShopConfig().banners', async () => {
+      mockBanners.value = [
+        { id: 'b1', title_km: 'Banner 1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
+        { id: 'b2', title_km: 'Banner 2', image_url: 'https://cdn.test/2.jpg', link_type: 'category', link_target: 'food' },
+      ];
 
-    wrapper = mountHomePage();
-    await flushPromises();
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    const slides = wrapper.findAll('.banner-slide');
-    expect(slides).toHaveLength(2);
-    expect(slides[0].find('img').attributes('src')).toBe('https://cdn.test/1.jpg');
-    expect(slides[1].find('img').attributes('src')).toBe('https://cdn.test/2.jpg');
+      const slides = wrapper.findAll('.banner-slide');
+      expect(slides).toHaveLength(2);
+      expect(slides[0].find('img').attributes('src')).toBe('https://cdn.test/1.jpg');
+      expect(slides[1].find('img').attributes('src')).toBe('https://cdn.test/2.jpg');
+    });
+
+    it('updates the active slide on swipe', async () => {
+      mockBanners.value = [
+        { id: 'b1', image_url: 'https://cdn.test/1.jpg' },
+        { id: 'b2', image_url: 'https://cdn.test/2.jpg' },
+      ];
+
+      wrapper = mountHomePage();
+      await flushPromises();
+
+      const track = wrapper.find('.banner-track');
+      expect(track.attributes('style')).toContain('translateX(-0%)');
+
+      await track.trigger('touchstart', { touches: [{ clientX: 200 }] });
+      await track.trigger('touchend', { changedTouches: [{ clientX: 100 }] });
+      await flushPromises();
+
+      expect(track.attributes('style')).toContain('translateX(-100%)');
+    });
+
+    it('navigates to /product/{id} when clicking a product banner', async () => {
+      mockBanners.value = [
+        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p123' },
+      ];
+
+      wrapper = mountHomePage();
+      await flushPromises();
+
+      await wrapper.find('.banner-slide').trigger('click');
+      expect(routerPush).toHaveBeenCalledTimes(1);
+      expect(routerPush).toHaveBeenCalledWith('/product/p123');
+    });
+
+    it('updates route query when clicking a category banner', async () => {
+      mockBanners.value = [
+        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'category', link_target: 'fashion' },
+      ];
+
+      wrapper = mountHomePage();
+      await flushPromises();
+
+      await wrapper.find('.banner-slide').trigger('click');
+      expect(routerPush).toHaveBeenCalledTimes(1);
+      expect(routerPush).toHaveBeenCalledWith({ path: '/', query: { category: 'fashion' } });
+    });
+
+    it('shows fallback placeholder when banners array is empty', async () => {
+      mockBanners.value = [];
+
+      wrapper = mountHomePage();
+      await flushPromises();
+
+      expect(wrapper.find('.banner-placeholder').exists()).toBe(true);
+      expect(wrapper.find('.banner-wrap').exists()).toBe(false);
+    });
+
+    it('ignores banner click after a drag to prevent swipe/click overlap', async () => {
+      mockBanners.value = [
+        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
+      ];
+
+      wrapper = mountHomePage();
+      await flushPromises();
+
+      const track = wrapper.find('.banner-track');
+      const slide = wrapper.find('.banner-slide');
+
+      // Drag more than the click movement threshold
+      await track.trigger('touchstart', { touches: [{ clientX: 200 }] });
+      await track.trigger('touchmove', { touches: [{ clientX: 185 }] });
+      await track.trigger('touchend', { changedTouches: [{ clientX: 185 }] });
+
+      await slide.trigger('click');
+      expect(routerPush).not.toHaveBeenCalled();
+    });
   });
 
-  it('updates the active slide on swipe', async () => {
-    mockBanners.value = [
-      { id: 'b1', image_url: 'https://cdn.test/1.jpg' },
-      { id: 'b2', image_url: 'https://cdn.test/2.jpg' },
-    ];
+  describe('city entry', () => {
+    const phnomPenh = { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 };
+    const siemReap = { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 };
 
-    wrapper = mountHomePage();
-    await flushPromises();
+    it('syncs cities from useShopConfig to cityStore after load resolves', async () => {
+      const cities = [phnomPenh, siemReap];
+      mockLoad.mockImplementation(async () => {
+        mockCities.value = cities;
+      });
 
-    const track = wrapper.find('.banner-track');
-    expect(track.attributes('style')).toContain('translateX(-0%)');
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    await track.trigger('touchstart', { touches: [{ clientX: 200 }] });
-    await track.trigger('touchend', { changedTouches: [{ clientX: 100 }] });
-    await flushPromises();
+      const store = useCityStore();
+      expect(store.cities).toEqual(cities);
+      expect(wrapper.find('.city-name').text()).toBe('金边');
+    });
 
-    expect(track.attributes('style')).toContain('translateX(-100%)');
-  });
+    it('shows the current city name in the current locale and navigates to /cities on click', async () => {
+      mockCities.value = [phnomPenh, siemReap];
 
-  it('navigates to /product/{id} when clicking a product banner', async () => {
-    mockBanners.value = [
-      { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p123' },
-    ];
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    wrapper = mountHomePage();
-    await flushPromises();
+      const entry = wrapper.find('.city-entry');
+      expect(entry.exists()).toBe(true);
+      expect(entry.find('.city-name').text()).toBe('金边');
 
-    await wrapper.find('.banner-slide').trigger('click');
-    expect(routerPush).toHaveBeenCalledTimes(1);
-    expect(routerPush).toHaveBeenCalledWith('/product/p123');
-  });
+      await entry.trigger('click');
+      expect(routerPush).toHaveBeenCalledTimes(1);
+      expect(routerPush).toHaveBeenCalledWith('/cities');
+    });
 
-  it('updates route query when clicking a category banner', async () => {
-    mockBanners.value = [
-      { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'category', link_target: 'fashion' },
-    ];
+    it('updates the displayed city name when the locale changes', async () => {
+      mockCities.value = [phnomPenh];
 
-    wrapper = mountHomePage();
-    await flushPromises();
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    await wrapper.find('.banner-slide').trigger('click');
-    expect(routerPush).toHaveBeenCalledTimes(1);
-    expect(routerPush).toHaveBeenCalledWith({ path: '/', query: { category: 'fashion' } });
-  });
+      expect(wrapper.find('.city-name').text()).toBe('金边');
 
-  it('shows fallback placeholder when banners array is empty', async () => {
-    mockBanners.value = [];
+      mockLocale.value = 'en';
+      await flushPromises();
+      expect(wrapper.find('.city-name').text()).toBe('Phnom Penh');
 
-    wrapper = mountHomePage();
-    await flushPromises();
+      mockLocale.value = 'km';
+      await flushPromises();
+      expect(wrapper.find('.city-name').text()).toBe('ភ្នំពេញ');
+    });
 
-    expect(wrapper.find('.banner-placeholder').exists()).toBe(true);
-    expect(wrapper.find('.banner-wrap').exists()).toBe(false);
-  });
+    it('updates the displayed city name when store currentCode changes', async () => {
+      mockCities.value = [phnomPenh, siemReap];
 
-  it('shows the current city name in the top header and navigates to /cities on click', async () => {
-    mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
-    ];
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    wrapper = mountHomePage();
-    const store = useCityStore();
-    store.setCities(mockCities.value);
-    await flushPromises();
+      expect(wrapper.find('.city-name').text()).toBe('金边');
 
-    const entry = wrapper.find('.city-entry');
-    expect(entry.exists()).toBe(true);
-    expect(entry.find('.city-name').text()).toBe('ភ្នំពេញ');
+      const store = useCityStore();
+      store.setCity('siem_reap');
+      await flushPromises();
 
-    await entry.trigger('click');
-    expect(routerPush).toHaveBeenCalledTimes(1);
-    expect(routerPush).toHaveBeenCalledWith('/cities');
-  });
+      expect(wrapper.find('.city-name').text()).toBe('暹粒');
+    });
 
-  it('updates the displayed city name when store currentCode changes', async () => {
-    mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
-    ];
+    it('falls back to name_km then code when the localized name is missing', async () => {
+      mockCities.value = [{ code: 'battambang', name_km: 'បាត់ដំបង', sort_order: 3 }];
 
-    wrapper = mountHomePage();
-    const store = useCityStore();
-    store.setCities(mockCities.value);
-    await flushPromises();
+      wrapper = mountHomePage();
+      await flushPromises();
 
-    expect(wrapper.find('.city-name').text()).toBe('ភ្នំពេញ');
+      const store = useCityStore();
+      store.setCity('battambang');
+      await flushPromises();
 
-    store.setCity('siem_reap');
-    await flushPromises();
-
-    expect(wrapper.find('.city-name').text()).toBe('សៀមរាប');
+      expect(wrapper.find('.city-name').text()).toBe('បាត់ដំបង');
+    });
   });
 });
