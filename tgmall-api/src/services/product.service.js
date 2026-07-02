@@ -43,7 +43,6 @@ export async function listProducts({ page, limit, category, q, sort, language = 
         category: true,
         salesCount: true,
         createdAt: true,
-        merchant: { select: { id: true, nameKm: true, nameEn: true } },
       },
     }),
     prisma.product.count({ where }),
@@ -58,7 +57,6 @@ export async function listProducts({ page, limit, category, q, sort, language = 
     priceUsd: Number(item.priceUsd),
     priceKhr: item.priceKhr,
     thumbnail: item.images?.[0]?.thumb_url || item.images?.[0]?.url || null,
-    merchantName: language === 'en' ? item.merchant.nameEn || item.merchant.nameKm : item.merchant.nameKm,
     category: item.category,
     salesCount: item.salesCount,
     createdAt: item.createdAt,
@@ -77,9 +75,6 @@ export async function listProducts({ page, limit, category, q, sort, language = 
 export async function getProductById(id) {
   const product = await prisma.product.findUnique({
     where: { id },
-    include: {
-      merchant: { select: { id: true, nameKm: true, nameEn: true } },
-    },
   });
 
   if (!product) return null;
@@ -87,11 +82,6 @@ export async function getProductById(id) {
 
   return {
     id: product.id,
-    merchant: {
-      id: product.merchant.id,
-      name: product.merchant.nameKm,
-      nameEn: product.merchant.nameEn,
-    },
     nameKm: product.nameKm,
     nameEn: product.nameEn,
     nameZh: product.nameZh,

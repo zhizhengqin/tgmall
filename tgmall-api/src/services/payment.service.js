@@ -3,7 +3,7 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import * as bakong from '../integrations/bakong.js';
-import { sendOrderNotification, sendMerchantOrderNotification } from '../integrations/telegram.js';
+import { sendOrderNotification } from '../integrations/telegram.js';
 
 /**
  * 生成 KHQR 支付二维码
@@ -238,17 +238,7 @@ export async function handlePaymentCallback(payload) {
             order, 'paid',
           ).catch((e) => console.error('[Bot] 支付成功通知失败:', e.message));
         }
-        // 通知商家买家已付款
-        const merchantUser = await prisma.user.findFirst({
-          where: { merchant: { id: order.merchantId } },
-          select: { telegramId: true, language: true },
-        });
-        if (merchantUser?.telegramId) {
-          sendMerchantOrderNotification(
-            { telegramId: merchantUser.telegramId, languageCode: merchantUser.language },
-            order, 'paid',
-          ).catch((e) => console.error('[Bot] 商家付款通知失败:', e.message));
-        }
+        // V2 公司自营模式：平台统一处理订单，无需通知商家
       } catch (e) {
         console.error('[Bot] 支付通知查询失败:', e.message);
       }

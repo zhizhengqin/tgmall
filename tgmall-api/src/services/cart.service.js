@@ -68,8 +68,7 @@ async function enrichCartItem(item) {
     where: { id: item.productId },
     select: {
       id: true, nameKm: true, nameEn: true, priceUsd: true, priceKhr: true,
-      stock: true, images: true, status: true, merchantId: true,
-      merchant: { select: { id: true, nameKm: true, nameEn: true } },
+      stock: true, images: true, status: true,
     },
   });
 
@@ -92,8 +91,6 @@ async function enrichCartItem(item) {
     quantity: Math.min(item.quantity, product?.stock || 0),
     maxQuantity: product?.stock || 0,
     stockStatus,
-    merchantId: product?.merchantId,
-    merchantName: product?.merchant?.nameKm || '',
     subtotalUsd: Number(product?.priceUsd || 0) * Math.min(item.quantity, product?.stock || 0),
   };
 }
@@ -101,16 +98,8 @@ async function enrichCartItem(item) {
 function groupCartItems(items) {
   // 清除无效商品
   const valid = items.filter((i) => i.stockStatus !== 'not_found' && i.stockStatus !== 'inactive');
-  // 按商家分组
-  const groupMap = {};
-  for (const item of valid) {
-    if (!groupMap[item.merchantId]) {
-      groupMap[item.merchantId] = { merchantId: item.merchantId, merchantName: item.merchantName, items: [] };
-    }
-    groupMap[item.merchantId].items.push(item);
-  }
-
-  const groups = Object.values(groupMap);
+  // V2 公司自营模式：所有商品属于同一平台，不再按商家分组
+  const groups = valid.length > 0 ? [{ merchantId: 'tgmall', merchantName: 'TG Mall', items: valid }] : [];
   const totalItems = valid.reduce((s, i) => s + i.quantity, 0);
   const totalUsd = valid.reduce((s, i) => s + i.subtotalUsd, 0);
   // KHR 简化估算
