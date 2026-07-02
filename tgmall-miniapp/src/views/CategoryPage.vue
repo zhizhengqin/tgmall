@@ -14,7 +14,7 @@
         class="category-card"
         @click="goToCategory(cat.value)"
       >
-        <img v-if="cat.icon" :src="cat.icon" class="cat-icon" />
+        <img v-if="cat.icon" :src="cat.icon" :alt="cat.label" class="cat-icon" />
         <span v-else class="cat-emoji">{{ cat.emoji }}</span>
         <span class="cat-name">{{ cat.label }}</span>
       </div>
@@ -131,9 +131,13 @@ function goToCategory(category) {
   router.push({ path: '/', query: { category } });
 }
 
-onMounted(() => {
-  load();
-  fetchProducts(true);
+onMounted(async () => {
+  try {
+    await load();
+  } catch {
+    // ignore — shop-config failure should not block the page
+  }
+  await fetchProducts(true);
 });
 </script>
 

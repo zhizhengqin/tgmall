@@ -6,6 +6,7 @@ import CategoryPage from '@/views/CategoryPage.vue';
 // ---- shared mock state ----
 const mockCategories = ref([]);
 const mockLoad = vi.fn();
+const mockLocale = ref('km');
 
 const routerPush = vi.fn();
 const getProducts = vi.fn();
@@ -24,7 +25,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
-    locale: ref('km'),
+    locale: mockLocale,
     t: (key) => key,
   }),
 }));
@@ -70,6 +71,7 @@ describe('CategoryPage grid from shop config', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCategories.value = [];
+    mockLocale.value = 'km';
     getProducts.mockResolvedValue({ data: [], meta: { hasNext: false } });
   });
 
@@ -141,5 +143,41 @@ describe('CategoryPage grid from shop config', () => {
     expect(wrapper.find('.category-page').exists()).toBe(true);
     expect(wrapper.findAll('.category-card')).toHaveLength(0);
     expect(mockLoad).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the package emoji for an unknown category code', async () => {
+    mockCategories.value = [
+      { code: 'unknown', name_km: 'មិនស្គាល់', name_en: 'Unknown', name_zh: '未知', sort_order: 1 },
+    ];
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    expect(wrapper.find('.category-card img').exists()).toBe(false);
+    expect(wrapper.find('.cat-emoji').text()).toBe('📦');
+  });
+
+  it('uses name_en when the locale is en', async () => {
+    mockLocale.value = 'en';
+    mockCategories.value = [
+      { code: 'fashion', name_km: 'ពាក់ព័ន្ធ', name_en: 'Fashion', name_zh: '时尚', sort_order: 1 },
+    ];
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    expect(wrapper.find('.cat-name').text()).toBe('Fashion');
+  });
+
+  it('uses name_zh when the locale is zh', async () => {
+    mockLocale.value = 'zh';
+    mockCategories.value = [
+      { code: 'fashion', name_km: 'ពាក់ព័ន្ធ', name_en: 'Fashion', name_zh: '时尚', sort_order: 1 },
+    ];
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    expect(wrapper.find('.cat-name').text()).toBe('时尚');
   });
 });
