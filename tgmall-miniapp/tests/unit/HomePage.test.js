@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, reactive } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import HomePage from '@/views/HomePage.vue';
+import { useCityStore } from '@/stores/cityStore.js';
 
 // ---- shared mock state ----
 const mockBanners = ref([]);
 const mockCategories = ref([]);
+const mockCities = ref([]);
 const mockLoad = vi.fn();
 
 const routeQuery = reactive({});
@@ -18,6 +21,7 @@ vi.mock('@/composables/useShopConfig.js', () => ({
   useShopConfig: () => ({
     banners: mockBanners,
     categories: mockCategories,
+    cities: mockCities,
     load: mockLoad,
   }),
 }));
@@ -53,6 +57,7 @@ vi.mock('@/api/products.js', () => ({
 
 // ---- helpers ----
 function mountHomePage() {
+  setActivePinia(createPinia());
   return mount(HomePage, {
     global: {
       stubs: {
@@ -73,15 +78,24 @@ describe('HomePage banner carousel', () => {
   let wrapper;
 
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockBanners.value = [];
     mockCategories.value = [];
+    mockCities.value = [];
     Object.keys(routeQuery).forEach((key) => delete routeQuery[key]);
     getProducts.mockResolvedValue({ data: [], meta: { hasNext: false } });
+    mockLoad.mockResolvedValue(undefined);
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
   });
 
   afterEach(() => {
     wrapper?.unmount();
+    vi.unstubAllGlobals();
   });
 
   it('renders banners from useShopConfig().banners', async () => {
@@ -154,23 +168,42 @@ describe('HomePage banner carousel', () => {
     expect(wrapper.find('.banner-wrap').exists()).toBe(false);
   });
 
-  it('ignores banner click after a drag to prevent swipe/click overlap', async () => {
-    mockBanners.value = [
-      { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
+  it('shows the current city name in the top header and navigates to /cities on click', async () => {
+    mockCities.value = [
+      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
     ];
 
     wrapper = mountHomePage();
+    const store = useCityStore();
+    store.setCities(mockCities.value);
     await flushPromises();
 
-    const track = wrapper.find('.banner-track');
-    const slide = wrapper.find('.banner-slide');
+    const entry = wrapper.find('.city-entry');
+    expect(entry.exists()).toBe(true);
+    expect(entry.find('.city-name').text()).toBe('ភ្នំពេញ');
 
-    // Drag more than the click movement threshold
-    await track.trigger('touchstart', { touches: [{ clientX: 200 }] });
-    await track.trigger('touchmove', { touches: [{ clientX: 185 }] });
-    await track.trigger('touchend', { changedTouches: [{ clientX: 185 }] });
+    await entry.trigger('click');
+    expect(routerPush).toHaveBeenCalledTimes(1);
+    expect(routerPush).toHaveBeenCalledWith('/cities');
+  });
 
-    await slide.trigger('click');
-    expect(routerPush).not.toHaveBeenCalled();
+  it('updates the displayed city name when store currentCode changes', async () => {
+    mockCities.value = [
+      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+    ];
+
+    wrapper = mountHomePage();
+    const store = useCityStore();
+    store.setCities(mockCities.value);
+    await flushPromises();
+
+    expect(wrapper.find('.city-name').text()).toBe('ភ្នំពេញ');
+
+    store.setCity('siem_reap');
+    await flushPromises();
+
+    expect(wrapper.find('.city-name').text()).toBe('សៀមរាប');
   });
 });

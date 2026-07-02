@@ -15,6 +15,12 @@ const routes = [
     meta: { title: 'categories' },
   },
   {
+    path: '/cities',
+    name: 'CitySelect',
+    component: () => import('@/views/CitySelectPage.vue'),
+    meta: { title: 'citySelect' },
+  },
+  {
     path: '/search',
     name: 'Search',
     component: () => import('@/views/SearchPage.vue'),

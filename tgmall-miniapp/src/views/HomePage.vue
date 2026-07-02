@@ -3,6 +3,10 @@
   <div class="home-page">
     <!-- 顶部搜索栏 -->
     <header class="top-header">
+      <div class="city-entry" @click="$router.push('/cities')">
+        <span class="city-name">{{ cityStore.currentCity.name_km }}</span>
+        <span class="city-arrow">▼</span>
+      </div>
       <div class="search-bar" @click="$router.push('/search')">
         <span class="search-icon">🔍</span>
         <span class="search-text">{{ $t('home.searchPlaceholder') }}</span>
@@ -110,6 +114,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
+import { useCityStore } from '@/stores/cityStore.js';
 import { useTelegram } from '@/composables/useTelegram';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
@@ -119,10 +124,11 @@ import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
+const cityStore = useCityStore();
 const route = useRoute();
 const router = useRouter();
 const { enableCloseConfirmation } = useTelegram();
-const { banners, categories: apiCategories, load } = useShopConfig();
+const { banners, categories: apiCategories, cities: shopCities, load } = useShopConfig();
 
 // 开启 Mini App 关闭确认
 enableCloseConfirmation();
@@ -283,8 +289,10 @@ onMounted(() => {
   if (categoryFromUrl && categoryFromUrl !== 'all') {
     activeCategory.value = categoryFromUrl;
   }
-  // 并行加载运营配置与商品
-  load();
+  // 并行加载运营配置与商品，并把城市列表同步到 cityStore
+  load().then(() => {
+    cityStore.setCities(shopCities.value);
+  });
   fetchProducts(true);
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
@@ -323,6 +331,32 @@ onUnmounted(() => {
   padding: var(--space-sm) var(--space-md);
   cursor: pointer;
 }
+
+.city-entry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 var(--space-xs);
+  cursor: pointer;
+}
+
+.city-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-arrow {
+  font-size: 10px;
+  color: var(--muted);
+}
+
 .search-icon { font-size: 14px; }
 .search-text { font-size: 13px; color: var(--muted); }
 

@@ -4,6 +4,7 @@
   "home": { "searchPlaceholder": "Search products...", "all": "All", "fashion": "Fashion", "beauty": "Beauty", "electronics": "Electronics", "home": "Home", "noProducts": "No products yet", "comingSoon": "Products are being added, please check back later", "hotProducts": "Hot Products" },
   "product": { "addToCart": "Add to Cart", "buyNow": "Buy Now", "soldOut": "Sold Out", "stockLeft": "Only {count} left", "description": "Description" },
   "cart": { "title": "Shopping Cart", "empty": "Your cart is empty", "goShopping": "Go Shopping", "total": "Total", "checkout": "Checkout", "selectAll": "Select All", "remove": "Remove", "checkoutCount": "Checkout ({count})", "stockLeft": "Only {count} left", "insufficient": "Insufficient stock! Max {count}", "confirmRemove": "Remove this item?" },
+  "city": { "selectTitle": "Select City" },
   "common": { "loading": "Loading...", "error": "Something went wrong", "loadError": "Failed to load", "retry": "Retry", "noMore": "— No more —", "confirm": "OK", "cancel": "Cancel", "save": "Save", "delete": "Delete" },
   "profile": {
     "guest": "User",
