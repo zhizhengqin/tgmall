@@ -41,4 +41,10 @@ router.use(inventoryRouter);
 router.get('/feedback', feedbackCtrl.list);
 router.patch('/feedback/:id/resolve', feedbackCtrl.resolve);
 
+// 优惠券管理
+router.get('/coupons', adminCtrl.listCoupons);
+router.post('/coupons', adminCtrl.createCoupon);
+router.put('/coupons/:id', adminCtrl.updateCoupon);
+router.patch('/coupons/:id/status', adminCtrl.toggleCouponStatus);
+
 export default router;
