@@ -32,6 +32,8 @@ model User {
   orders      Order[]
   userCoupons UserCoupon[]
   notifications Notification[]
+  wishlists   Wishlist[]
+  feedbackTickets FeedbackTicket[]
 
   @@index([telegramId])
   @@index([phone])
@@ -55,12 +57,14 @@ model Product {
   category      String   @db.VarChar(50) // 对应 categories.code，应用层校验
   status        String   @default("active") @db.VarChar(20)
   salesCount    Int      @default(0) @map("sales_count")
+  tags          Json     @default("[]") @map("tags") @db.JsonB
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   orderItems      OrderItem[]
   stockLogs       StockLog[]
   inventoryChecks InventoryCheck[]
+  wishlists       Wishlist[]
 
   @@index([category, status, createdAt(sort: Desc)])
   @@index([priceUsd])
@@ -341,4 +345,31 @@ model PasswordHistory {
 
   @@index([userId, createdAt])
   @@map("password_history")
+}
+
+model Wishlist {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+  @@map("wishlist")
+}
+
+model FeedbackTicket {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String    @db.Text
+  images     Json      @default("[]") @db.JsonB
+  status     String    @default("pending") @db.VarChar(20)
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz()
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([status, createdAt])
+  @@map("feedback_tickets")
 }
