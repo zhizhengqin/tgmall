@@ -7,7 +7,7 @@ import addressRoutes from './address.routes.js';
 import couponRoutes from './coupon.routes.js';
 import paymentRoutes from './payment.routes.js';
 import webhookRoutes from './webhook.routes.js';
-import { merchantRouter, adminRouter } from './merchant.routes.js';
+import adminRouter from './admin.routes.js';
 import { adminRouter as shopConfigAdminRouter, publicRouter as shopConfigPublicRouter } from './shopConfig.routes.js';
 
 const router = Router();
@@ -25,7 +25,6 @@ router.use('/users/me/addresses', addressRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/webhooks', webhookRoutes);
-router.use('/merchants', merchantRouter);
 router.use('/admin', adminRouter);
 router.use('/admin', shopConfigAdminRouter);
 router.use('/', shopConfigPublicRouter);
