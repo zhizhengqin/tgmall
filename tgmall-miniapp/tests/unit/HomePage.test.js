@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ref, reactive, flushPromises } from 'vue';
+import { ref, reactive } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
 import HomePage from '@/views/HomePage.vue';
 
