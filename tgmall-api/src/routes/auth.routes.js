@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { validate } from '../middleware/validate.js';
-import { telegramLoginSchema } from '../validators/auth.schema.js';
+import { auth } from '../middleware/auth.js';
+import {
+  telegramLoginSchema, sendSmsSchema, phoneLoginSchema,
+  resetPasswordSchema, setPasswordSchema, bindPhoneSchema,
+} from '../validators/auth.schema.js';
 import * as authController from '../controllers/auth.controller.js';
 import * as adminAuthController from '../controllers/adminAuth.controller.js';
 
@@ -9,5 +13,12 @@ const router = Router();
 router.post('/telegram', validate(telegramLoginSchema), authController.telegramLogin);
 router.post('/web-login', authController.webLogin);
 router.post('/admin-login', adminAuthController.login);
+
+// 手机号认证
+router.post('/send-sms', validate(sendSmsSchema), authController.sendSms);
+router.post('/login/phone', validate(phoneLoginSchema), authController.phoneLogin);
+router.post('/set-password', auth, validate(setPasswordSchema), authController.setPassword);
+router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
+router.post('/bind-phone', auth, validate(bindPhoneSchema), authController.bindPhone);
 
 export default router;
