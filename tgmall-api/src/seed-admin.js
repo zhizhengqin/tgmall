@@ -16,7 +16,7 @@ const p = new PrismaClient();
           where: { id: existing.id },
           data: { passwordHash: envHash },
         });
-        console.log('✅ 管理员密码已更新（来自 ADMIN_PASSWORD）');
+        console.log('✅ Admin password updated (from ADMIN_PASSWORD)');
       } else {
         await p.adminUser.create({
           data: {
@@ -26,27 +26,38 @@ const p = new PrismaClient();
             role: 'admin',
           },
         });
-        console.log('✅ 默认管理员已创建（ADMIN_PASSWORD）');
+        console.log('✅ Default admin created (ADMIN_PASSWORD)');
       }
     } else {
-      // 无环境变量: 使用默认密码 admin123
-      const defaultHash = await bcrypt.hash('admin123', 10);
-      if (existing) {
-        await p.adminUser.update({
-          where: { id: existing.id },
-          data: { passwordHash: defaultHash },
-        });
-        console.log('✅ 管理员密码已重置为默认 (admin123)');
+      const isProd = process.env.NODE_ENV === 'production';
+
+      if (isProd) {
+        // 生产环境必须设置 ADMIN_PASSWORD，拒绝创建默认密码管理员
+        if (existing) {
+          console.log('⚠️  Admin user exists but ADMIN_PASSWORD is not set — password unchanged');
+        } else {
+          console.error('❌ PRODUCTION: ADMIN_PASSWORD is required to create admin user. Skipping.');
+        }
       } else {
-        await p.adminUser.create({
-          data: {
-            username: 'admin',
-            passwordHash: defaultHash,
-            displayName: '管理员',
-            role: 'admin',
-          },
-        });
-        console.log('✅ 默认管理员已创建 (admin / admin123)');
+        // 非生产环境: 使用默认密码 admin123（仅开发/测试用）
+        const defaultHash = await bcrypt.hash('admin123', 10);
+        if (existing) {
+          await p.adminUser.update({
+            where: { id: existing.id },
+            data: { passwordHash: defaultHash },
+          });
+          console.log('✅ Admin password reset to default (admin123) [dev only]');
+        } else {
+          await p.adminUser.create({
+            data: {
+              username: 'admin',
+              passwordHash: defaultHash,
+              displayName: '管理员',
+              role: 'admin',
+            },
+          });
+          console.log('✅ Default admin created (admin / admin123) [dev only]');
+        }
       }
     }
   } catch (e) {
