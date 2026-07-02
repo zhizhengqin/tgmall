@@ -43,4 +43,12 @@ export const config = {
   // Mini App
   miniAppUrl: process.env.MINI_APP_URL || '',
   botUsername: process.env.BOT_USERNAME || '',
+  // SMS Mock 配置
+  sms: {
+    mockCode: process.env.SMS_MOCK_CODE || '123456',
+    cooldownSeconds: 60,
+    codeTtlSeconds: 300,
+    maxAttempts: 5,
+    blockSeconds: 900,
+  },
 };
