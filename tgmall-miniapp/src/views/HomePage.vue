@@ -23,7 +23,7 @@
 
     <!-- Banner 轮播 -->
     <div class="banner-wrap" v-if="banners.length > 0">
-      <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchend="onTouchEnd">
+      <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
         <div v-for="banner in banners" :key="banner.id" class="banner-slide" @click="onBannerClick(banner)">
           <img :src="banner.image_url" :alt="bannerTitle(banner)" class="banner-img" />
         </div>
@@ -152,6 +152,9 @@ const isLoading = ref(false);
 const loadError = ref('');
 const currentBanner = ref(0);
 const touchStartX = ref(0);
+const touchMoveDistance = ref(0);
+const SWIPE_THRESHOLD = 40;
+const CLICK_MOVE_THRESHOLD = 10;
 
 // 监听 URL 分类参数，支持 Banner category 跳转时自动切换品类
 watch(
@@ -174,11 +177,19 @@ function bannerTitle(banner) {
 
 function onTouchStart(e) {
   touchStartX.value = e.touches[0].clientX;
+  touchMoveDistance.value = 0;
+}
+
+function onTouchMove(e) {
+  const distance = Math.abs(e.touches[0].clientX - touchStartX.value);
+  if (distance > touchMoveDistance.value) {
+    touchMoveDistance.value = distance;
+  }
 }
 
 function onTouchEnd(e) {
   const diff = touchStartX.value - e.changedTouches[0].clientX;
-  if (Math.abs(diff) < 40) return;
+  if (Math.abs(diff) < SWIPE_THRESHOLD) return;
   if (diff > 0 && currentBanner.value < banners.value.length - 1) {
     currentBanner.value += 1;
   } else if (diff < 0 && currentBanner.value > 0) {
@@ -187,6 +198,7 @@ function onTouchEnd(e) {
 }
 
 function onBannerClick(banner) {
+  if (touchMoveDistance.value > CLICK_MOVE_THRESHOLD) return;
   if (!banner.link_type || !banner.link_target) return;
   if (banner.link_type === 'product') {
     router.push(`/product/${banner.link_target}`);
@@ -267,7 +279,7 @@ onMounted(() => {
     locale.value = languageStore.current;
   }
   // 从 URL 参数读取分类（从分类页跳转过来）
-  const categoryFromUrl = route.query.category;
+  const categoryFromUrl = Array.isArray(route.query.category) ? route.query.category[0] : route.query.category;
   if (categoryFromUrl && categoryFromUrl !== 'all') {
     activeCategory.value = categoryFromUrl;
   }
