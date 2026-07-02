@@ -71,6 +71,7 @@ model Product {
   priceUsd      Decimal  @map("price_usd") @db.Decimal(10,2)
   priceKhr      Int      @map("price_khr")
   stock         Int      @default(0)
+  alertThreshold Int?     @map("alert_threshold")
   images        Json     @default("[]") @db.JsonB
   specs         Json     @default("[]") @db.JsonB
   category      String   @db.VarChar(50) // 对应 categories.code，应用层校验
@@ -79,7 +80,9 @@ model Product {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
-  orderItems OrderItem[]
+  orderItems      OrderItem[]
+  stockLogs       StockLog[]
+  inventoryChecks InventoryCheck[]
 
   @@index([merchantId])
   @@index([category, status, createdAt(sort: Desc)])
@@ -319,4 +322,36 @@ model CustomerService {
 
   @@index([status, isDefault])
   @@map("customer_services")
+}
+
+model StockLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  product     Product   @relation(fields: [productId], references: [id])
+  beforeQty   Int       @map("before_qty")
+  afterQty    Int       @map("after_qty")
+  changeQty   Int       @map("change_qty")
+  reason      String    @db.VarChar(30)
+  operatorId  String?   @map("operator_id") @db.VarChar(36)
+  note        String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([productId, createdAt])
+  @@map("stock_logs")
+}
+
+model InventoryCheck {
+  id          String    @id @default(uuid()) @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  product     Product   @relation(fields: [productId], references: [id])
+  systemQty   Int       @map("system_qty")
+  actualQty   Int       @map("actual_qty")
+  diff        Int
+  note        String?   @db.Text
+  checkedBy   String    @map("checked_by") @db.VarChar(100)
+  checkedAt   DateTime  @default(now()) @map("checked_at") @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([productId, checkedAt])
+  @@map("inventory_checks")
 }
