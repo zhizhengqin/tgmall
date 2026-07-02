@@ -50,13 +50,20 @@
       <div class="section price-breakdown">
         <div class="pb-row"><span>商品总价</span><span>${{ subtotal.toFixed(2) }}</span></div>
         <div class="pb-row" v-if="discount > 0"><span>优惠券</span><span class="discount">-${{ discount.toFixed(2) }}</span></div>
-        <div class="pb-row"><span>配送费</span><span>免运费</span></div>
+        <div class="pb-row">
+          <span>配送费</span>
+          <span>{{ shippingFee === 0 ? '免运费' : '$' + shippingFee.toFixed(2) }}</span>
+        </div>
+        <div v-if="shortfall > 0" class="pb-row shortfall">
+          <span>起送金额</span>
+          <span>还差 ${{ shortfall.toFixed(2) }}（满 ${{ minOrderAmount.toFixed(2) }} 起送）</span>
+        </div>
         <div class="pb-row total"><span>合计</span><PriceDisplay :priceUsd="total" :priceKhr="totalKhr" /></div>
       </div>
 
       <!-- 提交按钮 -->
-      <button class="submit-btn" @click="submitOrder" :disabled="!selectedAddress || submitting">
-        {{ submitting ? '提交中...' : `提交订单 · $${total.toFixed(2)}` }}
+      <button class="submit-btn" @click="submitOrder" :disabled="!canSubmit">
+        {{ shortfall > 0 ? `差 $${shortfall.toFixed(2)} 起送` : (submitting ? '提交中...' : `提交订单 · $${total.toFixed(2)}`) }}
       </button>
     </template>
 
@@ -75,14 +82,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAddresses } from '@/api/addresses';
 import { getMyCoupons } from '@/api/coupons';
 import { createOrder } from '@/api/orders';
+import { useCityStore } from '@/stores/cityStore.js';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
+const cityStore = useCityStore();
+const { deliveryRule, loadDeliveryRule } = useShopConfig();
 const items = ref(JSON.parse(localStorage.getItem('checkout_items') || '[]'));
 const addresses = ref([]);
 const selectedAddress = ref(null);
@@ -106,8 +117,27 @@ const discount = computed(() => {
   if (!selectedCoupon.value) return 0;
   return selectedCoupon.value.type === 'fixed' ? selectedCoupon.value.value : Math.round(subtotal.value * selectedCoupon.value.value / 100 * 100) / 100;
 });
-const total = computed(() => Math.max(0, subtotal.value - discount.value));
+
+const shippingFee = computed(() => {
+  if (!deliveryRule.value) return 0;
+  const threshold = Number(deliveryRule.value.freeShippingThresholdUsd);
+  if (threshold > 0 && subtotal.value >= threshold) return 0;
+  return Number(deliveryRule.value.shippingFeeUsd);
+});
+
+const minOrderAmount = computed(() => Number(deliveryRule.value?.minOrderAmountUsd || 0));
+
+const shortfall = computed(() => {
+  if (!minOrderAmount.value) return 0;
+  return Math.max(0, minOrderAmount.value - subtotal.value);
+});
+
+const total = computed(() => Math.max(0, subtotal.value - discount.value + shippingFee.value));
 const totalKhr = computed(() => Math.round(total.value * 4000));
+
+const canSubmit = computed(() =>
+  selectedAddress.value && !submitting.value && shortfall.value <= 0
+);
 
 function selectAddress(a) { selectedAddress.value = a; showAddressPicker.value = false; }
 function specStr(spec) { return Object.values(spec || {}).join(' / '); }
@@ -152,6 +182,11 @@ onMounted(async () => {
     const res = await getMyCoupons('unused');
     coupons.value = res.data;
   } catch {}
+  loadDeliveryRule(cityStore.currentCity.code);
+});
+
+watch(() => cityStore.currentCity.code, (code) => {
+  loadDeliveryRule(code);
 });
 </script>
 
@@ -180,6 +215,7 @@ onMounted(async () => {
 .pb-row { display: flex; justify-content: space-between; font-size: 13px; }
 .pb-row.total { font-weight: 700; font-size: 15px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
 .discount { color: var(--accent-red); }
+.pb-row.shortfall { color: var(--accent-red); font-size: 13px; }
 .submit-btn { width: 100%; padding: 16px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-size: 16px; font-weight: 700; margin-top: 16px; }
 .submit-btn:disabled { opacity: 0.4; }
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 300; display: flex; align-items: flex-end; }
