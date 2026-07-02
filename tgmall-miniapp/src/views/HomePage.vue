@@ -21,8 +21,18 @@
       </div>
     </header>
 
-    <!-- Banner 轮播占位 -->
-    <div class="banner-placeholder">
+    <!-- Banner 轮播 -->
+    <div class="banner-wrap" v-if="banners.length > 0">
+      <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchend="onTouchEnd">
+        <div v-for="banner in banners" :key="banner.id" class="banner-slide" @click="onBannerClick(banner)">
+          <img :src="banner.image_url" :alt="bannerTitle(banner)" class="banner-img" />
+        </div>
+      </div>
+      <div class="banner-dots" v-if="banners.length > 1">
+        <span v-for="(_, i) in banners" :key="i" :class="{ active: currentBanner === i }"></span>
+      </div>
+    </div>
+    <div v-else class="banner-placeholder">
       <div class="banner-content">
         <span class="banner-icon">🇰🇭</span>
         <span>TG Mall — ទិញទំនិញតាម Telegram</span>
@@ -97,7 +107,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTelegram } from '@/composables/useTelegram';
@@ -110,8 +120,9 @@ import BottomNav from '@/components/common/BottomNav.vue';
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const route = useRoute();
+const router = useRouter();
 const { enableCloseConfirmation } = useTelegram();
-const { categories: apiCategories, load } = useShopConfig();
+const { banners, categories: apiCategories, load } = useShopConfig();
 
 // 开启 Mini App 关闭确认
 enableCloseConfirmation();
@@ -139,6 +150,43 @@ const page = ref(1);
 const hasMore = ref(true);
 const isLoading = ref(false);
 const loadError = ref('');
+const currentBanner = ref(0);
+const touchStartX = ref(0);
+
+const trackStyle = computed(() => ({
+  transform: `translateX(-${currentBanner.value * 100}%)`,
+}));
+
+function bannerTitle(banner) {
+  return banner[`title_${locale.value}`] || banner.title_km || '';
+}
+
+function onTouchStart(e) {
+  touchStartX.value = e.touches[0].clientX;
+}
+
+function onTouchEnd(e) {
+  const diff = touchStartX.value - e.changedTouches[0].clientX;
+  if (Math.abs(diff) < 40) return;
+  if (diff > 0 && currentBanner.value < banners.value.length - 1) {
+    currentBanner.value += 1;
+  } else if (diff < 0 && currentBanner.value > 0) {
+    currentBanner.value -= 1;
+  }
+}
+
+function onBannerClick(banner) {
+  if (!banner.link_type || !banner.link_target) return;
+  if (banner.link_type === 'product') {
+    router.push(`/product/${banner.link_target}`);
+  } else if (banner.link_type === 'category') {
+    router.push({ path: '/', query: { category: banner.link_target } });
+  } else if (banner.link_type === 'url') {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.openLink) tg.openLink(banner.link_target);
+    else window.open(banner.link_target, '_blank');
+  }
+}
 
 // 切换语言
 function switchLanguage(lang) {
@@ -289,6 +337,48 @@ onUnmounted(() => {
 }
 .banner-icon { font-size: 24px; }
 .banner-content { font-size: 14px; font-weight: 600; color: var(--fg); }
+
+.banner-wrap {
+  margin: var(--space-lg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 16/7;
+  background: var(--bg);
+}
+.banner-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+}
+.banner-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.banner-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+.banner-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  transition: all 0.3s;
+}
+.banner-dots span.active { background: #fff; width: 18px; border-radius: 3px; }
 
 /* 品类横滑 */
 .category-scroll {
