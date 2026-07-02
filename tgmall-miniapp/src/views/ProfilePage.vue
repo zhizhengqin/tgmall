@@ -54,6 +54,12 @@
       <router-link to="/coupons" class="menu-item">
         <span>🎫</span><span>{{ $t('profile.coupons') }}</span><span class="arrow">›</span>
       </router-link>
+      <router-link to="/wishlist" class="menu-item">
+        <span>❤️</span><span>{{ $t('wishlist.title') }}</span><span class="arrow">›</span>
+      </router-link>
+      <router-link to="/feedback" class="menu-item">
+        <span>📝</span><span>{{ $t('feedback.title') }}</span><span class="arrow">›</span>
+      </router-link>
       <!-- 手机号绑定（未绑定手机号时显示） -->
       <div v-if="!userStore.user?.phone" class="menu-item" @click="showBindPhone = !showBindPhone">
         <span>📱</span><span>{{ $t('auth.bindPhone') }}</span><span class="arrow">›</span>

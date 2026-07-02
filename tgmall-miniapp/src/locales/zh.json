@@ -120,5 +120,19 @@
     "supportedBanks": "支持的银行",
     "qrLoading": "生成二维码中...",
     "qrError": "无法生成二维码"
+  },
+  "wishlist": {
+    "title": "我的收藏",
+    "empty": "暂无收藏",
+    "goShopping": "去逛逛",
+    "remove": "取消收藏"
+  },
+  "feedback": {
+    "title": "意见反馈",
+    "placeholder": "请告诉我们您的想法...",
+    "submit": "提交反馈",
+    "success": "感谢反馈！您的意见已收到。",
+    "charLimit": "{current}/{max}",
+    "imageHint": "图片（选填，最多3张）"
   }
 }

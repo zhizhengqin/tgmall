@@ -15,7 +15,19 @@
     <div class="product-info">
       <div class="price-row">
         <PriceDisplay :priceUsd="currentPriceUsd" :priceKhr="currentPriceKhr" />
-        <span class="sales-badge" v-if="product.salesCount > 0">已售 {{ product.salesCount }}</span>
+        <div class="price-actions">
+          <button class="fav-btn" :class="{ active: isFavorited }" @click="toggleFavorite">
+            {{ isFavorited ? '❤️' : '🤍' }}
+          </button>
+          <span class="sales-badge" v-if="product.salesCount > 0">已售 {{ product.salesCount }}</span>
+        </div>
+      </div>
+
+      <!-- 标签 -->
+      <div v-if="product.tags && product.tags.length" class="tag-row">
+        <span v-for="(tag, i) in product.tags" :key="i" class="tag-chip" :style="{ color: tag.color, background: tag.bg }">
+          {{ tagDisplay(tag) }}
+        </span>
       </div>
 
       <h1 class="product-name">{{ displayName }}</h1>
@@ -77,6 +89,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getProductById } from '@/api/products';
 import { addToCart } from '@/api/cart';
+import { toggleWishlist } from '@/api/wishlist';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
@@ -85,6 +98,7 @@ const { locale } = useI18n();
 
 const product = ref(null);
 const loading = ref(true);
+const isFavorited = ref(false);
 const selectedSpecs = ref({});
 const quantity = ref(1);
 const currentImage = ref(0);
@@ -163,6 +177,22 @@ function specDisplayValue(val) {
   return val[map[locale.value]] || val.valueEn;
 }
 
+function tagDisplay(tag) {
+  const map = { km: 'textKm', en: 'textEn', zh: 'textZh' };
+  const key = map[locale.value] || 'textKm';
+  return tag[key] || tag.textKm;
+}
+
+async function toggleFavorite() {
+  try {
+    const res = await toggleWishlist(product.value.id);
+    isFavorited.value = res.data.isFavorited;
+  } catch (e) {
+    // 未登录等场景静默失败
+    console.error('toggle wishlist failed:', e);
+  }
+}
+
 function selectSpec(specName, val) {
   if (val.stock === 0) return;
   selectedSpecs.value = { ...selectedSpecs.value, [specName]: val.valueEn };
@@ -201,6 +231,7 @@ onMounted(async () => {
   try {
     const res = await getProductById(route.params.id);
     product.value = res.data;
+    isFavorited.value = res.data.isFavorited || false;
     // 初始化默认规格
     if (res.data.specs?.length) {
       for (const spec of res.data.specs) {
@@ -228,7 +259,12 @@ onMounted(async () => {
 .gallery-dots span.active { background: var(--accent); }
 .product-info { padding: var(--space-lg); }
 .price-row { display: flex; align-items: center; justify-content: space-between; }
+.price-actions { display: flex; align-items: center; gap: 10px; }
+.fav-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 0; line-height: 1; transition: transform 0.15s; }
+.fav-btn:active { transform: scale(1.2); }
 .sales-badge { font-size: 12px; color: var(--muted); }
+.tag-row { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+.tag-chip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; line-height: 1.5; }
 .product-name { font-size: 18px; font-weight: 700; margin: 8px 0; line-height: 1.3; }
 .merchant-name { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 .spec-group { margin-bottom: 16px; }

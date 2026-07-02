@@ -90,6 +90,7 @@
           :thumbnail="product.thumbnail"
           :merchant-name="product.merchantName"
           :stock="product.stock"
+          :tags="product.tags"
         />
       </div>
 

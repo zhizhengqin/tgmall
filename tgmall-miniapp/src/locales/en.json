@@ -120,5 +120,19 @@
     "supportedBanks": "Supported Banks",
     "qrLoading": "Generating QR...",
     "qrError": "Failed to generate QR code"
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "empty": "No favorites yet",
+    "goShopping": "Go Shopping",
+    "remove": "Remove"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "placeholder": "Tell us what you think...",
+    "submit": "Submit",
+    "success": "Thank you! Your feedback has been received.",
+    "charLimit": "{current}/{max}",
+    "imageHint": "Images (optional, up to 3)"
   }
 }

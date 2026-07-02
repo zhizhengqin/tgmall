@@ -92,6 +92,18 @@ const routes = [
     component: () => import('@/views/ResetPasswordPage.vue'),
     meta: { title: 'resetPassword' },
   },
+  {
+    path: '/wishlist',
+    name: 'Wishlist',
+    component: () => import('@/views/WishlistPage.vue'),
+    meta: { title: 'wishlist', requiresAuth: true },
+  },
+  {
+    path: '/feedback',
+    name: 'Feedback',
+    component: () => import('@/views/FeedbackPage.vue'),
+    meta: { title: 'feedback', requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

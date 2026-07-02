@@ -11,6 +11,12 @@
       <span v-if="stockLabel" class="stock-badge">{{ stockLabel }}</span>
     </div>
     <div class="card-body">
+      <!-- 标签行 -->
+      <div v-if="tags && tags.length" class="tag-row">
+        <span v-for="(tag, i) in tags" :key="i" class="tag-chip" :style="{ color: tag.color, background: tag.bg }">
+          {{ tagDisplay(tag) }}
+        </span>
+      </div>
       <h3 class="card-name">{{ name }}</h3>
       <p class="card-merchant">{{ merchantName }}</p>
       <PriceDisplay :price-usd="priceUsd" :price-khr="priceKhr" sm />
@@ -20,7 +26,10 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PriceDisplay from './PriceDisplay.vue';
+
+const { locale } = useI18n();
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -30,7 +39,14 @@ const props = defineProps({
   thumbnail: { type: String, default: '' },
   merchantName: { type: String, default: '' },
   stock: { type: Number, default: 0 },
+  tags: { type: Array, default: () => [] },
 });
+
+function tagDisplay(tag) {
+  const map = { km: 'textKm', en: 'textEn', zh: 'textZh' };
+  const key = map[locale.value] || 'textKm';
+  return tag[key] || tag.textKm;
+}
 
 const stockLabel = computed(() => {
   if (props.stock === 0) return null;
@@ -83,6 +99,19 @@ function onImageError(e) {
 }
 .card-body {
   padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+.tag-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.tag-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.6;
 }
 .card-name {
   font-size: 13px;
