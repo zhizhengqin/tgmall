@@ -27,11 +27,6 @@ export default api;
 // ── 大盘 ──
 export const getAdminDashboard = () => api.get('/admin/dashboard');
 
-// ── 商家审核 ──
-export const getMerchants = (params) => api.get('/admin/merchants', { params });
-export const approveMerchant = (id) => api.post(`/admin/merchants/${id}/approve`);
-export const rejectMerchant = (id, reason) => api.post(`/admin/merchants/${id}/reject`, { reason });
-
 // ── 用户管理 ──
 export const getAdminUsers = (params) => api.get('/admin/users', { params });
 

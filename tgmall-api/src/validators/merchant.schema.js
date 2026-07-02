@@ -1,16 +1,5 @@
-// 商家相关 Zod 校验 Schema
+// 管理后台 Zod 校验 Schema（原 merchant schema，V2 仅保留 admin 操作）
 import { z } from 'zod';
-
-// 商家入驻申请
-export const registerMerchantSchema = z.object({
-  name_km: z.string().min(1, '高棉语店名必填').max(200, '店名最长200字符'),
-  name_en: z.string().max(200, '英文店名最长200字符').optional(),
-  owner_name: z.string().min(1, '店主姓名必填').max(100, '姓名最长100字符'),
-  phone: z.string().regex(/^\+855\d{8,9}$/, '手机号须为 +855 格式'),
-  address: z.string().min(1, '地址必填').max(500, '地址最长500字符'),
-  category: z.string().min(1, '经营品类必填').max(50, '品类最长50字符'),
-  description: z.string().max(1000, '描述最长1000字符').optional(),
-});
 
 // 上架/编辑商品
 export const merchantProductSchema = z.object({
@@ -38,12 +27,3 @@ export const merchantProductSchema = z.object({
 
 // 发货
 export const shipOrderSchema = z.object({
-  logistics_company: z.string().min(1, '物流公司必填').max(100).optional(),
-  tracking_number: z.string().min(1, '运单号必填').max(100).optional(),
-  note: z.string().max(200, '备注最长200字符').optional(),
-});
-
-// 管理员审核驳回
-export const rejectMerchantSchema = z.object({
-  reason: z.string().min(1, '驳回原因必填').max(500, '原因最长500字符'),
-});
