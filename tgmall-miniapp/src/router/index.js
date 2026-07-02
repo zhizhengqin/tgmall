@@ -80,6 +80,18 @@ const routes = [
     component: () => import('@/views/CouponCenter.vue'),
     meta: { title: 'coupons' },
   },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/LoginPage.vue'),
+    meta: { title: 'login' },
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('@/views/ResetPasswordPage.vue'),
+    meta: { title: 'resetPassword' },
+  },
 ];
 
 const router = createRouter({

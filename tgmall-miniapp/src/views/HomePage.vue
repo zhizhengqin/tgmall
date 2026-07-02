@@ -299,6 +299,8 @@ onMounted(() => {
   load().then(() => {
     cityStore.setCities(shopCities.value);
   });
+  // 尝试 GPS 定位匹配最近城市（仅在用户未手动选择时工作）
+  cityStore.detectCityByGPS();
   fetchProducts(true);
   window.addEventListener('scroll', handleScroll, { passive: true });
 });

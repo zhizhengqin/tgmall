@@ -5,7 +5,13 @@
   "product": { "addToCart": "ដាក់ក្នុងកន្ត្រក", "buyNow": "ទិញឥឡូវនេះ", "soldOut": "អស់", "stockLeft": "សល់ {count} ប៉ុណ្ណោះ", "description": "ការពិពណ៌នា" },
   "cart": { "title": "កន្ត្រកទំនិញ", "empty": "កន្ត្រកទំនិញទទេ", "goShopping": "ទៅទិញឥឡូវនេះ", "total": "សរុប", "checkout": "ទូទាត់", "selectAll": "ជ្រើសរើសទាំងអស់", "remove": "លុប", "checkoutCount": "ទូទាត់ ({count})", "stockLeft": "សល់ {count} ប៉ុណ្ណោះ", "insufficient": "ស្តុកមិនគ្រប់គ្រាន់! អតិបរមា {count}", "confirmRemove": "លុបទំនិញនេះ?" },
   "checkout": { "shippingFee": "ថ្លៃដឹកជញ្ជូន", "freeShipping": "ដឹកជញ្ជូនឥតគិតថ្លៃ", "minOrder": "ចំនួនទិញអប្បបរមា", "shortfall": "នៅខ្វះ {amount} (អប្ប. {min})", "submit": "បញ្ជាទិញ", "submitShortfall": "នៅខ្វះ {amount}", "submitting": "កំពុងដាក់បញ្ជា..." },
-  "city": { "selectTitle": "ជ្រើសរើសទីក្រុង" },
+  "city": {
+    "selectTitle": "ជ្រើសរើសទីក្រុង",
+    "currentCity": "ទីក្រុងបច្ចុប្បន្ន",
+    "detecting": "កំពុងរកទីតាំង...",
+    "locationDenied": "មិនអាចចូលទីតាំង",
+    "useCurrent": "ប្រើទីតាំងបច្ចុប្បន្ន"
+  },
   "common": { "loading": "កំពុងផ្ទុក...", "error": "មានបញ្ហា", "loadError": "ផ្ទុកមិនបានជោគជ័យ", "retry": "ព្យាយាមម្តងទៀត", "noMore": "អស់ហើយ", "confirm": "យល់ព្រម", "cancel": "បោះបង់", "save": "រក្សាទុក", "delete": "លុប" },
   "profile": {
     "guest": "អ្នកប្រើ",
@@ -65,6 +71,24 @@
     "descriptionPlaceholder": "ពិពណ៌នាអំពីហាងរបស់អ្នក...",
     "submit": "ដាក់ពាក្យ",
     "success": "ពាក្យស្នើសុំបានដាក់ជូន! ការពិនិត្យនឹងចំណាយពេល 1-3 ថ្ងៃធ្វើការ។ លទ្ធផលនឹងផ្ញើតាម @xhzmall_bot។"
+  },
+  "auth": {
+    "smsLogin": "ចូលដោយសារ SMS",
+    "passwordLogin": "ចូលដោយពាក្យសម្ងាត់",
+    "phonePlaceholder": "បញ្ចូលលេខទូរស័ព្ទ +855",
+    "sendCode": "ផ្ញើកូដ",
+    "resendAfter": "ផ្ញើម្តងទៀត({s}s)",
+    "verifyCode": "កូដផ្ទៀងផ្ទាត់",
+    "password": "ពាក្យសម្ងាត់",
+    "forgotPassword": "ភ្លេចពាក្យសម្ងាត់?",
+    "resetPassword": "កំណត់ពាក្យសម្ងាត់ឡើងវិញ",
+    "newPassword": "ពាក្យសម្ងាត់ថ្មី",
+    "bindPhone": "ភ្ជាប់លេខទូរស័ព្ទ",
+    "bindPhoneHint": "ភ្ជាប់លេខទូរស័ព្ទដើម្បីទទួលបានការជូនដំណឹង",
+    "loginSuccess": "ចូលគណនីជោគជ័យ",
+    "setPasswordTitle": "កំណត់ពាក្យសម្ងាត់",
+    "passwordRule": "8-20 តួ មានអក្សរ និងលេខ",
+    "passwordsNotMatch": "ពាក្យសម្ងាត់មិនត្រូវគ្នា"
   },
   "payment": {
     "khqrTitle": "ការទូទាត់ KHQR",

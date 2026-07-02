@@ -54,6 +54,22 @@
       <router-link to="/coupons" class="menu-item">
         <span>🎫</span><span>{{ $t('profile.coupons') }}</span><span class="arrow">›</span>
       </router-link>
+      <!-- 手机号绑定（未绑定手机号时显示） -->
+      <div v-if="!userStore.user?.phone" class="menu-item" @click="showBindPhone = !showBindPhone">
+        <span>📱</span><span>{{ $t('auth.bindPhone') }}</span><span class="arrow">›</span>
+      </div>
+      <div v-if="showBindPhone" class="bind-phone-section">
+        <p class="bind-hint">{{ $t('auth.bindPhoneHint') }}</p>
+        <div class="bind-row">
+          <input v-model="bindForm.phone" type="tel" :placeholder="$t('auth.phonePlaceholder')" class="input" maxlength="15" />
+        </div>
+        <div class="bind-row">
+          <input v-model="bindForm.code" type="tel" :placeholder="$t('auth.verifyCode')" class="input code-input" maxlength="6" />
+          <button class="send-btn" :disabled="bindCooldown > 0" @click="handleBindSendSms">{{ bindCooldown > 0 ? $t('auth.resendAfter', { s: bindCooldown }) : $t('auth.sendCode') }}</button>
+        </div>
+        <div v-if="bindError" class="error-msg">{{ bindError }}</div>
+        <button class="btn-save" :disabled="bindLoading" @click="handleBindPhone">{{ bindLoading ? '...' : $t('common.confirm') }}</button>
+      </div>
       <div class="menu-item" @click="contactCustomerService">
         <span>💬</span><span>{{ $t('profile.customerService') }}</span><span class="arrow">›</span>
       </div>
@@ -76,6 +92,7 @@ import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
+import { sendSms, bindPhone as bindPhoneApi } from '@/api/auth';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import BottomNav from '@/components/common/BottomNav.vue';
 
@@ -131,6 +148,37 @@ async function handleDeleteAddr(id) {
   try { await deleteAddress(id); await loadAddresses(); } catch (e) { alert(t('profile.deleteFailed')); }
 }
 
+// ---- 手机号绑定 ----
+const showBindPhone = ref(false);
+const bindForm = reactive({ phone: '+855', code: '' });
+const bindCooldown = ref(0);
+const bindLoading = ref(false);
+const bindError = ref('');
+let bindTimer = null;
+
+async function handleBindSendSms() {
+  bindError.value = '';
+  try {
+    await sendSms(bindForm.phone, 'bind_phone');
+    bindCooldown.value = 60;
+    bindTimer = setInterval(() => { bindCooldown.value--; if (bindCooldown.value <= 0) { clearInterval(bindTimer); bindTimer = null; } }, 1000);
+  } catch (err) { bindError.value = err.response?.data?.error?.message || '发送失败'; }
+}
+
+async function handleBindPhone() {
+  bindError.value = '';
+  if (!bindForm.code) { bindError.value = '请输入验证码'; return; }
+  bindLoading.value = true;
+  try {
+    const res = await bindPhoneApi(bindForm.phone, bindForm.code);
+    if (res.success) {
+      userStore.user.phone = res.data.phone;
+      showBindPhone.value = false;
+    }
+  } catch (err) { bindError.value = err.response?.data?.error?.message || '绑定失败'; }
+  finally { bindLoading.value = false; }
+}
+
 function contactCustomerService() {
   const cs = customerService.value;
   if (!cs) return;
@@ -184,4 +232,11 @@ onMounted(() => {
 .lang-btns { display: flex; gap: 8px; }
 .lang-btn { padding: 8px 18px; border-radius: 999px; border: 1px solid var(--border); font-size: 13px; background: var(--surface); }
 .lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.bind-phone-section { padding: 12px 32px; margin-bottom: 8px; }
+.bind-hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.bind-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.bind-row .input { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; }
+.send-btn { padding: 8px 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 8px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+.send-btn:disabled { opacity: 0.5; }
+.error-msg { color: var(--accent-red); font-size: 12px; margin-bottom: 8px; }
 </style>
