@@ -63,6 +63,9 @@ export function createMockTx() {
       findUnique: jest.fn(({ where }) => couponStore.get(where.id) || null),
       _set: (id, data) => couponStore.set(id, { ...data }),
     },
+    stockLog: {
+      create: jest.fn(),
+    },
   };
 
   // $transaction 复用同一个 tx 对象（模拟 Prisma 事务客户端）

@@ -23,6 +23,9 @@ jest.unstable_mockModule('../../src/config/database.js', () => ({
           const p = productStore.get(where.id);
           if (!p) return null;
           if (data.stock?.decrement) p.stock -= data.stock.decrement;
+          else if (data.stock?.increment) p.stock += data.stock.increment;
+          else if (typeof data.stock === 'number') p.stock = data.stock;
+          if (typeof data.status === 'string') p.status = data.status;
           return p;
         }),
       },
@@ -30,6 +33,7 @@ jest.unstable_mockModule('../../src/config/database.js', () => ({
       order: {
         create: jest.fn(({ data }) => ({ id: 'order-1', ...data })),
       },
+      stockLog: { create: jest.fn() },
     })),
     user: { findUnique: jest.fn(() => null), findFirst: jest.fn(() => null) },
   },

@@ -98,12 +98,40 @@ export async function createOrder(userId, body) {
         });
       }
 
-      // 3c. 预扣库存
+      // 3c. 预扣库存 + 写 StockLog
       for (const item of items) {
+        const productBefore = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true },
+        });
+        const newStock = productBefore.stock - item.quantity;
+
         await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
+          data: { stock: newStock, ...(newStock === 0 ? { status: 'inactive' } : {}) },
         });
+
+        await tx.stockLog.create({
+          data: {
+            productId: item.productId,
+            beforeQty: productBefore.stock,
+            afterQty: newStock,
+            changeQty: -item.quantity,
+            reason: 'order_create',
+          },
+        });
+
+        // 库存归零自动下架
+        if (newStock === 0) {
+          await tx.stockLog.create({
+            data: {
+              productId: item.productId,
+              beforeQty: 0, afterQty: 0, changeQty: 0,
+              reason: 'auto_delist',
+              note: '库存归零自动下架',
+            },
+          });
+        }
       }
 
       const shippingFeeUsd = calculateShippingFee(totalUsd, deliveryRule);
@@ -360,11 +388,27 @@ export async function cancelOrder(userId, orderId, reason) {
   }
 
   await prisma.$transaction(async (tx) => {
-    // 恢复库存
+    // 恢复库存 + 写 StockLog
     for (const item of order.items) {
+      const productBefore = await tx.product.findUnique({
+        where: { id: item.productId },
+        select: { stock: true },
+      });
+      const newStock = productBefore.stock + item.quantity;
+
       await tx.product.update({
         where: { id: item.productId },
-        data: { stock: { increment: item.quantity } },
+        data: { stock: newStock },
+      });
+
+      await tx.stockLog.create({
+        data: {
+          productId: item.productId,
+          beforeQty: productBefore.stock,
+          afterQty: newStock,
+          changeQty: +item.quantity,
+          reason: 'order_cancel',
+        },
       });
     }
     // 退还优惠券
