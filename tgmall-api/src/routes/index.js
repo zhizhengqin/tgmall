@@ -8,6 +8,7 @@ import couponRoutes from './coupon.routes.js';
 import paymentRoutes from './payment.routes.js';
 import webhookRoutes from './webhook.routes.js';
 import adminRouter from './admin.routes.js';
+import cityRoutes from './city.routes.js';
 import { adminRouter as shopConfigAdminRouter, publicRouter as shopConfigPublicRouter } from './shopConfig.routes.js';
 
 const router = Router();
@@ -27,6 +28,7 @@ router.use('/payments', paymentRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/admin', adminRouter);
 router.use('/admin', shopConfigAdminRouter);
+router.use('/cities', cityRoutes);
 router.use('/', shopConfigPublicRouter);
 
 // 后续 Sprint: upload
