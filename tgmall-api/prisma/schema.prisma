@@ -19,6 +19,11 @@ model User {
   username    String?     @db.VarChar(100)
   language    String      @default("km") @db.VarChar(5)
   avatarUrl   String?     @map("avatar_url") @db.Text
+  passwordHash String?   @map("password_hash") @db.VarChar(255)
+  tokenVersion Int       @default(0) @map("token_version")
+  cityCode     String?   @map("city_code") @db.VarChar(50)
+  city         City?     @relation(fields: [cityCode], references: [code])
+  passwordHistory PasswordHistory[]
   status      String      @default("active") @db.VarChar(20)
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
@@ -246,6 +251,8 @@ model City {
   nameKm     String   @map("name_km") @db.VarChar(100)
   nameEn     String?  @map("name_en") @db.VarChar(100)
   nameZh     String?  @map("name_zh") @db.VarChar(100)
+  lat         Float?    @db.DoublePrecision
+  lng         Float?    @db.DoublePrecision
   sortOrder  Int      @default(0) @map("sort_order")
   status     String   @default("active") @db.VarChar(20)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -253,6 +260,7 @@ model City {
 
   deliveryRule DeliveryRule?
   addresses    Address[]
+  users       User[]
 
   @@index([status, sortOrder])
   @@map("cities")
@@ -322,4 +330,15 @@ model InventoryCheck {
 
   @@index([productId, checkedAt])
   @@map("inventory_checks")
+}
+
+model PasswordHistory {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id") @db.Uuid
+  hash      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("password_history")
 }
