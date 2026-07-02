@@ -29,7 +29,7 @@
     <div class="banner-wrap" v-if="banners.length > 0">
       <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
         <div v-for="banner in banners" :key="banner.id" class="banner-slide" @click="onBannerClick(banner)">
-          <img :src="banner.imageUrl" :alt="bannerTitle(banner)" class="banner-img" />
+          <img :src="banner.imageUrl" :alt="bannerTitle(banner)" class="banner-img" loading="lazy" decoding="async" />
         </div>
       </div>
       <div class="banner-dots" v-if="banners.length > 1">

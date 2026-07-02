@@ -4,7 +4,7 @@
     <!-- 图片轮播 -->
     <div class="image-gallery">
       <div class="gallery-track" ref="galleryRef" @scroll="onGalleryScroll">
-        <img v-for="(img, i) in product.images" :key="i" :src="img.url" :alt="product.nameKm" class="gallery-img" @click="openLightbox(i)" />
+        <img v-for="(img, i) in product.images" :key="i" :src="img.url" :alt="product.nameKm" class="gallery-img" loading="lazy" decoding="async" @click="openLightbox(i)" />
       </div>
       <div class="gallery-dots" v-if="product.images.length > 1">
         <span v-for="(_, i) in product.images" :key="i" :class="{ active: currentImage === i }" />

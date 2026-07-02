@@ -15,7 +15,7 @@
         <p class="merchant-name">{{ group.merchantName }}</p>
         <div v-for="item in group.items" :key="item.productId" class="cart-item">
           <input type="checkbox" :checked="isChecked(item.productId)" @change="toggleCheck(item.productId)" class="item-check" />
-          <img :src="item.thumbnail" class="item-thumb" />
+          <img :src="item.thumbnail" class="item-thumb" loading="lazy" decoding="async" />
           <div class="item-body">
             <p class="item-name">{{ item.productName }}</p>
             <p class="item-spec" v-if="item.spec">{{ specStr(item.spec) }}</p>

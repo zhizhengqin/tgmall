@@ -21,7 +21,7 @@
           <span class="oc-status" :class="statusClass(o.status)">{{ $t(`orders.status.${o.status}`) }}</span>
         </div>
         <div class="oc-body">
-          <img :src="o.thumbnail" class="oc-thumb" />
+          <img :src="o.thumbnail" class="oc-thumb" loading="lazy" decoding="async" />
           <div class="oc-info">
             <p class="oc-merchant">{{ o.merchantName }}</p>
             <p class="oc-count">{{ $t('orders.itemCount', { count: o.itemCount }) }}</p>

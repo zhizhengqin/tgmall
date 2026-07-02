@@ -26,7 +26,7 @@
       <div class="section">
         <p class="section-title">{{ $t('orders.itemsList') }}</p>
         <div v-for="item in order.items" :key="item.productId" class="item-row">
-          <img :src="item.thumbnail || ''" class="item-img" />
+          <img :src="item.thumbnail || ''" class="item-img" loading="lazy" decoding="async" />
           <div class="item-info">
             <p class="item-name">{{ item.productName }}</p>
             <p class="item-spec" v-if="item.spec && Object.keys(item.spec).length">{{ specStr(item.spec) }}</p>
