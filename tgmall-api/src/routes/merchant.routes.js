@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 import { defaultMerchant } from '../middleware/defaultMerchant.js';
+import inventoryRouter from './inventory.routes.js';
 import { validate } from '../middleware/validate.js';
 import {
   merchantProductSchema,
@@ -39,6 +40,9 @@ adminRouter.post('/products/:id/toggle', ctrl.toggleProduct);
 adminRouter.get('/orders', ctrl.listOrders);
 adminRouter.get('/orders/:id', ctrl.getOrder);
 adminRouter.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
+
+// 库存管理
+adminRouter.use(inventoryRouter);
 
 // 保留空的 merchantRouter 兼容现有引用
 const merchantRouter = Router();
