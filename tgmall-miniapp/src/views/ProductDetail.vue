@@ -265,7 +265,7 @@ onMounted(async () => {
 .sales-badge { font-size: 12px; color: var(--muted); }
 .tag-row { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
 .tag-chip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; line-height: 1.5; }
-.product-name { font-size: 18px; font-weight: 700; margin: 8px 0; line-height: 1.3; }
+.product-name { font-size: 18px; font-weight: 700; margin: 8px 0; line-height: 1.6; }
 .merchant-name { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 .spec-group { margin-bottom: 16px; }
 .spec-label { font-size: 13px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 8px; }

@@ -111,7 +111,7 @@ onMounted(() => { loadWishlist(); });
 .item-link { display: flex; align-items: center; gap: 12px; flex: 1; text-decoration: none; color: inherit; min-width: 0; }
 .item-thumb { width: 72px; height: 72px; border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0; background: oklch(96% 0.003 90); }
 .item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.item-name { font-size: 13px; font-weight: 600; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .remove-btn { padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 12px; flex-shrink: 0; cursor: pointer; }
 .load-more { text-align: center; padding: 16px; color: var(--accent); font-size: 13px; cursor: pointer; }
 </style>

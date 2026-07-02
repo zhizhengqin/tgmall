@@ -162,7 +162,7 @@ onMounted(loadCart);
 .item-check { margin-top: 4px; width: 18px; height: 18px; }
 .item-thumb { width: 80px; height: 80px; border-radius: var(--radius-sm); object-fit: cover; background: oklch(96% 0.003 90); }
 .item-body { flex: 1; min-width: 0; }
-.item-name { font-size: 13px; font-weight: 600; line-height: 1.4; }
+.item-name { font-size: 13px; font-weight: 600; line-height: 1.6; }
 .item-spec { font-size: 11px; color: var(--muted); margin: 4px 0; }
 .item-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
 .qty-spinner { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 4px; }

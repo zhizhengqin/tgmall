@@ -82,6 +82,7 @@ body {
 /* 高棉语模式 */
 body.lang-km {
   font-family: var(--font-khmer);
+  line-height: 1.6;
 }
 body.lang-km .price-usd,
 body.lang-km .price-khr {
