@@ -180,10 +180,13 @@ describe('CheckoutPage delivery rules by city', () => {
     await flushPromises();
 
     expect(shippingRowText(wrapper)).toContain('$2.50');
+    expect(shippingRowText(wrapper)).toContain('៛10,000');
 
     const submitBtn = wrapper.find('.submit-btn');
     expect(submitBtn.attributes('disabled')).toBeUndefined();
     expect(submitBtn.text()).toContain('checkout.submit');
+    expect(submitBtn.text()).toContain('$12.50');
+    expect(submitBtn.text()).toContain('៛50,000');
   });
 
   it('shows free shipping when subtotal meets or exceeds threshold', async () => {
@@ -226,11 +229,14 @@ describe('CheckoutPage delivery rules by city', () => {
     const shortfallRow = wrapper.find('.pb-row.shortfall');
     expect(shortfallRow.exists()).toBe(true);
     expect(shortfallRow.text()).toContain('$5.00');
+    expect(shortfallRow.text()).toContain('៛20,000');
     expect(shortfallRow.text()).toContain('$15.00');
+    expect(shortfallRow.text()).toContain('៛60,000');
 
     const submitBtn = wrapper.find('.submit-btn');
     expect(submitBtn.attributes('disabled')).toBeDefined();
     expect(submitBtn.text()).toContain('$5.00');
+    expect(submitBtn.text()).toContain('៛20,000');
   });
 
   it('total includes subtotal - discount + shipping fee', async () => {
@@ -254,14 +260,18 @@ describe('CheckoutPage delivery rules by city', () => {
 
     // subtotal = 30; discount = 0 (no coupon selected); shipping = 2; total = 32
     expect(totalRowText(wrapper)).toContain('$32.00');
+    expect(totalRowText(wrapper)).toContain('៛128,000');
     expect(wrapper.find('.submit-btn').text()).toContain('$32.00');
+    expect(wrapper.find('.submit-btn').text()).toContain('៛128,000');
 
     // 选择固定金额优惠券后 total = 30 - 5 + 2 = 27
     wrapper.vm.selectedCoupon = { id: 'c2', title: '$5 off', type: 'fixed', value: 5 };
     await flushPromises();
 
     expect(totalRowText(wrapper)).toContain('$27.00');
+    expect(totalRowText(wrapper)).toContain('៛108,000');
     expect(wrapper.find('.submit-btn').text()).toContain('$27.00');
+    expect(wrapper.find('.submit-btn').text()).toContain('៛108,000');
   });
 
   it('silently degrades when delivery rule fails to load', async () => {
