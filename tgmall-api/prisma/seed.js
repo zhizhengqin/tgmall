@@ -34,6 +34,103 @@ async function main() {
 
   console.log(`   用户: ${user1.firstName}, ${user2.firstName}`);
 
+  // ---- 默认城市与配送规则 ----
+  const cityPhnomPenh = await prisma.city.upsert({
+    where: { code: 'phnom_penh' },
+    update: {},
+    create: {
+      code: 'phnom_penh',
+      nameKm: 'ភ្នំពេញ',
+      nameEn: 'Phnom Penh',
+      nameZh: '金边',
+      sortOrder: 1,
+      status: 'active',
+    },
+  });
+  await prisma.city.upsert({
+    where: { code: 'siem_reap' },
+    update: {},
+    create: {
+      code: 'siem_reap',
+      nameKm: 'សៀមរាប',
+      nameEn: 'Siem Reap',
+      nameZh: '暹粒',
+      sortOrder: 2,
+      status: 'active',
+    },
+  });
+
+  await prisma.deliveryRule.upsert({
+    where: { cityCode: 'phnom_penh' },
+    update: {},
+    create: {
+      cityCode: 'phnom_penh',
+      minOrderAmountUsd: 4.00,
+      shippingFeeUsd: 1.00,
+      freeShippingThresholdUsd: 0,
+      estimatedDeliveryDays: 2,
+      status: 'active',
+    },
+  });
+  await prisma.deliveryRule.upsert({
+    where: { cityCode: 'siem_reap' },
+    update: {},
+    create: {
+      cityCode: 'siem_reap',
+      minOrderAmountUsd: 6.00,
+      shippingFeeUsd: 2.00,
+      freeShippingThresholdUsd: 30.00,
+      estimatedDeliveryDays: 3,
+      status: 'active',
+    },
+  });
+
+  // ---- 默认品类 ----
+  const categories = [
+    { code: 'fashion', nameKm: 'សំលៀកបំពាក់', nameEn: 'Fashion', nameZh: '时尚', iconUrl: 'https://cdn.xxx.com/icons/fashion.svg', sortOrder: 1 },
+    { code: 'beauty', nameKm: 'គ្រឿងសម្អាង', nameEn: 'Beauty', nameZh: '美妆', iconUrl: 'https://cdn.xxx.com/icons/beauty.svg', sortOrder: 2 },
+    { code: 'electronics', nameKm: 'គ្រឿងអេឡិចត្រូនិច', nameEn: 'Electronics', nameZh: '电子', iconUrl: 'https://cdn.xxx.com/icons/electronics.svg', sortOrder: 3 },
+    { code: 'home', nameKm: 'គ្រឿងសង្ហារិម', nameEn: 'Home', nameZh: '家居', iconUrl: 'https://cdn.xxx.com/icons/home.svg', sortOrder: 4 },
+  ];
+  for (const c of categories) {
+    await prisma.category.upsert({ where: { code: c.code }, update: {}, create: c });
+  }
+
+  // ---- 默认 Banner ----
+  await prisma.banner.createMany({
+    data: [
+      {
+        titleKm: 'ប្រូម៉ូសិនពិសេស',
+        titleEn: 'Special Promotion',
+        titleZh: '特价促销',
+        imageUrl: 'https://placehold.co/800x400/c4932a/white?text=Promo',
+        linkType: 'url',
+        linkTarget: 'https://t.me/xhzmall_bot',
+        sortOrder: 1,
+        status: 'active',
+      },
+    ],
+    skipDuplicates: false,
+  });
+
+  // ---- 默认客服 ----
+  await prisma.customerService.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      nameKm: 'ផ្នែកជំនួយអតិថិជន',
+      nameEn: 'Customer Support',
+      nameZh: '在线客服',
+      telegramUsername: 'xhzmall_support',
+      phone: '+85512345678',
+      workHours: '8:00 - 20:00',
+      isDefault: true,
+      sortOrder: 1,
+      status: 'active',
+    },
+  });
+
   // 2. 创建测试商家
   const merchant1 = await prisma.merchant.create({
     data: {
@@ -534,6 +631,7 @@ async function main() {
         phone: '+85512345001',
         province: 'ភ្នំពេញ',
         district: 'ខណ្ឌបឹងកេងកង',
+        cityCode: 'phnom_penh',
         detail: 'ផ្ទះលេខ 123 ផ្លូវ 456',
         isDefault: true,
       },
@@ -543,6 +641,7 @@ async function main() {
         phone: '+85512345001',
         province: 'សៀមរាប',
         district: 'ក្រុងសៀមរាប',
+        cityCode: 'siem_reap',
         detail: 'ផ្ទះលេខ 78 ផ្លូវជាតិលេខ 6',
         isDefault: false,
       },
@@ -552,6 +651,7 @@ async function main() {
         phone: '+85512345002',
         province: 'ភ្នំពេញ',
         district: 'ខណ្ឌដូនពេញ',
+        cityCode: 'phnom_penh',
         detail: 'No. 200, Street 13',
         isDefault: true,
       },

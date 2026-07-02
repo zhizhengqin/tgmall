@@ -92,3 +92,22 @@
 - 所有用户界面必须三语支持（高棉语/英语/中文），默认高棉语。
 - 所有价格必须 USD/KHR 双币种同时显示。手机号 +855 格式校验。
 - 弱网环境适配：图片 WebP + CDN + 懒加载，首屏 < 3 秒（4G），< 5 秒（3G）。
+
+## Skill routing
+
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+
+Key routing rules:
+- Product ideas/brainstorming → invoke /office-hours
+- Strategy/scope → invoke /plan-ceo-review
+- Architecture → invoke /plan-eng-review
+- Design system/plan review → invoke /design-consultation or /plan-design-review
+- Full review pipeline → invoke /autoplan
+- Bugs/errors → invoke /investigate
+- QA/testing site behavior → invoke /qa or /qa-only
+- Code review/diff check → invoke /review
+- Visual polish → invoke /design-review
+- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Save progress → invoke /context-save
+- Resume context → invoke /context-restore
+- Author a backlog-ready spec/issue → invoke /spec
