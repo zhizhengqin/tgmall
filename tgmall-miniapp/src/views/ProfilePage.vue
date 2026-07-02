@@ -168,12 +168,12 @@ async function handleBindSendSms() {
     await sendSms(bindForm.phone, 'bind_phone');
     bindCooldown.value = 60;
     bindTimer = setInterval(() => { bindCooldown.value--; if (bindCooldown.value <= 0) { clearInterval(bindTimer); bindTimer = null; } }, 1000);
-  } catch (err) { bindError.value = err.response?.data?.error?.message || '发送失败'; }
+  } catch (err) { bindError.value = err.response?.data?.error?.message || t('error.sendFailed'); }
 }
 
 async function handleBindPhone() {
   bindError.value = '';
-  if (!bindForm.code) { bindError.value = '请输入验证码'; return; }
+  if (!bindForm.code) { bindError.value = t('error.enterCode'); return; }
   bindLoading.value = true;
   try {
     const res = await bindPhoneApi(bindForm.phone, bindForm.code);
@@ -181,7 +181,7 @@ async function handleBindPhone() {
       userStore.user.phone = res.data.phone;
       showBindPhone.value = false;
     }
-  } catch (err) { bindError.value = err.response?.data?.error?.message || '绑定失败'; }
+  } catch (err) { bindError.value = err.response?.data?.error?.message || t('error.bindFailed'); }
   finally { bindLoading.value = false; }
 }
 
