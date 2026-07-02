@@ -164,5 +164,31 @@
     "back": "Back",
     "noMore": "No more"
   },
-  "language": "Language"
+  "language": "Language",
+  "inventory": {
+    "title": "Inventory",
+    "search": "Search products",
+    "stock": "Stock",
+    "alertThreshold": "Alert threshold",
+    "status": "Status",
+    "actions": "Actions",
+    "adjustStock": "Adjust stock",
+    "newQty": "New quantity",
+    "note": "Note",
+    "stockLogs": "Change history",
+    "reason": "Reason",
+    "changeQty": "Change",
+    "operator": "Operator",
+    "check": "Check",
+    "checkTitle": "Inventory check",
+    "selectProduct": "Select product",
+    "systemQty": "System quantity",
+    "actualQty": "Actual quantity",
+    "diff": "Difference",
+    "checkedBy": "Checked by",
+    "lowStockAlert": "Low stock alert",
+    "filterLowStock": "Low stock only",
+    "noThreshold": "Not set",
+    "export": "Export CSV"
+  }
 }

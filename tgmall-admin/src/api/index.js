@@ -72,3 +72,10 @@ export const createCustomerService = (data) => api.post('/admin/customer-service
 export const updateCustomerService = (id, data) => api.put(`/admin/customer-services/${id}`, data);
 export const toggleCustomerService = (id) => api.post(`/admin/customer-services/${id}/toggle`);
 export const setDefaultCustomerService = (id) => api.post(`/admin/customer-services/${id}/set-default`);
+
+// ── 库存管理 ──
+export const getInventory = (params) => api.get('/admin/inventory', { params });
+export const adjustStock = (id, data) => api.put(`/admin/products/${id}/stock`, data);
+export const getStockLogs = (id, params) => api.get(`/admin/products/${id}/stock-logs`, { params });
+export const checkInventory = (data) => api.post('/admin/inventory/check', data);
+export const setAlertThreshold = (id, data) => api.put(`/admin/products/${id}/alert-threshold`, data);

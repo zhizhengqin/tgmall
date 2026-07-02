@@ -166,5 +166,31 @@
     "back": "返回",
     "noMore": "没有更多了"
   },
-  "language": "语言"
+  "language": "语言",
+  "inventory": {
+    "title": "库存管理",
+    "search": "搜索商品",
+    "stock": "库存",
+    "alertThreshold": "预警阈值",
+    "status": "状态",
+    "actions": "操作",
+    "adjustStock": "调整库存",
+    "newQty": "新库存数量",
+    "note": "备注",
+    "stockLogs": "变更历史",
+    "reason": "原因",
+    "changeQty": "变更量",
+    "operator": "操作人",
+    "check": "盘点",
+    "checkTitle": "库存盘点",
+    "selectProduct": "选择商品",
+    "systemQty": "系统库存",
+    "actualQty": "实盘数量",
+    "diff": "差异",
+    "checkedBy": "盘点人",
+    "lowStockAlert": "库存不足",
+    "filterLowStock": "仅显示低库存",
+    "noThreshold": "未设置",
+    "export": "导出CSV"
+  }
 }

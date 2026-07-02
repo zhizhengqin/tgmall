@@ -23,6 +23,7 @@ export const merchantProductSchema = z.object({
   price_usd: z.number().positive('价格必须大于0').max(999999.99, '价格超出上限'),
   price_khr: z.number().int('瑞尔必须是整数').positive('价格必须大于0'),
   stock: z.number().int('库存必须是整数').min(0, '库存不能为负数'),
+  alert_threshold: z.number().int('预警阈值必须是整数').min(0).optional().nullable(),
   images: z.array(z.object({
     url: z.string().url('图片URL格式无效'),
     thumb_url: z.string().url('缩略图URL格式无效').optional(),

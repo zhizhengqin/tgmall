@@ -8,6 +8,7 @@
         <el-form-item :label="$t('products.priceUsd')"><el-input-number v-model="f.priceUsd" :min="0.01" :precision="2" /></el-form-item>
         <el-form-item :label="$t('products.priceKhr')"><el-input-number v-model="f.priceKhr" :min="0" :step="100" /></el-form-item>
         <el-form-item :label="$t('products.stock')"><el-input-number v-model="f.stock" :min="0" /></el-form-item>
+        <el-form-item :label="$t('inventory.alertThreshold')"><el-input-number v-model="f.alertThreshold" :min="0" placeholder="留空表示不预警" /></el-form-item>
         <el-form-item :label="$t('products.category')"><el-input v-model="f.category" /></el-form-item>
         <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button></el-form-item>
         <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)">{{im.url}}</el-tag></div>
@@ -22,7 +23,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
 const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref('');
-const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, category:'', images:[], specs:[] });
+const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[] });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
 async function save() { saving.value = true; isEdit ? await updateProduct(route.params.id, f) : await createProduct(f); router.push('/products'); }
 onMounted(async () => { if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); } });

@@ -11,6 +11,7 @@ const routes = [
   { path: '/settings/delivery-rules', name: 'DeliveryRules', component: () => import('@/pages/DeliveryRulesPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/customer-services', name: 'CustomerServices', component: () => import('@/pages/CustomerServicesPage.vue'), meta: { requiresAuth: true } },
   { path: '/products', name: 'Products', component: () => import('@/pages/ProductsPage.vue'), meta: { requiresAuth: true } },
+  { path: '/inventory', name: 'Inventory', component: () => import('@/pages/InventoryPage.vue'), meta: { requiresAuth: true } },
   { path: '/products/new', name: 'ProductNew', component: () => import('@/pages/ProductFormPage.vue'), meta: { requiresAuth: true } },
   { path: '/products/:id', name: 'ProductEdit', component: () => import('@/pages/ProductFormPage.vue'), meta: { requiresAuth: true }, props: true },
   { path: '/orders', name: 'Orders', component: () => import('@/pages/OrdersPage.vue'), meta: { requiresAuth: true } },

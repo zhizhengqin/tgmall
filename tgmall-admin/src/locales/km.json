@@ -191,5 +191,31 @@
     "back": "ត្រលប់",
     "noMore": "អស់ហើយ"
   },
-  "language": "ភាសា"
+  "language": "ភាសា",
+  "inventory": {
+    "title": "គ្រប់គ្រងស្តុក",
+    "search": "ស្វែងរកផលិតផល",
+    "stock": "ស្តុក",
+    "alertThreshold": "កម្រិតជូនដំណឹង",
+    "status": "ស្ថានភាព",
+    "actions": "សកម្មភាព",
+    "adjustStock": "កែតម្រូវស្តុក",
+    "newQty": "ចំនួនថ្មី",
+    "note": "ចំណាំ",
+    "stockLogs": "ប្រវត្តិនៃការផ្លាស់ប្តូរ",
+    "reason": "មូលហេតុ",
+    "changeQty": "ការផ្លាស់ប្តូរ",
+    "operator": "ប្រតិបត្តិករ",
+    "check": "ត្រួតពិនិត្យ",
+    "checkTitle": "ត្រួតពិនិត្យស្តុក",
+    "selectProduct": "ជ្រើសរើសផលិតផល",
+    "systemQty": "ចំនួនក្នុងប្រព័ន្ធ",
+    "actualQty": "ចំនួនពិត",
+    "diff": "ភាពខុសគ្នា",
+    "checkedBy": "ពិនិត្យដោយ",
+    "lowStockAlert": "ស្តុកមិនគ្រប់",
+    "filterLowStock": "បង្ហាញតែស្តុកទាប",
+    "noThreshold": "មិនបានកំណត់",
+    "export": "នាំចេញ CSV"
+  }
 }
