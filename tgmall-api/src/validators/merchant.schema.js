@@ -22,6 +22,13 @@ export const merchantProductSchema = z.object({
     values: z.array(z.string()),
   })).max(20, '最多20个规格').optional().default([]),
   category: z.string().min(1, '品类必填').max(50, '品类最长50字符'),
+  tags: z.array(z.object({
+    textKm: z.string(),
+    textEn: z.string().optional(),
+    textZh: z.string().optional(),
+    color: z.string(),
+    bg: z.string(),
+  })).max(6, '最多6个标签').optional().default([]),
   status: z.enum(['active', 'inactive']).optional().default('active'),
 });
 

@@ -15,6 +15,7 @@ export async function list(req, res, next) {
       q,
       sort,
       language: req.headers['accept-language'] || 'km',
+      userId: req.user?.userId,
     });
 
     res.json({
@@ -35,7 +36,7 @@ export async function list(req, res, next) {
 
 export async function detail(req, res, next) {
   try {
-    const product = await productService.getProductById(req.params.id);
+    const product = await productService.getProductById(req.params.id, req.user?.userId);
     if (!product) {
       return next(new AppError('商品不存在', 404, 'NOT_FOUND'));
     }
