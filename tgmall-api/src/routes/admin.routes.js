@@ -9,6 +9,7 @@ import {
 } from '../validators/merchant.schema.js';
 import * as ctrl from '../controllers/merchant.controller.js';
 import * as adminCtrl from '../controllers/admin.controller.js';
+import * as feedbackCtrl from '../controllers/feedback.controller.js';
 import inventoryRouter from './inventory.routes.js';
 
 const router = Router();
@@ -35,5 +36,9 @@ router.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
 
 // 库存管理
 router.use(inventoryRouter);
+
+// 反馈工单管理
+router.get('/feedback', feedbackCtrl.list);
+router.patch('/feedback/:id/resolve', feedbackCtrl.resolve);
 
 export default router;
