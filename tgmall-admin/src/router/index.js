@@ -16,6 +16,8 @@ const routes = [
   { path: '/products/:id', name: 'ProductEdit', component: () => import('@/pages/ProductFormPage.vue'), meta: { requiresAuth: true }, props: true },
   { path: '/orders', name: 'Orders', component: () => import('@/pages/OrdersPage.vue'), meta: { requiresAuth: true } },
   { path: '/orders/:id', name: 'OrderDetail', component: () => import('@/pages/OrderDetailPage.vue'), meta: { requiresAuth: true }, props: true },
+  { path: '/coupons', name: 'Coupons', component: () => import('@/pages/CouponsPage.vue'), meta: { requiresAuth: true } },
+  { path: '/feedback', name: 'Feedback', component: () => import('@/pages/FeedbackPage.vue'), meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
 ];
 

@@ -6,6 +6,8 @@
     <el-menu-item index="/inventory"><el-icon><Box /></el-icon><span>{{ $t('inventory.title') }}</span></el-menu-item>
     <el-menu-item index="/orders"><el-icon><List /></el-icon><span>{{ $t('nav.orders') }}</span></el-menu-item>
     <el-menu-item index="/users"><el-icon><User /></el-icon><span>{{ $t('nav.users') }}</span></el-menu-item>
+    <el-menu-item index="/coupons"><el-icon><Ticket /></el-icon><span>{{ $t('nav.coupons') }}</span></el-menu-item>
+    <el-menu-item index="/feedback"><el-icon><ChatLineSquare /></el-icon><span>{{ $t('nav.feedback') }}</span></el-menu-item>
     <el-sub-menu index="/settings">
       <template #title>
         <el-icon><Setting /></el-icon>
@@ -19,7 +21,7 @@
     </el-sub-menu>
   </el-menu>
 </template>
-<script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, User, Goods, List, Setting, Box } from '@element-plus/icons-vue'; const route = useRoute();</script>
+<script setup>import { useRoute } from 'vue-router'; import { DataAnalysis, User, Goods, List, Setting, Box, Ticket, ChatLineSquare } from '@element-plus/icons-vue'; const route = useRoute();</script>
 <style scoped>
 .sidebar { width: 220px; min-height: 100vh; position: fixed; left: 0; top: 0; border-right: none; }
 .logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,.1); }

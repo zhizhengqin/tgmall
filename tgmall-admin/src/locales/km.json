@@ -7,6 +7,8 @@
     "merchants": "ហាង",
     "users": "អ្នកប្រើ",
     "settings": "ការកំណត់",
+    "coupons": "គោលប៉ុន្មាន",
+    "feedback": "មតិយោបល់",
     "logout": "ចាកចេញ"
   },
   "dashboard": {
@@ -152,7 +154,9 @@
     "publishNow": "ដាក់លក់ភ្លាម",
     "nameKm": "ឈ្មោះ (ភាសាខ្មែរ)",
     "nameEn": "ឈ្មោះ (អង់គ្លេស)",
-    "nameZh": "ឈ្មោះ (ចិន)"
+    "nameZh": "ឈ្មោះ (ចិន)",
+    "tags": "ស្លាក",
+    "addTag": "បន្ថែមស្លាក"
   },
   "orders": {
     "title": "កម្មង",
@@ -189,7 +193,11 @@
     "error": "មានបញ្ហា",
     "success": "ជោគជ័យ",
     "back": "ត្រលប់",
-    "noMore": "អស់ហើយ"
+    "noMore": "អស់ហើយ",
+    "actions": "សកម្មភាព",
+    "all": "ទាំងអស់",
+    "enable": "បើក",
+    "disable": "បិទ"
   },
   "language": "ភាសា",
   "inventory": {
@@ -216,6 +224,29 @@
     "lowStockAlert": "ស្តុកមិនគ្រប់",
     "filterLowStock": "បង្ហាញតែស្តុកទាប",
     "noThreshold": "មិនបានកំណត់",
-    "export": "នាំចេញ CSV"
+      "export": "នាំចេញ CSV"
+  },
+  "coupons": {
+    "titleKm": "ចំណងជើង (ខ្មែរ)",
+    "titleEn": "ចំណងជើង (អង់គ្លេស)",
+    "titleZh": "ចំណងជើង (ចិន)",
+    "type": "ប្រភេទ",
+    "value": "តម្លៃ",
+    "minSpend": "ចំណាយអប្បបរមា",
+    "totalQty": "ចំនួនសរុប",
+    "startDate": "ថ្ងៃចាប់ផ្តើម",
+    "endDate": "ថ្ងៃបញ្ចប់",
+    "status": "ស្ថានភាព",
+    "used": "ប្រើប្រាស់"
+  },
+  "feedback": {
+    "pending": "រង់ចាំ",
+    "resolved": "បានដោះស្រាយ",
+    "user": "អ្នកប្រើ",
+    "content": "ខ្លឹមសារ",
+    "status": "ស្ថានភាព",
+    "date": "កាលបរិច្ឆេទ",
+    "images": "រូបភាព",
+    "resolve": "ដោះស្រាយ"
   }
 }

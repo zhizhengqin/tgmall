@@ -7,6 +7,8 @@
     "merchants": "Merchants",
     "users": "Users",
     "settings": "Settings",
+    "coupons": "Coupons",
+    "feedback": "Feedback",
     "logout": "Logout"
   },
   "dashboard": {
@@ -137,7 +139,9 @@
     "inactive": "Inactive", "edit": "Edit", "images": "Images",
     "createTitle": "Add Product", "editTitle": "Edit Product",
     "saveAsDraft": "Save Draft", "publishNow": "Publish",
-    "nameKm": "Name (Khmer)", "nameEn": "Name (English)", "nameZh": "Name (Chinese)"
+    "nameKm": "Name (Khmer)", "nameEn": "Name (English)", "nameZh": "Name (Chinese)",
+    "tags": "Tags",
+    "addTag": "Add Tag"
   },
   "orders": {
     "title": "Orders", "all": "All",
@@ -162,7 +166,11 @@
     "error": "Error",
     "success": "Success",
     "back": "Back",
-    "noMore": "No more"
+    "noMore": "No more",
+    "actions": "Actions",
+    "all": "All",
+    "enable": "Enable",
+    "disable": "Disable"
   },
   "language": "Language",
   "inventory": {
@@ -190,5 +198,28 @@
     "filterLowStock": "Low stock only",
     "noThreshold": "Not set",
     "export": "Export CSV"
+  },
+  "coupons": {
+    "titleKm": "Title (Khmer)",
+    "titleEn": "Title (English)",
+    "titleZh": "Title (Chinese)",
+    "type": "Type",
+    "value": "Value",
+    "minSpend": "Min Spend",
+    "totalQty": "Total Qty",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": "Status",
+    "used": "Used"
+  },
+  "feedback": {
+    "pending": "Pending",
+    "resolved": "Resolved",
+    "user": "User",
+    "content": "Content",
+    "status": "Status",
+    "date": "Date",
+    "images": "Images",
+    "resolve": "Resolve"
   }
 }
