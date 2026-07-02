@@ -33,35 +33,8 @@ model User {
   @@map("users")
 }
 
-model Merchant {
-  id             String    @id @default(uuid()) @db.Uuid
-  nameKm         String    @map("name_km") @db.VarChar(200)
-  nameEn         String?   @map("name_en") @db.VarChar(200)
-  ownerName      String    @map("owner_name") @db.VarChar(100)
-  phone          String    @unique @db.VarChar(20)
-  address        String    @db.Text
-  category       String    @db.VarChar(50)
-  description    String?   @db.Text
-  status         String    @default("pending") @db.VarChar(20)
-  commissionRate Decimal   @default(3.0) @map("commission_rate") @db.Decimal(3,1)
-  rejectReason   String?   @map("reject_reason") @db.Text
-  telegramId     BigInt?   @map("telegram_id")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
-
-  products Product[]
-  orders   Order[]
-  coupons  Coupon[]
-
-  @@index([status])
-  @@index([category])
-  @@map("merchants")
-}
-
 model Product {
   id            String   @id @default(uuid()) @db.Uuid
-  merchantId    String   @map("merchant_id") @db.Uuid
-  merchant      Merchant @relation(fields: [merchantId], references: [id])
   nameKm        String   @map("name_km") @db.VarChar(300)
   nameEn        String?  @map("name_en") @db.VarChar(300)
   nameZh        String?  @map("name_zh") @db.VarChar(300)
@@ -84,7 +57,6 @@ model Product {
   stockLogs       StockLog[]
   inventoryChecks InventoryCheck[]
 
-  @@index([merchantId])
   @@index([category, status, createdAt(sort: Desc)])
   @@index([priceUsd])
   @@index([salesCount(sort: Desc)])
@@ -96,8 +68,6 @@ model Order {
   orderNumber     String    @unique @map("order_number") @db.VarChar(30)
   userId          String    @map("user_id") @db.Uuid
   user            User      @relation(fields: [userId], references: [id])
-  merchantId      String    @map("merchant_id") @db.Uuid
-  merchant        Merchant  @relation(fields: [merchantId], references: [id])
   totalUsd        Decimal   @map("total_usd") @db.Decimal(10,2)
   totalKhr        Int       @map("total_khr")
   discountUsd     Decimal   @default(0) @map("discount_usd") @db.Decimal(10,2)
@@ -122,7 +92,7 @@ model Order {
   items OrderItem[]
 
   @@index([userId, createdAt(sort: Desc)])
-  @@index([merchantId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
   @@index([status])
   @@index([paymentTimeout])
   @@map("orders")
@@ -147,8 +117,6 @@ model OrderItem {
 
 model Coupon {
   id         String       @id @default(uuid()) @db.Uuid
-  merchantId String?      @map("merchant_id") @db.Uuid
-  merchant   Merchant?    @relation(fields: [merchantId], references: [id])
   titleKm    String       @map("title_km") @db.VarChar(200)
   titleEn    String?      @map("title_en") @db.VarChar(200)
   titleZh    String?      @map("title_zh") @db.VarChar(200)
