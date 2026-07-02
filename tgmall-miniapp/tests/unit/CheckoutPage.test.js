@@ -62,12 +62,24 @@ vi.mock('@/api/orders.js', () => ({
   createOrder: () => createOrder(),
 }));
 
+// checkout keys that include named interpolation; others fall back to the key itself
+const checkoutMessages = {
+  'checkout.shortfall': '还差 {amount}（满 {min} 起送）',
+  'checkout.submitShortfall': '差 {amount} 起送',
+};
+
+function mockT(key, params) {
+  let str = checkoutMessages[key] ?? key;
+  if (!params) return str;
+  return Object.entries(params).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), str);
+}
+
 // ---- helpers ----
 function mountCheckoutPage() {
   return mount(CheckoutPage, {
     global: {
       mocks: {
-        $t: (key) => key,
+        $t: mockT,
       },
     },
     attachTo: document.body,
@@ -84,7 +96,7 @@ function setCheckoutItems(items) {
 }
 
 function shippingRowText(wrapper) {
-  return wrapper.findAll('.pb-row').find((r) => r.text().includes('配送费'))?.text() || '';
+  return wrapper.findAll('.pb-row').find((r) => r.text().includes('checkout.shippingFee'))?.text() || '';
 }
 
 function totalRowText(wrapper) {
@@ -171,7 +183,7 @@ describe('CheckoutPage delivery rules by city', () => {
 
     const submitBtn = wrapper.find('.submit-btn');
     expect(submitBtn.attributes('disabled')).toBeUndefined();
-    expect(submitBtn.text()).toContain('提交订单');
+    expect(submitBtn.text()).toContain('checkout.submit');
   });
 
   it('shows free shipping when subtotal meets or exceeds threshold', async () => {
@@ -193,7 +205,7 @@ describe('CheckoutPage delivery rules by city', () => {
     wrapper = mountCheckoutPage();
     await flushPromises();
 
-    expect(shippingRowText(wrapper)).toContain('免运费');
+    expect(shippingRowText(wrapper)).toContain('checkout.freeShipping');
   });
 
   it('disables submit and shows shortfall when below minimum order amount', async () => {
@@ -213,12 +225,12 @@ describe('CheckoutPage delivery rules by city', () => {
 
     const shortfallRow = wrapper.find('.pb-row.shortfall');
     expect(shortfallRow.exists()).toBe(true);
-    expect(shortfallRow.text()).toContain('还差 $5.00');
-    expect(shortfallRow.text()).toContain('满 $15.00 起送');
+    expect(shortfallRow.text()).toContain('$5.00');
+    expect(shortfallRow.text()).toContain('$15.00');
 
     const submitBtn = wrapper.find('.submit-btn');
     expect(submitBtn.attributes('disabled')).toBeDefined();
-    expect(submitBtn.text()).toContain('差 $5.00 起送');
+    expect(submitBtn.text()).toContain('$5.00');
   });
 
   it('total includes subtotal - discount + shipping fee', async () => {
@@ -263,7 +275,7 @@ describe('CheckoutPage delivery rules by city', () => {
     wrapper = mountCheckoutPage();
     await flushPromises();
 
-    expect(shippingRowText(wrapper)).toContain('免运费');
+    expect(shippingRowText(wrapper)).toContain('checkout.freeShipping');
     expect(wrapper.find('.submit-btn').exists()).toBe(true);
     expect(wrapper.find('.pb-row.shortfall').exists()).toBe(false);
   });

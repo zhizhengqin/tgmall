@@ -51,19 +51,28 @@
         <div class="pb-row"><span>商品总价</span><span>${{ subtotal.toFixed(2) }}</span></div>
         <div class="pb-row" v-if="discount > 0"><span>优惠券</span><span class="discount">-${{ discount.toFixed(2) }}</span></div>
         <div class="pb-row">
-          <span>配送费</span>
-          <span>{{ shippingFee === 0 ? '免运费' : '$' + shippingFee.toFixed(2) }}</span>
+          <span>{{ $t('checkout.shippingFee') }}</span>
+          <PriceDisplay v-if="shippingFee > 0" :priceUsd="shippingFee" :priceKhr="shippingFeeKhr" sm />
+          <span v-else>{{ $t('checkout.freeShipping') }}</span>
         </div>
         <div v-if="shortfall > 0" class="pb-row shortfall">
-          <span>起送金额</span>
-          <span>还差 ${{ shortfall.toFixed(2) }}（满 ${{ minOrderAmount.toFixed(2) }} 起送）</span>
+          <span>{{ $t('checkout.minOrder') }}</span>
+          <span>{{ $t('checkout.shortfall', { amount: formatPrice(shortfall), min: formatPrice(minOrderAmount) }) }}</span>
         </div>
         <div class="pb-row total"><span>合计</span><PriceDisplay :priceUsd="total" :priceKhr="totalKhr" /></div>
       </div>
 
       <!-- 提交按钮 -->
       <button class="submit-btn" @click="submitOrder" :disabled="!canSubmit">
-        {{ shortfall > 0 ? `差 $${shortfall.toFixed(2)} 起送` : (submitting ? '提交中...' : `提交订单 · $${total.toFixed(2)}`) }}
+        <template v-if="shortfall > 0">
+          {{ $t('checkout.submitShortfall', { amount: formatPrice(shortfall) }) }}
+        </template>
+        <template v-else-if="submitting">
+          {{ $t('checkout.submitting') }}
+        </template>
+        <template v-else>
+          {{ $t('checkout.submit') }} · <PriceDisplay :priceUsd="total" :priceKhr="totalKhr" sm />
+        </template>
       </button>
     </template>
 
@@ -120,12 +129,14 @@ const discount = computed(() => {
 
 const shippingFee = computed(() => {
   if (!deliveryRule.value) return 0;
-  const threshold = Number(deliveryRule.value.freeShippingThresholdUsd);
+  const threshold = Number(deliveryRule.value.freeShippingThresholdUsd ?? 0);
   if (threshold > 0 && subtotal.value >= threshold) return 0;
-  return Number(deliveryRule.value.shippingFeeUsd);
+  return Number(deliveryRule.value.shippingFeeUsd ?? 0);
 });
 
-const minOrderAmount = computed(() => Number(deliveryRule.value?.minOrderAmountUsd || 0));
+const shippingFeeKhr = computed(() => Math.round(shippingFee.value * 4000));
+
+const minOrderAmount = computed(() => Number(deliveryRule.value?.minOrderAmountUsd ?? 0));
 
 const shortfall = computed(() => {
   if (!minOrderAmount.value) return 0;
@@ -134,6 +145,10 @@ const shortfall = computed(() => {
 
 const total = computed(() => Math.max(0, subtotal.value - discount.value + shippingFee.value));
 const totalKhr = computed(() => Math.round(total.value * 4000));
+
+function formatPrice(usd) {
+  return `$${usd.toFixed(2)} / ៛${Math.round(usd * 4000).toLocaleString()}`;
+}
 
 const canSubmit = computed(() =>
   selectedAddress.value && !submitting.value && shortfall.value <= 0

@@ -4,6 +4,7 @@
   "home": { "searchPlaceholder": "ស្វែងរកទំនិញ...", "all": "ទាំងអស់", "fashion": "សំលៀក", "beauty": "សម្រស់", "electronics": "អេឡិចត្រូនិច", "home": "គ្រឿងសង្ហារិម", "noProducts": "មិនទាន់មានទំនិញ", "comingSoon": "ទំនិញកំពុងឡើង សូមរង់ចាំ", "hotProducts": "ទំនិញពេញនិយម" },
   "product": { "addToCart": "ដាក់ក្នុងកន្ត្រក", "buyNow": "ទិញឥឡូវនេះ", "soldOut": "អស់", "stockLeft": "សល់ {count} ប៉ុណ្ណោះ", "description": "ការពិពណ៌នា" },
   "cart": { "title": "កន្ត្រកទំនិញ", "empty": "កន្ត្រកទំនិញទទេ", "goShopping": "ទៅទិញឥឡូវនេះ", "total": "សរុប", "checkout": "ទូទាត់", "selectAll": "ជ្រើសរើសទាំងអស់", "remove": "លុប", "checkoutCount": "ទូទាត់ ({count})", "stockLeft": "សល់ {count} ប៉ុណ្ណោះ", "insufficient": "ស្តុកមិនគ្រប់គ្រាន់! អតិបរមា {count}", "confirmRemove": "លុបទំនិញនេះ?" },
+  "checkout": { "shippingFee": "ថ្លៃដឹកជញ្ជូន", "freeShipping": "ដឹកជញ្ជូនឥតគិតថ្លៃ", "minOrder": "ចំនួនទិញអប្បបរមា", "shortfall": "នៅខ្វះ {amount} (អប្ប. {min})", "submit": "បញ្ជាទិញ", "submitShortfall": "នៅខ្វះ {amount}", "submitting": "កំពុងដាក់បញ្ជា..." },
   "city": { "selectTitle": "ជ្រើសរើសទីក្រុង" },
   "common": { "loading": "កំពុងផ្ទុក...", "error": "មានបញ្ហា", "loadError": "ផ្ទុកមិនបានជោគជ័យ", "retry": "ព្យាយាមម្តងទៀត", "noMore": "អស់ហើយ", "confirm": "យល់ព្រម", "cancel": "បោះបង់", "save": "រក្សាទុក", "delete": "លុប" },
   "profile": {
