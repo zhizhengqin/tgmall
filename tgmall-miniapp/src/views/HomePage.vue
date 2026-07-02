@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
@@ -152,6 +152,17 @@ const isLoading = ref(false);
 const loadError = ref('');
 const currentBanner = ref(0);
 const touchStartX = ref(0);
+
+// 监听 URL 分类参数，支持 Banner category 跳转时自动切换品类
+watch(
+  () => route.query.category,
+  (newCategory) => {
+    const cat = Array.isArray(newCategory) ? newCategory[0] : newCategory || 'all';
+    if (activeCategory.value === cat) return;
+    activeCategory.value = cat;
+    refreshProducts();
+  }
+);
 
 const trackStyle = computed(() => ({
   transform: `translateX(-${currentBanner.value * 100}%)`,
