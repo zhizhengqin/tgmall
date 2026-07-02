@@ -1,10 +1,11 @@
-// 订单服务单元测试 — TC-O-001~007
+// 订单服务单元测试 — TC-O-001~007 (V2 公司自营模式)
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { createMockTx, createMockRedis } from '../helpers/mocks.js';
 
 /**
  * 模拟 createOrder 核心逻辑（从 order.service.js 提取）
  * 测试：库存校验、优惠券应用、订单创建、库存扣减
+ * V2：无商家隔离，任意商品可合并下单
  */
 async function createOrderTest(tx, redis, userId, { items, shippingAddressId, couponId, paymentMethod }) {
   // 1. 验证地址
@@ -19,7 +20,7 @@ async function createOrderTest(tx, redis, userId, { items, shippingAddressId, co
   try {
     return await tx.$transaction(async (tx2) => {
       // 3a. 校验库存 + 计算价格
-      let totalUsd = 0; let totalKhr = 0; let merchantId = null;
+      let totalUsd = 0; let totalKhr = 0;
       for (const item of items) {
         const product = tx2.product.findUnique({ where: { id: item.productId } });
         if (!product) throw Object.assign(new Error(`商品不存在: ${item.productId}`), { code: 'NOT_FOUND' });
@@ -29,10 +30,6 @@ async function createOrderTest(tx, redis, userId, { items, shippingAddressId, co
         }
         totalUsd += product.priceUsd * item.quantity;
         totalKhr += (product.priceKhr || product.priceUsd * 4000) * item.quantity;
-        if (!merchantId) merchantId = product.merchantId;
-        else if (merchantId !== product.merchantId) {
-          throw Object.assign(new Error('一个订单只能包含同一商家的商品'), { code: 'VALIDATION_ERROR' });
-        }
       }
 
       // 3b. 优惠券
@@ -55,13 +52,13 @@ async function createOrderTest(tx, redis, userId, { items, shippingAddressId, co
         tx2.product.update({ where: { id: item.productId }, data: { stock: { decrement: item.quantity } } });
       }
 
-      // 3d. 创建订单
+      // 3d. 创建订单 (V2: 无 merchantId)
       const finalUsd = Math.round((totalUsd - discountUsd) * 100) / 100;
       const finalKhr = Math.round((totalKhr - discountUsd * 4000));
       const order = tx2.order.create({
         data: {
           orderNumber: `ORD-TEST-${Date.now()}`,
-          userId, merchantId,
+          userId,
           totalUsd: finalUsd, totalKhr: finalKhr,
           discountUsd, paymentMethod,
           status: paymentMethod === 'cod' ? 'paid' : 'pending_payment',
@@ -93,7 +90,7 @@ describe('订单服务 (order.service)', () => {
 
   // TC-O-001: 正常下单（单商品）
   it('正常下单：单商品，无优惠券，库存扣减正确', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'ទឹកក្រូចដូង', priceUsd: 2.50, priceKhr: 10000, stock: 10, status: 'active', merchantId: 'merchant-1' });
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'ទឹកក្រូចដូង', priceUsd: 2.50, priceKhr: 10000, stock: 10, status: 'active' });
 
     const order = await createOrderTest(tx, redis, 'user-1', {
       items: [{ productId: 'prod-1', quantity: 2 }],
@@ -106,21 +103,24 @@ describe('订单服务 (order.service)', () => {
     expect(tx.product._get('prod-1').stock).toBe(8);
   });
 
-  // TC-O-003: 跨商家拒绝
-  it('跨商家下单应拒绝', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active', merchantId: 'merchant-A' });
-    tx.product._set('prod-2', { id: 'prod-2', nameKm: 'B', priceUsd: 5, priceKhr: 20000, stock: 10, status: 'active', merchantId: 'merchant-B' });
+  // TC-O-003: V2 公司自营模式，多商品可合并下单
+  it('V2 公司自营：多商品下单合并计算总额', async () => {
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active' });
+    tx.product._set('prod-2', { id: 'prod-2', nameKm: 'B', priceUsd: 5, priceKhr: 20000, stock: 10, status: 'active' });
 
-    await expect(createOrderTest(tx, redis, 'user-1', {
+    const order = await createOrderTest(tx, redis, 'user-1', {
       items: [{ productId: 'prod-1', quantity: 1 }, { productId: 'prod-2', quantity: 1 }],
       shippingAddressId: 'addr-1',
       paymentMethod: 'khqr',
-    })).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
+    });
+
+    expect(order.totalUsd).toBe(15.00); // 10 + 5
+    expect(order.status).toBe('pending_payment');
   });
 
   // TC-O-004: 库存不足
   it('库存不足应拒绝下单', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'ទឹកក្រូចដូង', priceUsd: 2.50, stock: 3, status: 'active', merchantId: 'merchant-1' });
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'ទឹកក្រូចដូង', priceUsd: 2.50, stock: 3, status: 'active' });
 
     await expect(createOrderTest(tx, redis, 'user-1', {
       items: [{ productId: 'prod-1', quantity: 10 }],
@@ -131,7 +131,7 @@ describe('订单服务 (order.service)', () => {
 
   // TC-O-005: 商品已下架
   it('已下架商品应拒绝下单', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'X', priceUsd: 5, stock: 10, status: 'inactive', merchantId: 'merchant-1' });
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'X', priceUsd: 5, stock: 10, status: 'inactive' });
 
     await expect(createOrderTest(tx, redis, 'user-1', {
       items: [{ productId: 'prod-1', quantity: 1 }],
@@ -151,7 +151,7 @@ describe('订单服务 (order.service)', () => {
 
   // TC-O-007: fix 优惠券
   it('fix 优惠券正确应用', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active', merchantId: 'merchant-1' });
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active' });
 
     tx.userCoupon.findFirst = jest.fn(({ where }) => {
       if (where.couponId === 'coupon-1') {
@@ -173,7 +173,7 @@ describe('订单服务 (order.service)', () => {
 
   // TC-O-017: 并发下单拒绝
   it('并发下单第二个请求应被拒绝', async () => {
-    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, stock: 10, status: 'active', merchantId: 'merchant-1' });
+    tx.product._set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, stock: 10, status: 'active' });
 
     // 第一个请求获取锁成功
     const order = await createOrderTest(tx, redis, 'user-1', {
@@ -184,7 +184,6 @@ describe('订单服务 (order.service)', () => {
     expect(order.status).toBe('pending_payment');
 
     // 第二个请求：锁仍然存在（未过期），应拒绝
-    // 注意：createOrderTest 的 finally 会删除锁，所以我们在这之前手动设一个锁
     await redis.set('lock:order:user-1', '1', 'NX', 'EX', 30);
 
     await expect(createOrderTest(tx, redis, 'user-1', {
@@ -194,4 +193,3 @@ describe('订单服务 (order.service)', () => {
     })).rejects.toMatchObject({ code: 'DUPLICATE_ORDER' });
   });
 });
-

@@ -86,7 +86,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-010: 支付回调幂等性
   it('首次回调成功处理', async () => {
-    tx.order._set('order-1', { id: 'order-1', orderNumber: 'ORD-TEST', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 50 });
+    tx.order._set('order-1', { id: 'order-1', orderNumber: 'ORD-TEST', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 50 });
 
     const result = await handleCallbackTest(tx, redis, null, {
       provider: 'bakong', transaction_id: 'txn-1', order_number: 'ORD-TEST',
@@ -97,7 +97,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-010: 重复回调被跳过
   it('重复回调应返回 duplicate', async () => {
-    tx.order._set('order-2', { id: 'order-2', orderNumber: 'ORD-DUP', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 50 });
+    tx.order._set('order-2', { id: 'order-2', orderNumber: 'ORD-DUP', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 50 });
     await redis.set('payment:callback:bakong:txn-dup', '1');
 
     const result = await handleCallbackTest(tx, redis, null, {
@@ -109,7 +109,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-009: 签名验证失败
   it('签名无效应拒绝回调', async () => {
-    tx.order._set('order-3', { id: 'order-3', orderNumber: 'ORD-SIG', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 50 });
+    tx.order._set('order-3', { id: 'order-3', orderNumber: 'ORD-SIG', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 50 });
 
     await expect(handleCallbackTest(tx, redis, null, {
       provider: 'bakong', transaction_id: 'txn-3', order_number: 'ORD-SIG',
@@ -127,7 +127,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-012: 事务失败幂等标记不存在
   it('事务失败时幂等标记不应设置（C3 关键）', async () => {
-    tx.order._set('order-5', { id: 'order-5', orderNumber: 'ORD-FAIL', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 50 });
+    tx.order._set('order-5', { id: 'order-5', orderNumber: 'ORD-FAIL', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 50 });
 
     // Mock 事务失败
     tx.$transaction = async () => { throw new Error('DB Error'); };
@@ -144,7 +144,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-013: 支付成功更新订单状态
   it('支付成功应更新 paymentStatus 和 paidAt', async () => {
-    tx.order._set('order-6', { id: 'order-6', orderNumber: 'ORD-OK', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 100 });
+    tx.order._set('order-6', { id: 'order-6', orderNumber: 'ORD-OK', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 100 });
 
     await handleCallbackTest(tx, redis, null, {
       provider: 'bakong', transaction_id: 'txn-6', order_number: 'ORD-OK',
@@ -158,7 +158,7 @@ describe('支付服务 (payment.service)', () => {
 
   // TC-P-015: 支付失败不更新为 success
   it('支付失败不应将订单标记为 success', async () => {
-    tx.order._set('order-7', { id: 'order-7', orderNumber: 'ORD-FAIL-PAY', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', merchantId: 'm1', totalUsd: 80 });
+    tx.order._set('order-7', { id: 'order-7', orderNumber: 'ORD-FAIL-PAY', paymentStatus: 'pending', status: 'pending_payment', userId: 'u1', totalUsd: 80 });
 
     const result = await handleCallbackTest(tx, redis, null, {
       provider: 'bakong', transaction_id: 'txn-7', order_number: 'ORD-FAIL-PAY',

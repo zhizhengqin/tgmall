@@ -28,7 +28,6 @@ async function sendMessageTest(telegramId, text, botToken) {
  * 频率控制检查
  */
 async function checkRateLimit(redis, userId, type) {
-  if (type === 'merchant_new_order') return true; // 商家新订单不限制
   const key = `notify:ratelimit:${userId}:${type}`;
   if (await redis.get(key)) return false;
   await redis.set(key, '1', 'EX', 60);
@@ -107,14 +106,6 @@ describe('Bot 通知服务 (notification.service)', () => {
 
     const allowed2 = await checkRateLimit(redis, 'user-1', 'order_status');
     expect(allowed2).toBe(false);
-  });
-
-  // TC-N-007: 商家新订单不限制
-  it('商家新订单通知不受频率限制', async () => {
-    for (let i = 0; i < 10; i++) {
-      const allowed = await checkRateLimit(redis, 'merchant-1', 'merchant_new_order');
-      expect(allowed).toBe(true);
-    }
   });
 
   // TC-N-010: 三语模板

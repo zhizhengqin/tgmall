@@ -7,11 +7,9 @@ export async function getPlatformDashboard() {
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  const [gmvToday, gmvMonth, totalMerchants, pendingAudit, totalUsers, totalOrders] = await Promise.all([
+  const [gmvToday, gmvMonth, totalUsers, totalOrders] = await Promise.all([
     prisma.order.aggregate({ _sum: { totalUsd: true }, where: { paidAt: { gte: today }, status: { in: ['paid', 'shipped', 'completed'] } } }),
     prisma.order.aggregate({ _sum: { totalUsd: true }, where: { paidAt: { gte: monthStart }, status: { in: ['paid', 'shipped', 'completed'] } } }),
-    prisma.merchant.count({ where: { status: 'active' } }),
-    prisma.merchant.count({ where: { status: 'pending' } }),
     prisma.user.count({ where: { status: 'active' } }),
     prisma.order.count(),
   ]);
@@ -41,20 +39,14 @@ export async function getPlatformDashboard() {
   return {
     gmvToday: Number(gmvToday._sum.totalUsd || 0),
     gmvThisMonth: Number(gmvMonth._sum.totalUsd || 0),
-    totalMerchants, pendingAudit, totalUsers, totalOrders,
+    totalMerchants: 0, pendingAudit: 0, totalUsers, totalOrders,
     recent7DaysTrend: Object.values(dailyMap),
   };
 }
 
-// GET /admin/merchants
-export async function getMerchants({ status, page, limit }) {
-  const where = {};
-  if (status) where.status = status;
-  const [items, total] = await Promise.all([
-    prisma.merchant.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: { id: true, nameKm: true, nameEn: true, phone: true, category: true, status: true, createdAt: true } }),
-    prisma.merchant.count({ where }),
-  ]);
-  return { items, total, page, limit };
+// GET /admin/merchants — V2 公司自营模式，无商户列表
+export async function getMerchants({ page, limit }) {
+  return { items: [], total: 0, page, limit };
 }
 
 // GET /admin/users

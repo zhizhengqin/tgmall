@@ -2,7 +2,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { adminAuth } from '../middleware/adminAuth.js';
-import { defaultMerchant } from '../middleware/defaultMerchant.js';
 import { validate } from '../middleware/validate.js';
 import {
   merchantProductSchema,
@@ -22,8 +21,7 @@ router.get('/dashboard', adminCtrl.dashboard);
 router.get('/merchants', adminCtrl.listMerchants);
 router.get('/users', adminCtrl.listUsers);
 
-// 商品管理（管理员直接管理所有商品，归属到默认平台 merchant）
-router.use(defaultMerchant);
+// 商品管理（管理员直接管理所有商品）
 router.get('/products', ctrl.listProducts);
 router.get('/products/:id', ctrl.getProduct);
 router.post('/products', validate(merchantProductSchema), ctrl.createProduct);

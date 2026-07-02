@@ -4,7 +4,7 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
-import { sendOrderNotification, sendMerchantOrderNotification } from '../integrations/telegram.js';
+import { sendOrderNotification } from '../integrations/telegram.js';
 import { calculateShippingFee } from './shopConfig.service.js';
 
 export async function createOrder(userId, body) {
@@ -31,7 +31,6 @@ export async function createOrder(userId, body) {
       // 3a. 逐商品校验库存并计算价格
       let totalUsd = 0;
       let totalKhr = 0;
-      let merchantId = null;
       const itemDetails = []; // 记录每个商品的单价快照
 
       for (const item of items) {
@@ -47,11 +46,6 @@ export async function createOrder(userId, body) {
         totalUsd += unitPriceUsd * item.quantity;
         totalKhr += unitPriceKhr * item.quantity;
         itemDetails.push({ ...item, unitPriceUsd, unitPriceKhr });
-
-        if (!merchantId) merchantId = product.merchantId;
-        else if (merchantId !== product.merchantId) {
-          throw new AppError('一个订单只能包含同一商家的商品', 400, 'VALIDATION_ERROR');
-        }
       }
 
       // 1.1 校验地址城市与配送规则
@@ -65,7 +59,7 @@ export async function createOrder(userId, body) {
 
       // 未指定优惠券时，自动匹配最优可用券
       if (!selectedCouponId) {
-        const autoCoupon = await findBestCoupon(tx, userId, merchantId, totalUsd);
+        const autoCoupon = await findBestCoupon(tx, userId, totalUsd);
         if (autoCoupon) {
           selectedCouponId = autoCoupon.id;
         }
@@ -79,10 +73,6 @@ export async function createOrder(userId, body) {
         if (!userCoupon) throw new AppError('优惠券无效', 400, 'INVALID_COUPON');
         if (new Date(userCoupon.coupon.endDate) < new Date()) {
           throw new AppError('优惠券已过期', 400, 'COUPON_EXPIRED');
-        }
-        // 校验商家匹配：全平台券(merchantId=null)或本店券
-        if (userCoupon.coupon.merchantId && userCoupon.coupon.merchantId !== merchantId) {
-          throw new AppError('该优惠券不适用于此商家的商品', 400, 'INVALID_COUPON');
         }
         if (totalUsd < Number(userCoupon.coupon.minSpend)) {
           throw new AppError(`未达到最低消费 $${userCoupon.coupon.minSpend}`, 400, 'COUPON_MIN_SPEND');
@@ -191,7 +181,6 @@ export async function createOrder(userId, body) {
         data: {
           orderNumber,
           userId,
-          merchantId,
           totalUsd: finalTotalUsd,
           totalKhr: finalTotalKhr,
           discountUsd,
@@ -239,18 +228,6 @@ export async function createOrder(userId, body) {
           'created',
         ).catch((e) => console.error('[Bot] 下单通知失败:', e.message));
       }
-      // 通知商家新订单
-      const merchantUser = await prisma.user.findFirst({
-        where: { merchant: { id: order.merchantId } },
-        select: { telegramId: true, language: true },
-      });
-      if (merchantUser?.telegramId) {
-        sendMerchantOrderNotification(
-          { telegramId: merchantUser.telegramId, languageCode: merchantUser.language },
-          order,
-          'new',
-        ).catch((e) => console.error('[Bot] 商家新单通知失败:', e.message));
-      }
     } catch (e) {
       console.error('[Bot] 通知查询失败:', e.message);
     }
@@ -269,7 +246,7 @@ export async function createOrder(userId, body) {
  * 自动查找最优可用优惠券
  * 规则：满足最低消费门槛 + 折扣金额最大 + 同金额 fixed 优先 + 同类型最近过期优先
  */
-async function findBestCoupon(tx, userId, merchantId, totalUsd) {
+async function findBestCoupon(tx, userId, totalUsd) {
   const now = new Date();
   const userCoupons = await tx.userCoupon.findMany({
     where: {
@@ -280,10 +257,6 @@ async function findBestCoupon(tx, userId, merchantId, totalUsd) {
         startDate: { lte: now },
         endDate: { gte: now },
         minSpend: { lte: totalUsd },
-        OR: [
-          { merchantId: null },          // 全平台券
-          { merchantId },                // 本店券
-        ],
       },
     },
     include: { coupon: true },
@@ -328,7 +301,6 @@ export async function getUserOrders(userId, { status, page, limit }) {
           take: 1,
           include: { product: { select: { images: true } } },
         },
-        merchant: { select: { nameKm: true } },
       },
     }),
     prisma.order.count({ where }),
@@ -344,7 +316,7 @@ export async function getUserOrders(userId, { status, page, limit }) {
       totalKhr: o.totalKhr,
       itemCount: o.items.length,
       thumbnail: o.items[0]?.product?.images?.[0]?.thumb_url || '',
-      merchantName: o.merchant?.nameKm || '',
+      merchantName: 'TG Mall',
       createdAt: o.createdAt,
     })),
     total,
@@ -362,7 +334,6 @@ export async function getOrderById(userId, orderId) {
       items: {
         include: { product: { select: { images: true } } },
       },
-      merchant: { select: { nameKm: true } },
       coupon: { select: { titleKm: true, type: true, value: true } },
     },
   });

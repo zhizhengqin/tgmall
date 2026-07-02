@@ -93,6 +93,20 @@
 - 所有价格必须 USD/KHR 双币种同时显示。手机号 +855 格式校验。
 - 弱网环境适配：图片 WebP + CDN + 懒加载，首屏 < 3 秒（4G），< 5 秒（3G）。
 
+## 开发路线图
+
+> 完整路线图：`docs/superpowers/plans/2026-07-02-tg-mall-development-roadmap.md`
+
+| Sprint | 目标 | 核心交付 | 工期 |
+|--------|------|---------|------|
+| **Sprint 4 续** ✅ | Mini App 运营配置落地 | Banner/品类/城市/配送规则动态加载 + 客服入口 | ~1 周（已完成） |
+| **Sprint 5** | 支付闭环 + 库存管理后台 | ABA Pay / Wing Pay 真实对接、库存预警/调整/日志、清理 V1 商户代码 | ~2 周 |
+| **Sprint 6** | 手机号登录 + 城市体验 | 短信验证码、手机号/密码登录、定位授权、城市切换联动 | ~2 周 |
+| **Sprint 7** | 运营体验增强 | 商品标签、收藏、优惠券后台、客服反馈工单 | ~2 周 |
+| **Sprint 8** | Alpha 打磨与上线 | 三语验收、弱网测试、性能压测、安全扫描、集成测试 | ~2 周 |
+
+**原则**：先补齐 P0 验收缺口 → 再补 P1 体验 → P2 功能本期冻结。每 Sprint 产出可 Demo。
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.

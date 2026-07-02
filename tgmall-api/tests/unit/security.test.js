@@ -63,15 +63,16 @@ describe('OWASP Top 10 安全测试', () => {
     expect(getOrderById('user-2', 'order-1')).toBeNull();
   });
 
-  // TC-S-007: A01 水平越权 — 商家商品
-  it('A01: 商家只能查看自己的商品', () => {
-    function getProductById(merchantId, productId) {
-      const product = { id: productId, merchantId: 'merchant-A' };
-      if (product.merchantId !== merchantId) return null;
-      return product;
+  // TC-S-007: A01 水平越权 — V2 平台自营：管理员可访问所有商品
+  it('A01: 用户只能访问自己的订单（V2 自营）', () => {
+    // V2 公司自营模式：无商家隔离。确保用户级别的水平越权防护依然有效
+    function getOrderById(userId, orderId) {
+      const order = { id: orderId, userId: 'user-1' };
+      if (order.userId !== userId) return null;
+      return order;
     }
-    expect(getProductById('merchant-A', 'prod-1')).toBeTruthy();
-    expect(getProductById('merchant-B', 'prod-1')).toBeNull();
+    expect(getOrderById('user-1', 'order-1')).toBeTruthy();
+    expect(getOrderById('user-2', 'order-1')).toBeNull();
   });
 
   // TC-S-008: A02 JWT 签名
@@ -108,8 +109,7 @@ describe('OWASP Top 10 安全测试', () => {
   // TC-S-012: A07 Webhook 无 Token
   it('A07: Webhook 路由不在 auth 中间件下（用签名替代）', () => {
     const webhookRoute = '/api/v1/webhooks/payment';
-    const authMiddlewareRoutes = ['/api/v1/orders', '/api/v1/merchants', '/api/v1/cart'];
-    expect(authMiddlewareRoutes).not.toContain('/api/v1/webhooks/payment');
+    const authMiddlewareRoutes = ['/api/v1/orders', '/api/v1/cart', '/api/v1/admin'];    expect(authMiddlewareRoutes).not.toContain('/api/v1/webhooks/payment');
     expect(webhookRoute).toContain('webhooks');
   });
 

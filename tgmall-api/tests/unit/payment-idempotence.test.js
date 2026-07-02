@@ -54,7 +54,6 @@ describe('支付回调幂等性 (C3 fix)', () => {
       paymentStatus: 'pending',
       status: 'pending_payment',
       userId: 'user-1',
-      merchantId: 'merchant-1',
       totalUsd: 50,
       totalKhr: 200000,
       paymentMethod: 'khqr',

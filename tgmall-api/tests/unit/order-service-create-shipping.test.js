@@ -88,7 +88,7 @@ describe('createOrder 配送规则集成', () => {
   it('将配送费计入订单总价', async () => {
     mockAddress();
     mockDeliveryRule();
-    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 5, priceKhr: 20000, stock: 10, status: 'active', merchantId: 'm-1' });
+    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 5, priceKhr: 20000, stock: 10, status: 'active' });
 
     const order = await createOrder('user-1', {
       items: [{ product_id: 'prod-1', quantity: 1 }],
@@ -104,7 +104,7 @@ describe('createOrder 配送规则集成', () => {
   it('地址无 cityCode 时根据 province 归一化匹配配送规则', async () => {
     mockAddress({ cityCode: null, province: '金边' });
     mockDeliveryRule();
-    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 6, priceKhr: 24000, stock: 10, status: 'active', merchantId: 'm-1' });
+    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 6, priceKhr: 24000, stock: 10, status: 'active' });
 
     const order = await createOrder('user-1', {
       items: [{ product_id: 'prod-1', quantity: 1 }],
@@ -119,7 +119,7 @@ describe('createOrder 配送规则集成', () => {
   it('子订单金额未满起送额时拒绝下单', async () => {
     mockAddress();
     mockDeliveryRule();
-    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 3, priceKhr: 12000, stock: 10, status: 'active', merchantId: 'm-1' });
+    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 3, priceKhr: 12000, stock: 10, status: 'active' });
 
     await expect(createOrder('user-1', {
       items: [{ product_id: 'prod-1', quantity: 1 }],
@@ -131,7 +131,7 @@ describe('createOrder 配送规则集成', () => {
   it('满足免邮门槛时运费为 0', async () => {
     mockAddress();
     mockDeliveryRule({ shippingFeeUsd: 2, freeShippingThresholdUsd: 30 });
-    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 35, priceKhr: 140000, stock: 10, status: 'active', merchantId: 'm-1' });
+    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 35, priceKhr: 140000, stock: 10, status: 'active' });
 
     const order = await createOrder('user-1', {
       items: [{ product_id: 'prod-1', quantity: 1 }],
@@ -146,7 +146,7 @@ describe('createOrder 配送规则集成', () => {
   it('地址所在城市无配送规则时拒绝下单', async () => {
     mockAddress({ cityCode: 'unknown_city' });
     prisma.deliveryRule.findFirst.mockResolvedValue(null);
-    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active', merchantId: 'm-1' });
+    productStore.set('prod-1', { id: 'prod-1', nameKm: 'A', priceUsd: 10, priceKhr: 40000, stock: 10, status: 'active' });
 
     await expect(createOrder('user-1', {
       items: [{ product_id: 'prod-1', quantity: 1 }],

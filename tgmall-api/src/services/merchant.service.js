@@ -242,8 +242,8 @@ export async function getDashboard(merchantId) {
 // ============================================================
 // 商家商品列表（含搜索 + 分页 + 状态筛选）
 // ============================================================
-export async function getProducts(merchantId, { q, category, status, page, limit }) {
-  const where = { merchantId };
+export async function getProducts({ q, category, status, page, limit }) {
+  const where = {};
   if (status) where.status = status;
   if (category) where.category = category;
   if (q) {
@@ -296,9 +296,9 @@ export async function getProducts(merchantId, { q, category, status, page, limit
 // ============================================================
 // 获取单个商品（商家归属校验）
 // ============================================================
-export async function getProductById(merchantId, productId) {
+export async function getProductById(productId) {
   const product = await prisma.product.findFirst({
-    where: { id: productId, merchantId },
+    where: { id: productId },
   });
   if (!product) throw new AppError('商品不存在或不属于您的店铺', 404, 'NOT_FOUND');
   return product;
@@ -307,7 +307,7 @@ export async function getProductById(merchantId, productId) {
 // ============================================================
 // 上架商品
 // ============================================================
-export async function createProduct(merchantId, body) {
+export async function createProduct(body) {
   const product = await prisma.product.create({
     data: {
       merchantId,
@@ -345,10 +345,10 @@ export async function createProduct(merchantId, body) {
 // ============================================================
 // 编辑商品
 // ============================================================
-export async function updateProduct(merchantId, productId, body) {
+export async function updateProduct(productId, body) {
   // 1. 校验商品归属
   const existing = await prisma.product.findFirst({
-    where: { id: productId, merchantId },
+    where: { id: productId },
   });
   if (!existing) throw new AppError('商品不存在或不属于您的店铺', 404, 'NOT_FOUND');
 
@@ -390,9 +390,9 @@ export async function updateProduct(merchantId, productId, body) {
 // ============================================================
 // 上下架切换
 // ============================================================
-export async function toggleProduct(merchantId, productId) {
+export async function toggleProduct(productId) {
   const product = await prisma.product.findFirst({
-    where: { id: productId, merchantId },
+    where: { id: productId },
   });
   if (!product) throw new AppError('商品不存在或不属于您的店铺', 404, 'NOT_FOUND');
 
@@ -410,9 +410,9 @@ export async function toggleProduct(merchantId, productId) {
 // ============================================================
 // 商家订单详情
 // ============================================================
-export async function getOrderDetail(merchantId, orderId) {
+export async function getOrderDetail(orderId) {
   const order = await prisma.order.findFirst({
-    where: { id: orderId, merchantId },
+    where: { id: orderId },
     include: {
       items: {
         include: {
@@ -469,8 +469,8 @@ export async function getOrderDetail(merchantId, orderId) {
 // ============================================================
 // 商家订单列表（按状态 Tab + 日期筛选）
 // ============================================================
-export async function getOrders(merchantId, { status, startDate, endDate, page, limit }) {
-  const where = { merchantId };
+export async function getOrders({ status, startDate, endDate, page, limit }) {
+  const where = {};
   if (status) where.status = status;
   if (startDate) {
     where.createdAt = { ...(where.createdAt || {}), gte: new Date(startDate) };
@@ -528,10 +528,10 @@ export async function getOrders(merchantId, { status, startDate, endDate, page, 
 // ============================================================
 // 确认发货 + Bot 通知消费者
 // ============================================================
-export async function shipOrder(merchantId, orderId, logisticsInfo) {
+export async function shipOrder(orderId, logisticsInfo) {
   // 1. 校验订单归属 + 状态
   const order = await prisma.order.findFirst({
-    where: { id: orderId, merchantId },
+    where: { id: orderId },
     include: {
       user: { select: { telegramId: true, language: true } },
     },
