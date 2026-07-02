@@ -54,6 +54,9 @@
       <router-link to="/coupons" class="menu-item">
         <span>🎫</span><span>{{ $t('profile.coupons') }}</span><span class="arrow">›</span>
       </router-link>
+      <div class="menu-item" @click="contactCustomerService">
+        <span>💬</span><span>{{ $t('profile.customerService') }}</span><span class="arrow">›</span>
+      </div>
     </div>
 
     <div class="lang-section">
@@ -73,11 +76,13 @@ import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
+const { customerService, loadCustomerService } = useShopConfig();
 
 const displayName = computed(() => {
   const u = userStore.user;
@@ -126,7 +131,29 @@ async function handleDeleteAddr(id) {
   try { await deleteAddress(id); await loadAddresses(); } catch (e) { alert(t('profile.deleteFailed')); }
 }
 
-onMounted(loadAddresses);
+function contactCustomerService() {
+  const cs = customerService.value;
+  if (!cs) return;
+
+  if (cs.telegram_username) {
+    const link = `https://t.me/${cs.telegram_username}`;
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(link);
+    } else {
+      window.open(link, '_blank');
+    }
+    return;
+  }
+
+  if (cs.phone) {
+    window.location.href = `tel:${cs.phone}`;
+  }
+}
+
+onMounted(() => {
+  loadAddresses();
+  loadCustomerService().catch(() => {});
+});
 </script>
 
 <style scoped>
