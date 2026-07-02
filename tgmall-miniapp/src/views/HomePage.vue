@@ -38,7 +38,7 @@
         :class="{ active: activeCategory === cat.value }"
         @click="switchCategory(cat.value)"
       >
-        {{ $t(`home.${cat.value}`) || cat.label }}
+        {{ cat.label }}
       </button>
     </div>
 
@@ -96,32 +96,34 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTelegram } from '@/composables/useTelegram';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
 import ProductCard from '@/components/common/ProductCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const route = useRoute();
 const { enableCloseConfirmation } = useTelegram();
+const { categories: apiCategories, load } = useShopConfig();
 
 // 开启 Mini App 关闭确认
 enableCloseConfirmation();
 
-// 品类列表
-const categories = [
-  { value: 'all', label: '全部' },
-  { value: 'fashion', label: '时尚' },
-  { value: 'beauty', label: '美妆' },
-  { value: 'electronics', label: '电子' },
-  { value: 'home', label: '家居' },
-];
+// 品类列表（接入后台配置，保留 all 为第一个选项）
+const categories = computed(() => [
+  { value: 'all', label: t('home.all') || '全部' },
+  ...(apiCategories.value || []).map(c => ({
+    value: c.code,
+    label: c[`name${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`] || c.nameKm || c.code,
+  })),
+]);
 
 // 语言列表（三语并排显示）
 const langList = [
@@ -207,9 +209,11 @@ onMounted(() => {
   }
   // 从 URL 参数读取分类（从分类页跳转过来）
   const categoryFromUrl = route.query.category;
-  if (categoryFromUrl && categories.some(c => c.value === categoryFromUrl)) {
+  if (categoryFromUrl && categoryFromUrl !== 'all') {
     activeCategory.value = categoryFromUrl;
   }
+  // 并行加载运营配置与商品
+  load();
   fetchProducts(true);
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
