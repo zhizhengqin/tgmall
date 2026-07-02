@@ -118,7 +118,7 @@ describe('ProfilePage customer service entry', () => {
   });
 
   it('opens Telegram link via window.Telegram.WebApp.openTelegramLink when username is available', async () => {
-    mockCustomerService.value = { telegram_username: 'support_bot', phone: '+85512345678' };
+    mockCustomerService.value = { telegramUsername: 'support_bot', phone: '+85512345678' };
 
     wrapper = mountProfilePage();
     await flushPromises();
@@ -136,7 +136,7 @@ describe('ProfilePage customer service entry', () => {
   it('falls back to window.open when Telegram WebApp is unavailable and username is available', async () => {
     vi.stubGlobal('Telegram', undefined);
 
-    mockCustomerService.value = { telegram_username: 'support_bot' };
+    mockCustomerService.value = { telegramUsername: 'support_bot' };
 
     wrapper = mountProfilePage();
     await flushPromises();
@@ -156,7 +156,7 @@ describe('ProfilePage customer service entry', () => {
       writable: true,
     });
 
-    mockCustomerService.value = { telegram_username: null, phone: '+85512345678' };
+    mockCustomerService.value = { telegramUsername: null, phone: '+85512345678' };
 
     wrapper = mountProfilePage();
     await flushPromises();

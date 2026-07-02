@@ -69,8 +69,8 @@ describe('CitySelectPage', () => {
 
   it('renders cities from useShopConfig().cities and marks the current one', async () => {
     mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ];
 
     wrapper = mountCitySelectPage();
@@ -86,8 +86,8 @@ describe('CitySelectPage', () => {
 
   it('shows a checkmark on the current city only', async () => {
     mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ];
 
     wrapper = mountCitySelectPage();
@@ -101,8 +101,8 @@ describe('CitySelectPage', () => {
 
   it('calls setCity and navigates back when a city is clicked', async () => {
     mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ];
 
     wrapper = mountCitySelectPage();
@@ -115,10 +115,10 @@ describe('CitySelectPage', () => {
     expect(routerBack).toHaveBeenCalledTimes(1);
   });
 
-  it('uses name_en when the locale is en', async () => {
+  it('uses nameEn when the locale is en', async () => {
     mockLocale.value = 'en';
     mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
     ];
 
     wrapper = mountCitySelectPage();
@@ -127,10 +127,10 @@ describe('CitySelectPage', () => {
     expect(wrapper.find('.city-name').text()).toBe('Phnom Penh');
   });
 
-  it('uses name_zh when the locale is zh', async () => {
+  it('uses nameZh when the locale is zh', async () => {
     mockLocale.value = 'zh';
     mockCities.value = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
     ];
 
     wrapper = mountCitySelectPage();
@@ -149,8 +149,8 @@ describe('CitySelectPage', () => {
 
   it('syncs cities to the store after load resolves', async () => {
     const cities = [
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ];
     mockLoad.mockImplementation(async () => {
       mockCities.value = cities;

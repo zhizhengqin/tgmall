@@ -38,26 +38,26 @@ describe('cityStore', () => {
   it('computes currentCity from the cities list', () => {
     const store = useCityStore();
     store.setCities([
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ]);
     expect(store.currentCity.code).toBe('phnom_penh');
-    expect(store.currentCity.name_en).toBe('Phnom Penh');
+    expect(store.currentCity.nameEn).toBe('Phnom Penh');
   });
 
   it('returns a default city object when the list is empty', () => {
     const store = useCityStore();
     expect(store.currentCity.code).toBe('phnom_penh');
-    expect(store.currentCity.name_km).toBe('ភ្នំពេញ');
-    expect(store.currentCity.name_en).toBe('Phnom Penh');
-    expect(store.currentCity.name_zh).toBe('金边');
+    expect(store.currentCity.nameKm).toBe('ភ្នំពេញ');
+    expect(store.currentCity.nameEn).toBe('Phnom Penh');
+    expect(store.currentCity.nameZh).toBe('金边');
   });
 
   it('setCity updates currentCode and persists to localStorage', () => {
     const store = useCityStore();
     store.setCities([
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 },
     ]);
 
     store.setCity('siem_reap');
@@ -68,7 +68,7 @@ describe('cityStore', () => {
   it('setCity ignores unknown city codes', () => {
     const store = useCityStore();
     store.setCities([
-      { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 },
+      { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 },
     ]);
 
     store.setCity('unknown_city');
@@ -87,7 +87,7 @@ describe('cityStore', () => {
     expect(store.currentCode).toBe('siem_reap');
 
     store.setCities([
-      { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 1 },
+      { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 1 },
     ]);
 
     expect(store.cities).toHaveLength(1);

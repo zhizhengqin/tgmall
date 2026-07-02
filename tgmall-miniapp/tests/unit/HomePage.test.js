@@ -102,8 +102,8 @@ describe('HomePage', () => {
   describe('banner carousel', () => {
     it('renders banners from useShopConfig().banners', async () => {
       mockBanners.value = [
-        { id: 'b1', title_km: 'Banner 1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
-        { id: 'b2', title_km: 'Banner 2', image_url: 'https://cdn.test/2.jpg', link_type: 'category', link_target: 'food' },
+        { id: 'b1', titleKm: 'Banner 1', imageUrl: 'https://cdn.test/1.jpg', linkType: 'product', linkTarget: 'p1' },
+        { id: 'b2', titleKm: 'Banner 2', imageUrl: 'https://cdn.test/2.jpg', linkType: 'category', linkTarget: 'food' },
       ];
 
       wrapper = mountHomePage();
@@ -117,8 +117,8 @@ describe('HomePage', () => {
 
     it('updates the active slide on swipe', async () => {
       mockBanners.value = [
-        { id: 'b1', image_url: 'https://cdn.test/1.jpg' },
-        { id: 'b2', image_url: 'https://cdn.test/2.jpg' },
+        { id: 'b1', imageUrl: 'https://cdn.test/1.jpg' },
+        { id: 'b2', imageUrl: 'https://cdn.test/2.jpg' },
       ];
 
       wrapper = mountHomePage();
@@ -136,7 +136,7 @@ describe('HomePage', () => {
 
     it('navigates to /product/{id} when clicking a product banner', async () => {
       mockBanners.value = [
-        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p123' },
+        { id: 'b1', imageUrl: 'https://cdn.test/1.jpg', linkType: 'product', linkTarget: 'p123' },
       ];
 
       wrapper = mountHomePage();
@@ -149,7 +149,7 @@ describe('HomePage', () => {
 
     it('updates route query when clicking a category banner', async () => {
       mockBanners.value = [
-        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'category', link_target: 'fashion' },
+        { id: 'b1', imageUrl: 'https://cdn.test/1.jpg', linkType: 'category', linkTarget: 'fashion' },
       ];
 
       wrapper = mountHomePage();
@@ -172,7 +172,7 @@ describe('HomePage', () => {
 
     it('ignores banner click after a drag to prevent swipe/click overlap', async () => {
       mockBanners.value = [
-        { id: 'b1', image_url: 'https://cdn.test/1.jpg', link_type: 'product', link_target: 'p1' },
+        { id: 'b1', imageUrl: 'https://cdn.test/1.jpg', linkType: 'product', linkTarget: 'p1' },
       ];
 
       wrapper = mountHomePage();
@@ -192,8 +192,8 @@ describe('HomePage', () => {
   });
 
   describe('city entry', () => {
-    const phnomPenh = { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 };
-    const siemReap = { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 };
+    const phnomPenh = { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 };
+    const siemReap = { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 };
 
     it('syncs cities from useShopConfig to cityStore after load resolves', async () => {
       const cities = [phnomPenh, siemReap];
@@ -256,8 +256,8 @@ describe('HomePage', () => {
       expect(wrapper.find('.city-name').text()).toBe('暹粒');
     });
 
-    it('falls back to name_km then code when the localized name is missing', async () => {
-      mockCities.value = [{ code: 'battambang', name_km: 'បាត់ដំបង', sort_order: 3 }];
+    it('falls back to nameKm then code when the localized name is missing', async () => {
+      mockCities.value = [{ code: 'battambang', nameKm: 'បាត់ដំបង', sortOrder: 3 }];
 
       wrapper = mountHomePage();
       await flushPromises();

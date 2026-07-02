@@ -16,9 +16,9 @@ describe('useShopConfig', () => {
 
   it('加载时 loading 为 true，成功后保存数据', async () => {
     const { getBanners, getCategories, getCities } = await import('@/api/shopConfig.js');
-    getBanners.mockResolvedValue({ data: [{ id: 1, title_km: 'b1', image_url: 'url1' }] });
-    getCategories.mockResolvedValue({ data: [{ code: 'fashion', name_km: 'f' }] });
-    getCities.mockResolvedValue({ data: [{ code: 'phnom_penh', name_km: '金边' }] });
+    getBanners.mockResolvedValue({ data: [{ id: 1, titleKm: 'b1', imageUrl: 'url1' }] });
+    getCategories.mockResolvedValue({ data: [{ code: 'fashion', nameKm: 'f' }] });
+    getCities.mockResolvedValue({ data: [{ code: 'phnom_penh', nameKm: '金边' }] });
 
     const { banners, categories, cities, loading, load } = useShopConfig();
     const promise = load();

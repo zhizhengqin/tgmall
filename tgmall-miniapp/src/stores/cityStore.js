@@ -5,9 +5,9 @@ const STORAGE_KEY = 'tgmall_selected_city';
 const DEFAULT_CITY = 'phnom_penh';
 const DEFAULT_CITY_OBJ = {
   code: DEFAULT_CITY,
-  name_km: 'ភ្នំពេញ',
-  name_en: 'Phnom Penh',
-  name_zh: '金边',
+  nameKm: 'ភ្នំពេញ',
+  nameEn: 'Phnom Penh',
+  nameZh: '金边',
 };
 
 export const useCityStore = defineStore('city', () => {

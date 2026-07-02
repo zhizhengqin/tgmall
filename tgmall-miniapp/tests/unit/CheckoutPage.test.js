@@ -106,8 +106,8 @@ function totalRowText(wrapper) {
 describe('CheckoutPage delivery rules by city', () => {
   let wrapper;
 
-  const phnomPenh = { code: 'phnom_penh', name_km: 'ភ្នំពេញ', name_en: 'Phnom Penh', name_zh: '金边', sort_order: 1 };
-  const siemReap = { code: 'siem_reap', name_km: 'សៀមរាប', name_en: 'Siem Reap', name_zh: '暹粒', sort_order: 2 };
+  const phnomPenh = { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 };
+  const siemReap = { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 };
   const defaultAddress = {
     id: 1,
     recipient_name: 'Test User',

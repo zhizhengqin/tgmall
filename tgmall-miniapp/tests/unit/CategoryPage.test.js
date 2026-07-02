@@ -81,8 +81,8 @@ describe('CategoryPage grid from shop config', () => {
 
   it('renders categories supplied by useShopConfig().categories', async () => {
     mockCategories.value = [
-      { code: 'fashion', name_km: 'ពាក់ព័ន្ធ', name_en: 'Fashion', name_zh: '时尚', sort_order: 1 },
-      { code: 'electronics', name_km: 'ឧបករណ៍អេឡិចត្រូនិច', name_en: 'Electronics', name_zh: '电子', sort_order: 2 },
+      { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
+      { code: 'electronics', nameKm: 'ឧបករណ៍អេឡិចត្រូនិច', nameEn: 'Electronics', nameZh: '电子', sortOrder: 2 },
     ];
 
     wrapper = mountCategoryPage();
@@ -94,9 +94,9 @@ describe('CategoryPage grid from shop config', () => {
     expect(cards[1].find('.cat-name').text()).toBe('ឧបករណ៍អេឡិចត្រូនិច');
   });
 
-  it('displays the icon image when icon_url is present', async () => {
+  it('displays the icon image when iconUrl is present', async () => {
     mockCategories.value = [
-      { code: 'home', name_km: 'ផ្ទះ', name_en: 'Home', name_zh: '家居', icon_url: 'https://cdn.test/home.png', sort_order: 1 },
+      { code: 'home', nameKm: 'ផ្ទះ', nameEn: 'Home', nameZh: '家居', iconUrl: 'https://cdn.test/home.png', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();
@@ -108,9 +108,9 @@ describe('CategoryPage grid from shop config', () => {
     expect(wrapper.find('.cat-emoji').exists()).toBe(false);
   });
 
-  it('falls back to emoji when icon_url is absent', async () => {
+  it('falls back to emoji when iconUrl is absent', async () => {
     mockCategories.value = [
-      { code: 'beauty', name_km: 'សម្ផស្ស', name_en: 'Beauty', name_zh: '美妆', sort_order: 1 },
+      { code: 'beauty', nameKm: 'សម្ផស្ស', nameEn: 'Beauty', nameZh: '美妆', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();
@@ -123,7 +123,7 @@ describe('CategoryPage grid from shop config', () => {
 
   it('navigates to / with ?category={code} when a category is clicked', async () => {
     mockCategories.value = [
-      { code: 'food', name_km: 'អាហារ', name_en: 'Food', name_zh: '食品', sort_order: 1 },
+      { code: 'food', nameKm: 'អាហារ', nameEn: 'Food', nameZh: '食品', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();
@@ -147,7 +147,7 @@ describe('CategoryPage grid from shop config', () => {
 
   it('falls back to the package emoji for an unknown category code', async () => {
     mockCategories.value = [
-      { code: 'unknown', name_km: 'មិនស្គាល់', name_en: 'Unknown', name_zh: '未知', sort_order: 1 },
+      { code: 'unknown', nameKm: 'មិនស្គាល់', nameEn: 'Unknown', nameZh: '未知', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();
@@ -157,10 +157,10 @@ describe('CategoryPage grid from shop config', () => {
     expect(wrapper.find('.cat-emoji').text()).toBe('📦');
   });
 
-  it('uses name_en when the locale is en', async () => {
+  it('uses nameEn when the locale is en', async () => {
     mockLocale.value = 'en';
     mockCategories.value = [
-      { code: 'fashion', name_km: 'ពាក់ព័ន្ធ', name_en: 'Fashion', name_zh: '时尚', sort_order: 1 },
+      { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();
@@ -169,10 +169,10 @@ describe('CategoryPage grid from shop config', () => {
     expect(wrapper.find('.cat-name').text()).toBe('Fashion');
   });
 
-  it('uses name_zh when the locale is zh', async () => {
+  it('uses nameZh when the locale is zh', async () => {
     mockLocale.value = 'zh';
     mockCategories.value = [
-      { code: 'fashion', name_km: 'ពាក់ព័ន្ធ', name_en: 'Fashion', name_zh: '时尚', sort_order: 1 },
+      { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
     ];
 
     wrapper = mountCategoryPage();

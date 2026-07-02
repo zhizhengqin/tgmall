@@ -82,12 +82,15 @@ const { locale } = useI18n();
 const { categories: apiCategories, load } = useShopConfig();
 
 const emojiMap = { fashion: '👗', beauty: '💄', electronics: '📱', home: '🏠' };
-const categories = computed(() => (apiCategories.value || []).map(c => ({
-  value: c.code,
-  label: c[`name_${locale.value}`] || c.name_km || c.code,
-  icon: c.icon_url,
-  emoji: emojiMap[c.code] || '📦',
-})));
+const categories = computed(() => (apiCategories.value || []).map(c => {
+  const key = `name${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`;
+  return {
+    value: c.code,
+    label: c[key] || c.nameKm || c.code,
+    icon: c.iconUrl,
+    emoji: emojiMap[c.code] || '📦',
+  };
+}));
 
 const products = ref([]);
 const page = ref(1);

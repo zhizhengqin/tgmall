@@ -29,7 +29,7 @@
     <div class="banner-wrap" v-if="banners.length > 0">
       <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
         <div v-for="banner in banners" :key="banner.id" class="banner-slide" @click="onBannerClick(banner)">
-          <img :src="banner.image_url" :alt="bannerTitle(banner)" class="banner-img" />
+          <img :src="banner.imageUrl" :alt="bannerTitle(banner)" class="banner-img" />
         </div>
       </div>
       <div class="banner-dots" v-if="banners.length > 1">
@@ -178,11 +178,13 @@ const trackStyle = computed(() => ({
 }));
 
 function bannerTitle(banner) {
-  return banner[`title_${locale.value}`] || banner.title_km || '';
+  const key = `title${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`;
+  return banner[key] || banner.titleKm || '';
 }
 
 function cityName(city) {
-  return city[`name_${locale.value}`] || city.name_km || city.code;
+  const key = `name${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`;
+  return city[key] || city.nameKm || city.code;
 }
 
 function onTouchStart(e) {
@@ -209,15 +211,15 @@ function onTouchEnd(e) {
 
 function onBannerClick(banner) {
   if (touchMoveDistance.value > CLICK_MOVE_THRESHOLD) return;
-  if (!banner.link_type || !banner.link_target) return;
-  if (banner.link_type === 'product') {
-    router.push(`/product/${banner.link_target}`);
-  } else if (banner.link_type === 'category') {
-    router.push({ path: '/', query: { category: banner.link_target } });
-  } else if (banner.link_type === 'url') {
+  if (!banner.linkType || !banner.linkTarget) return;
+  if (banner.linkType === 'product') {
+    router.push(`/product/${banner.linkTarget}`);
+  } else if (banner.linkType === 'category') {
+    router.push({ path: '/', query: { category: banner.linkTarget } });
+  } else if (banner.linkType === 'url') {
     const tg = window.Telegram?.WebApp;
-    if (tg && tg.openLink) tg.openLink(banner.link_target);
-    else window.open(banner.link_target, '_blank');
+    if (tg && tg.openLink) tg.openLink(banner.linkTarget);
+    else window.open(banner.linkTarget, '_blank');
   }
 }
 

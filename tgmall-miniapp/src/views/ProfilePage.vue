@@ -135,8 +135,8 @@ function contactCustomerService() {
   const cs = customerService.value;
   if (!cs) return;
 
-  if (cs.telegram_username) {
-    const link = `https://t.me/${cs.telegram_username}`;
+  if (cs.telegramUsername) {
+    const link = `https://t.me/${cs.telegramUsername}`;
     if (window.Telegram?.WebApp?.openTelegramLink) {
       window.Telegram.WebApp.openTelegramLink(link);
     } else {

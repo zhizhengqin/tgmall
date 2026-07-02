@@ -34,7 +34,8 @@ const cityStore = useCityStore();
 const { cities, load } = useShopConfig();
 
 function cityName(city) {
-  return city[`name_${locale.value}`] || city.name_km || city.code;
+  const key = `name${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`;
+  return city[key] || city.nameKm || city.code;
 }
 
 function selectCity(code) {
