@@ -29,7 +29,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PriceDisplay from './PriceDisplay.vue';
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -50,7 +50,7 @@ function tagDisplay(tag) {
 
 const stockLabel = computed(() => {
   if (props.stock === 0) return null;
-  if (props.stock <= 5) return `仅剩${props.stock}件`;
+  if (props.stock <= 5) return t('product.stockLeft', { count: props.stock });
   return null;
 });
 

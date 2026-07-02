@@ -19,7 +19,7 @@
           <button class="fav-btn" :class="{ active: isFavorited }" @click="toggleFavorite">
             {{ isFavorited ? '❤️' : '🤍' }}
           </button>
-          <span class="sales-badge" v-if="product.salesCount > 0">已售 {{ product.salesCount }}</span>
+          <span class="sales-badge" v-if="product.salesCount > 0">{{ $t('product.sales') }} {{ product.salesCount }}</span>
         </div>
       </div>
 
@@ -43,20 +43,20 @@
             @click="selectSpec(spec.nameEn, val)"
           >
             {{ specDisplayValue(val) }}
-            <span v-if="val.stock === 0" class="soldout-chip">售罄</span>
+            <span v-if="val.stock === 0" class="soldout-chip">{{ $t('product.soldOut') }}</span>
           </button>
         </div>
       </div>
 
       <!-- 数量 -->
       <div class="quantity-row">
-        <span class="spec-label">数量</span>
+        <span class="spec-label">{{ $t('cart.quantity') }}</span>
         <div class="quantity-spinner">
           <button class="qty-btn" @click="quantity = Math.max(1, quantity - 1)">−</button>
           <span class="qty-value">{{ quantity }}</span>
           <button class="qty-btn" @click="quantity = Math.min(maxQuantity, quantity + 1)">+</button>
         </div>
-        <span class="stock-hint" v-if="maxQuantity <= 5">仅剩 {{ maxQuantity }} 件</span>
+        <span class="stock-hint" v-if="maxQuantity <= 5">{{ $t('product.stockLeft', { count: maxQuantity }) }}</span>
       </div>
 
       <!-- 描述 -->
@@ -71,16 +71,16 @@
     <!-- 底部操作栏 -->
     <div class="bottom-actions">
       <button class="btn-cart" @click="handleAddToCart" :disabled="!canBuy">
-        {{ canBuy ? '加入购物车' : '已售罄' }}
+        {{ canBuy ? $t('product.addToCart') : $t('product.soldOut') }}
       </button>
-      <button class="btn-buy" @click="handleBuyNow" :disabled="!canBuy">立即购买</button>
+      <button class="btn-buy" @click="handleBuyNow" :disabled="!canBuy">{{ $t('product.buyNow') }}</button>
     </div>
 
     <button class="back-btn" @click="$router.back()">←</button>
   </div>
 
-  <div v-else-if="loading" class="loading-page">加载中...</div>
-  <div v-else class="error-page">商品不存在或已下架</div>
+  <div v-else-if="loading" class="loading-page">{{ $t('common.loading') }}</div>
+  <div v-else class="error-page">{{ $t('product.notFound') }}</div>
 </template>
 
 <script setup>
@@ -216,9 +216,9 @@ async function handleAddToCart() {
       if (val) spec[s.nameEn] = val;
     }
     await addToCart({ product_id: product.value.id, quantity: quantity.value, spec });
-    alert('已加入购物车');
+    alert(t('cart.added'));
   } catch (e) {
-    alert('加入购物车失败: ' + (e?.response?.data?.error?.message || '网络错误'));
+    alert(t('cart.addFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));
   }
 }
 

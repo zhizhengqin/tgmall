@@ -3,33 +3,33 @@
   <div class="page">
     <div class="header">
       <button @click="$router.back()">←</button>
-      <h2>优惠券</h2>
+      <h2>{{ $t('coupons.title') }}</h2>
     </div>
 
-    <div v-if="loading">加载中...</div>
+    <div v-if="loading">{{ $t('common.loading') }}</div>
 
     <template v-else>
       <!-- 可领取 -->
       <div class="section" v-if="availableCoupons.length">
-        <p class="section-title">可领取</p>
+        <p class="section-title">{{ $t('coupons.available') }}</p>
         <div v-for="c in availableCoupons" :key="c.id" class="coupon-card">
           <div class="cc-left">
             <p class="cc-value" v-if="c.type==='fixed'">${{ c.value }}</p>
             <p class="cc-value" v-else>{{ c.value }}%</p>
-            <p class="cc-condition" v-if="Number(c.min_spend)>0">满 ${{ c.min_spend }}</p>
+            <p class="cc-condition" v-if="Number(c.min_spend)>0">{{ $t('coupons.minSpend', { amount: '$' + c.min_spend }) }}</p>
           </div>
           <div class="cc-right">
             <p class="cc-title">{{ c.title_km }}</p>
-            <p class="cc-expire">有效期至 {{ formatDate(c.end_date) }}</p>
+            <p class="cc-expire">{{ $t('coupons.validUntil') }} {{ formatDate(c.end_date) }}</p>
           </div>
-          <button class="claim-btn" @click="handleClaim(c.id)">领取</button>
+          <button class="claim-btn" @click="handleClaim(c.id)">{{ $t('coupons.claim') }}</button>
         </div>
       </div>
 
       <!-- 我的优惠券 -->
       <div class="section">
-        <p class="section-title">我的优惠券</p>
-        <div v-if="!myCoupons.length" class="empty">暂无优惠券</div>
+        <p class="section-title">{{ $t('coupons.myCoupons') }}</p>
+        <div v-if="!myCoupons.length" class="empty">{{ $t('coupons.noCoupons') }}</div>
         <div v-for="uc in myCoupons" :key="uc.id" class="coupon-card" :class="{ used: uc.status !== 'unused' }">
           <div class="cc-left">
             <p class="cc-value" v-if="uc.coupon?.type==='fixed'">${{ uc.coupon.value }}</p>
@@ -37,7 +37,7 @@
           </div>
           <div class="cc-right">
             <p class="cc-title">{{ uc.coupon?.title_km }}</p>
-            <p class="cc-expire">{{ uc.status === 'used' ? '已使用' : uc.status === 'expired' ? '已过期' : '有效期至 ' + formatDate(uc.coupon?.end_date) }}</p>
+            <p class="cc-expire">{{ uc.status === 'used' ? $t('coupons.used') : uc.status === 'expired' ? $t('coupons.expired') : $t('coupons.validUntil') + ' ' + formatDate(uc.coupon?.end_date) }}</p>
           </div>
         </div>
       </div>
@@ -47,8 +47,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getAvailableCoupons, claimCoupon, getMyCoupons } from '@/api/coupons';
 
+const { t } = useI18n();
 const availableCoupons = ref([]);
 const myCoupons = ref([]);
 const loading = ref(true);
@@ -56,8 +58,8 @@ const loading = ref(true);
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('zh-CN') : ''; }
 
 async function handleClaim(id) {
-  try { await claimCoupon(id); await loadData(); alert('领取成功!'); }
-  catch (e) { alert(e?.response?.data?.error?.message || '领取失败'); }
+  try { await claimCoupon(id); await loadData(); alert(t('coupons.claimSuccess')); }
+  catch (e) { alert(e?.response?.data?.error?.message || t('coupons.claimFailed')); }
 }
 
 async function loadData() {

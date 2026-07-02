@@ -3,10 +3,10 @@
   <div class="page">
     <div class="header">
       <button @click="$router.back()">←</button>
-      <h2>订单详情</h2>
+      <h2>{{ $t('orders.detailTitle') }}</h2>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading" class="loading">{{ $t('common.loading') }}</div>
 
     <template v-else-if="order">
       <!-- 状态 + 订单号 -->
@@ -17,14 +17,14 @@
 
       <!-- 收货地址 -->
       <div class="section">
-        <p class="section-title">收货信息</p>
+        <p class="section-title">{{ $t('orders.shippingInfo') }}</p>
         <p class="recipient">{{ order.shippingAddress?.recipientName }} {{ order.shippingAddress?.phone }}</p>
         <p class="addr">{{ order.shippingAddress?.province }} {{ order.shippingAddress?.district }} {{ order.shippingAddress?.detail }}</p>
       </div>
 
       <!-- 商品清单 -->
       <div class="section">
-        <p class="section-title">商品清单</p>
+        <p class="section-title">{{ $t('orders.itemsList') }}</p>
         <div v-for="item in order.items" :key="item.productId" class="item-row">
           <img :src="item.thumbnail || ''" class="item-img" />
           <div class="item-info">
@@ -38,49 +38,49 @@
 
       <!-- 价格明细（使用 priceBreakdown） -->
       <div class="section">
-        <p class="section-title">价格明细</p>
+        <p class="section-title">{{ $t('orders.priceDetail') }}</p>
         <div class="pb-row">
-          <span>商品小计</span>
+          <span>{{ $t('orders.subtotal') }}</span>
           <span>${{ Number(pb.subtotalUsd).toFixed(2) }}</span>
         </div>
         <div class="pb-row" v-if="Number(pb.discountUsd) > 0">
-          <span>优惠券{{ order.coupon ? '（' + order.coupon.title + '）' : '' }}</span>
+          <span>{{ $t('checkout.couponLabel') }}{{ order.coupon ? '（' + order.coupon.title + '）' : '' }}</span>
           <span class="discount">-${{ Number(pb.discountUsd).toFixed(2) }}</span>
         </div>
         <div class="pb-row">
-          <span>配送费</span>
-          <span>{{ Number(pb.shippingFeeUsd) > 0 ? '$' + Number(pb.shippingFeeUsd).toFixed(2) : '免运费' }}</span>
+          <span>{{ $t('orders.shippingFee') }}</span>
+          <span>{{ Number(pb.shippingFeeUsd) > 0 ? '$' + Number(pb.shippingFeeUsd).toFixed(2) : $t('orders.freeShipping') }}</span>
         </div>
         <div class="pb-row total">
-          <span>实付</span>
+          <span>{{ $t('orders.totalPaid') }}</span>
           <span class="total-price">${{ Number(pb.totalUsd).toFixed(2) }}</span>
         </div>
       </div>
 
       <!-- 支付方式 -->
       <div class="section" v-if="order.paymentMethod">
-        <p class="section-title">支付方式</p>
-        <p>{{ paymentMethodLabel(order.paymentMethod) }}</p>
+        <p class="section-title">{{ $t('orders.paymentMethod') }}</p>
+        <p>{{ $t(paymentMethodKey(order.paymentMethod)) }}</p>
       </div>
 
       <!-- 物流信息（已发货时显示） -->
       <div class="section" v-if="order.logistics">
-        <p class="section-title">物流信息</p>
+        <p class="section-title">{{ $t('orders.logistics') }}</p>
         <div class="logistics-info">
-          <p><span class="logi-label">物流公司</span> {{ order.logistics.company }}</p>
-          <p><span class="logi-label">运单号</span> {{ order.logistics.trackingNumber }}</p>
+          <p><span class="logi-label">{{ $t('orders.logisticsCompany') }}</span> {{ order.logistics.company }}</p>
+          <p><span class="logi-label">{{ $t('orders.trackingNumber') }}</span> {{ order.logistics.trackingNumber }}</p>
           <p v-if="order.logistics.estimatedDelivery">
-            <span class="logi-label">预计送达</span> {{ order.logistics.estimatedDelivery }}
+            <span class="logi-label">{{ $t('orders.estimatedDelivery') }}</span> {{ order.logistics.estimatedDelivery }}
           </p>
           <a v-if="order.logistics.trackingUrl" :href="order.logistics.trackingUrl" target="_blank" class="track-link">
-            查看物流详情 →
+            {{ $t('orders.trackLink') }}
           </a>
         </div>
       </div>
 
       <!-- 订单时间线 -->
       <div class="section" v-if="order.timeline?.length">
-        <p class="section-title">订单进度</p>
+        <p class="section-title">{{ $t('orders.progress') }}</p>
         <div class="timeline">
           <div v-for="(step, idx) in order.timeline" :key="idx" class="tl-step" :class="{ active: idx === 0 }">
             <div class="tl-dot"></div>
@@ -96,11 +96,11 @@
       <div class="actions">
         <!-- 待付款：去支付 + 取消 -->
         <template v-if="order.status === 'pending_payment'">
-          <button class="btn-pay" @click="goPay">去支付</button>
-          <button class="btn-cancel" @click="handleCancel">取消订单</button>
+          <button class="btn-pay" @click="goPay">{{ $t('orders.goPay') }}</button>
+          <button class="btn-cancel" @click="handleCancel">{{ $t('orders.cancel') }}</button>
         </template>
         <!-- 已发货：确认收货 -->
-        <button v-if="order.status === 'shipped'" class="btn-confirm" @click="handleConfirm">确认收货</button>
+        <button v-if="order.status === 'shipped'" class="btn-confirm" @click="handleConfirm">{{ $t('orders.confirmReceipt') }}</button>
         <!-- 已完成/已取消：无操作按钮 -->
       </div>
     </template>
@@ -110,10 +110,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { getOrderById, cancelOrder, confirmOrder } from '@/api/orders';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const order = ref(null);
 const loading = ref(true);
 
@@ -135,16 +137,17 @@ const pb = computed(() => {
 });
 
 function statusLabel(s) {
-  const map = { pending_payment: '待付款', paid: '已付款', shipped: '已发货', completed: '已完成', cancelled: '已取消' };
-  return map[s] || s;
+  const key = `orders.status.${s}`;
+  const translated = t(key);
+  return translated !== key ? translated : s;
 }
 function statusClass(s) {
   const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
   return map[s] || '';
 }
-function paymentMethodLabel(m) {
-  const map = { khqr: 'KHQR 扫码支付', aba_pay: 'ABA Pay', wing_pay: 'Wing Pay', cod: '货到付款' };
-  return map[m] || m;
+function paymentMethodKey(m) {
+  const map = { khqr: 'payment.khqr', aba_pay: 'payment.abaPay', wing_pay: 'payment.wingPay', cod: 'payment.cod' };
+  return map[m] || 'payment.khqr';
 }
 function specStr(spec) { return Object.values(spec || {}).join(' / '); }
 function formatTime(t) { return t ? new Date(t).toLocaleString('zh-CN') : ''; }
@@ -165,22 +168,22 @@ function goPay() {
 }
 
 async function handleCancel() {
-  if (!confirm('确定取消订单？')) return;
+  if (!confirm(t('orders.confirmCancel'))) return;
   try {
     await cancelOrder(order.value.id, '用户取消');
     order.value.status = 'cancelled';
   } catch (e) {
-    alert(e?.response?.data?.error?.message || '取消失败');
+    alert(e?.response?.data?.error?.message || t('orders.cancelFailed'));
   }
 }
 
 async function handleConfirm() {
-  if (!confirm('确定已收到货？')) return;
+  if (!confirm(t('orders.confirmReceiptHint'))) return;
   try {
     await confirmOrder(order.value.id);
     order.value.status = 'completed';
   } catch (e) {
-    alert(e?.response?.data?.error?.message || '操作失败');
+    alert(e?.response?.data?.error?.message || t('orders.opFailed'));
   }
 }
 

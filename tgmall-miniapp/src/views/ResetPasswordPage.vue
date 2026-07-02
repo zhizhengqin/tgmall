@@ -61,9 +61,11 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { sendSms, resetPassword } from '@/api/auth';
 
 const router = useRouter();
+const { t } = useI18n();
 const step = ref(1);
 const phone = ref('');
 const code = ref('');
@@ -87,34 +89,34 @@ async function handleSendSms() {
     cooldown.value = 60;
     cooldownTimer = setInterval(() => { cooldown.value--; if (cooldown.value <= 0) { clearInterval(cooldownTimer); cooldownTimer = null; } }, 1000);
   } catch (err) {
-    errorMsg.value = err.response?.data?.error?.message || '发送失败';
+    errorMsg.value = err.response?.data?.error?.message || t('error.sendFailed');
   }
 }
 
 async function handleNext() {
   errorMsg.value = '';
   if (step.value === 1) {
-    if (!phone.value) { errorMsg.value = '请输入手机号'; return; }
+    if (!phone.value) { errorMsg.value = t('error.enterPhone'); return; }
     await handleSendSms();
     step.value = 2;
     return;
   }
   if (step.value === 2) {
-    if (!code.value) { errorMsg.value = '请输入验证码'; return; }
+    if (!code.value) { errorMsg.value = t('error.enterCode'); return; }
     step.value = 3;
     return;
   }
   if (step.value === 3) {
-    if (!newPassword.value) { errorMsg.value = '请输入新密码'; return; }
-    if (newPassword.value.length < 8 || newPassword.value.length > 20) { errorMsg.value = '密码需 8-20 位'; return; }
-    if (newPassword.value !== confirmPassword.value) { errorMsg.value = '两次密码不一致'; return; }
+    if (!newPassword.value) { errorMsg.value = t('error.enterPassword'); return; }
+    if (newPassword.value.length < 8 || newPassword.value.length > 20) { errorMsg.value = t('error.passwordRule'); return; }
+    if (newPassword.value !== confirmPassword.value) { errorMsg.value = t('error.passwordsNotMatch'); return; }
     loading.value = true;
     try {
       await resetPassword({ phone: phone.value, code: code.value, new_password: newPassword.value });
-      successMsg.value = '密码已重置，请重新登录';
+      successMsg.value = t('auth.passwordResetSuccess');
       setTimeout(() => router.replace('/login'), 2000);
     } catch (err) {
-      errorMsg.value = err.response?.data?.error?.message || '重置失败';
+      errorMsg.value = err.response?.data?.error?.message || t('error.resetFailed');
     } finally {
       loading.value = false;
     }

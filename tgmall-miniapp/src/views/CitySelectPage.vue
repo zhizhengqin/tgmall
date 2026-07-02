@@ -3,7 +3,7 @@
   <div class="city-select-page">
     <header class="city-header">
       <button class="back-btn" @click="router.back()">←</button>
-      <h2 class="page-title">{{ $t('city.selectTitle') || '选择城市' }}</h2>
+      <h2 class="page-title">{{ $t('city.selectTitle') }}</h2>
     </header>
 
     <div class="city-list">

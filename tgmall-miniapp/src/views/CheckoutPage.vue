@@ -3,10 +3,10 @@
   <div class="page">
     <div class="header">
       <button @click="$router.back()">←</button>
-      <h2>确认订单</h2>
+      <h2>{{ $t('checkout.confirmTitle') }}</h2>
     </div>
 
-    <div v-if="!items.length" class="empty">请先选择商品</div>
+    <div v-if="!items.length" class="empty">{{ $t('checkout.emptyCart') }}</div>
 
     <template v-else>
       <!-- 收货地址 -->
@@ -15,7 +15,7 @@
           <p class="addr-name">{{ selectedAddress.recipient_name }} {{ selectedAddress.phone }}</p>
           <p class="addr-detail">{{ selectedAddress.province }} {{ selectedAddress.district }} {{ selectedAddress.detail }}</p>
         </div>
-        <p v-else class="add-addr">+ 添加收货地址</p>
+        <p v-else class="add-addr">{{ $t('checkout.addAddress') }}</p>
       </div>
 
       <!-- 商品清单 -->
@@ -32,13 +32,13 @@
 
       <!-- 优惠券 -->
       <div class="section" @click="showCouponPicker = true">
-        <span>优惠券</span>
-        <span class="right-arrow">{{ selectedCoupon ? selectedCoupon.title : '选择优惠券' }} ›</span>
+        <span>{{ $t('checkout.couponLabel') }}</span>
+        <span class="right-arrow">{{ selectedCoupon ? selectedCoupon.title : $t('checkout.selectCoupon') }} ›</span>
       </div>
 
       <!-- 支付方式 -->
       <div class="section">
-        <p class="section-label">支付方式</p>
+        <p class="section-label">{{ $t('checkout.paymentMethod') }}</p>
         <div class="payment-options">
           <button v-for="pm in paymentMethods" :key="pm.value" class="pm-btn" :class="{ active: paymentMethod === pm.value }" @click="paymentMethod = pm.value">
             {{ pm.label }}
@@ -48,8 +48,8 @@
 
       <!-- 价格明细 -->
       <div class="section price-breakdown">
-        <div class="pb-row"><span>商品总价</span><span>${{ subtotal.toFixed(2) }}</span></div>
-        <div class="pb-row" v-if="discount > 0"><span>优惠券</span><span class="discount">-${{ discount.toFixed(2) }}</span></div>
+        <div class="pb-row"><span>{{ $t('checkout.subtotal') }}</span><span>${{ subtotal.toFixed(2) }}</span></div>
+        <div class="pb-row" v-if="discount > 0"><span>{{ $t('checkout.couponLabel') }}</span><span class="discount">-${{ discount.toFixed(2) }}</span></div>
         <div class="pb-row">
           <span>{{ $t('checkout.shippingFee') }}</span>
           <PriceDisplay v-if="shippingFee > 0" :priceUsd="shippingFee" :priceKhr="shippingFeeKhr" sm />
@@ -59,7 +59,7 @@
           <span>{{ $t('checkout.minOrder') }}</span>
           <span>{{ $t('checkout.shortfall', { amount: formatPrice(shortfall), min: formatPrice(minOrderAmount) }) }}</span>
         </div>
-        <div class="pb-row total"><span>合计</span><PriceDisplay :priceUsd="total" :priceKhr="totalKhr" /></div>
+        <div class="pb-row total"><span>{{ $t('checkout.total') }}</span><PriceDisplay :priceUsd="total" :priceKhr="totalKhr" /></div>
       </div>
 
       <!-- 提交按钮 -->
@@ -79,12 +79,12 @@
     <!-- 地址选择弹窗 -->
     <div v-if="showAddressPicker" class="modal-mask" @click.self="showAddressPicker = false">
       <div class="modal">
-        <h3>选择收货地址</h3>
+        <h3>{{ $t('checkout.selectAddress') }}</h3>
         <div v-for="a in addresses" :key="a.id" class="addr-option" :class="{ selected: selectedAddress?.id === a.id }" @click="selectAddress(a)">
           <p>{{ a.recipient_name }} {{ a.phone }}</p>
           <p class="addr-sub">{{ a.province }} {{ a.district }} {{ a.detail }}</p>
         </div>
-        <button class="add-new" @click="showAddressForm = true">+ 新增地址</button>
+        <button class="add-new" @click="showAddressForm = true">{{ $t('checkout.addNewAddress') }}</button>
       </div>
     </div>
   </div>
@@ -93,6 +93,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { getAddresses } from '@/api/addresses';
 import { getMyCoupons } from '@/api/coupons';
 import { createOrder } from '@/api/orders';
@@ -101,6 +102,7 @@ import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 const cityStore = useCityStore();
 const { deliveryRule, loadDeliveryRule } = useShopConfig();
 const items = ref(JSON.parse(localStorage.getItem('checkout_items') || '[]'));
@@ -114,12 +116,12 @@ const showCouponPicker = ref(false);
 const showAddressForm = ref(false);
 const submitting = ref(false);
 
-const paymentMethods = [
-  { value: 'khqr', label: 'KHQR 扫码' },
-  { value: 'aba_pay', label: 'ABA Pay' },
-  { value: 'wing_pay', label: 'Wing Pay' },
-  { value: 'cod', label: '货到付款' },
-];
+const paymentMethods = computed(() => [
+  { value: 'khqr', label: t('payment.khqr') },
+  { value: 'aba_pay', label: t('payment.abaPay') },
+  { value: 'wing_pay', label: t('payment.wingPay') },
+  { value: 'cod', label: t('payment.cod') },
+]);
 
 const subtotal = computed(() => items.value.reduce((s, i) => s + i.priceUsd * i.quantity, 0));
 const discount = computed(() => {
@@ -181,7 +183,7 @@ async function submitOrder() {
       },
     });
   } catch (e) {
-    alert('下单失败: ' + (e?.response?.data?.error?.message || '网络错误'));
+    alert(t('checkout.orderFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));
   }
   submitting.value = false;
 }

@@ -64,18 +64,18 @@
       <!-- 加载错误 -->
       <div v-else-if="loadError" class="error-state">
         <div class="error-icon">⚠️</div>
-        <div class="error-title">{{ $t('common.loadError') || '加载失败' }}</div>
+        <div class="error-title">{{ $t('common.loadError') }}</div>
         <div class="error-desc">{{ loadError }}</div>
         <button class="retry-btn" @click="refreshProducts">
-          {{ $t('common.retry') || '重试' }}
+          {{ $t('common.retry') }}
         </button>
       </div>
 
       <!-- 空状态 -->
       <div v-else-if="products.length === 0" class="empty-state">
         <div class="empty-icon">📦</div>
-        <div class="empty-title">{{ $t('home.noProducts') || '暂无商品' }}</div>
-        <div class="empty-desc">{{ $t('home.comingSoon') || '商品正在上架中，请稍后再来' }}</div>
+        <div class="empty-title">{{ $t('home.noProducts') }}</div>
+        <div class="empty-desc">{{ $t('home.comingSoon') }}</div>
       </div>
 
       <!-- 商品双列网格 -->
@@ -136,7 +136,7 @@ enableCloseConfirmation();
 
 // 品类列表（接入后台配置，保留 all 为第一个选项）
 const categories = computed(() => [
-  { value: 'all', label: t('home.all') || '全部' },
+  { value: 'all', label: t('home.all') },
   ...(apiCategories.value || []).map(c => ({
     value: c.code,
     label: c[`name${locale.value.charAt(0).toUpperCase() + locale.value.slice(1)}`] || c.nameKm || c.code,
@@ -267,8 +267,8 @@ async function fetchProducts(reset = false) {
     hasMore.value = res.meta?.hasNext ?? false;
     page.value += 1;
   } catch (err) {
-    console.error('加载商品失败:', err);
-    loadError.value = err.response?.data?.error?.message || err.message || '网络错误';
+    console.error('loadProducts failed:', err);
+    loadError.value = err.response?.data?.error?.message || err.message || t('checkout.networkError');
   } finally {
     isLoading.value = false;
   }

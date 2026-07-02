@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <p v-if="hasMore" class="load-more" @click="loadMore">{{ $t('common.loadMore') || '更多' }}</p>
+    <p v-if="hasMore" class="load-more" @click="loadMore">{{ $t('common.loadMore') }}</p>
 
     <BottomNav />
   </div>

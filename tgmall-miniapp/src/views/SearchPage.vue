@@ -3,14 +3,14 @@
   <div class="page">
     <div class="search-header">
       <button class="back-btn" @click="$router.back()">←</button>
-      <input ref="inputRef" v-model="keyword" type="text" :placeholder="'搜索商品...'" class="search-input" @input="onInput" />
+      <input ref="inputRef" v-model="keyword" type="text" :placeholder="$t('home.searchPlaceholder')" class="search-input" @input="onInput" />
     </div>
 
     <!-- 历史搜索 -->
     <div v-if="!keyword && history.length" class="section">
       <div class="section-header">
-        <span>历史搜索</span>
-        <button @click="clearHistory">清除</button>
+        <span>{{ $t('search.historyTitle') }}</span>
+        <button @click="clearHistory">{{ $t('search.clear') }}</button>
       </div>
       <div class="tag-cloud">
         <span v-for="h in history" :key="h" class="tag" @click="keyword = h; search()">{{ h }}</span>
@@ -19,11 +19,11 @@
 
     <!-- 搜索结果 -->
     <div v-if="keyword" class="results">
-      <p class="result-count" v-if="!loading">找到 {{ products.length }} 件商品</p>
+      <p class="result-count" v-if="!loading">{{ $t('search.resultCount', { count: products.length }) }}</p>
       <div class="product-grid">
         <ProductCard v-for="p in products" :key="p.id" v-bind="p" />
       </div>
-      <p v-if="!loading && products.length === 0 && searched" class="no-result">未找到相关商品</p>
+      <p v-if="!loading && products.length === 0 && searched" class="no-result">{{ $t('search.noResult') }}</p>
     </div>
   </div>
 </template>

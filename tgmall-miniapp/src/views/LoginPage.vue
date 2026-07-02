@@ -80,10 +80,12 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useUserStore } from '@/stores/userStore';
 import { sendSms, loginByPhone } from '@/api/auth';
 
 const router = useRouter();
+const { t } = useI18n();
 const userStore = useUserStore();
 
 const tab = ref('sms');
@@ -106,7 +108,7 @@ let cooldownTimer = null;
 async function handleSendSms() {
   errorMsg.value = '';
   if (!phone.value || phone.value.length < 10) {
-    errorMsg.value = '请输入正确的手机号';
+    errorMsg.value = t('error.invalidPhone');
     return;
   }
   try {
@@ -120,21 +122,21 @@ async function handleSendSms() {
       }
     }, 1000);
   } catch (err) {
-    errorMsg.value = err.response?.data?.error?.message || '发送失败';
+    errorMsg.value = err.response?.data?.error?.message || t('error.sendFailed');
   }
 }
 
 async function handleLogin(mode) {
   errorMsg.value = '';
-  if (!phone.value) { errorMsg.value = '请输入手机号'; return; }
+  if (!phone.value) { errorMsg.value = t('error.enterPhone'); return; }
   loading.value = true;
   try {
     const payload = { phone: phone.value };
     if (mode === 'sms') {
-      if (!code.value) { errorMsg.value = '请输入验证码'; loading.value = false; return; }
+      if (!code.value) { errorMsg.value = t('error.enterCode'); loading.value = false; return; }
       payload.code = code.value;
     } else {
-      if (!password.value) { errorMsg.value = '请输入密码'; loading.value = false; return; }
+      if (!password.value) { errorMsg.value = t('auth.password'); loading.value = false; return; }
       payload.password = password.value;
     }
     const res = await loginByPhone(payload);
@@ -143,7 +145,7 @@ async function handleLogin(mode) {
       router.replace('/');
     }
   } catch (err) {
-    errorMsg.value = err.response?.data?.error?.message || '登录失败';
+    errorMsg.value = err.response?.data?.error?.message || t('error.loginFailed');
   } finally {
     loading.value = false;
   }

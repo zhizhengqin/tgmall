@@ -22,7 +22,7 @@
 
     <!-- 热门推荐标题 -->
     <section class="section-header">
-      <h2 class="section-title">{{ $t('home.hotProducts') || '热门推荐' }}</h2>
+      <h2 class="section-title">{{ $t('home.hotProducts') }}</h2>
     </section>
 
     <!-- 商品列表 -->
@@ -32,12 +32,12 @@
       <div v-else-if="loadError" class="error-state">
         <div class="error-icon">⚠️</div>
         <div class="error-desc">{{ loadError }}</div>
-        <button class="retry-btn" @click="fetchProducts(true)">{{ $t('common.retry') || '重试' }}</button>
+        <button class="retry-btn" @click="fetchProducts(true)">{{ $t('common.retry') }}</button>
       </div>
 
       <div v-else-if="products.length === 0" class="empty-state">
         <div class="empty-icon">📦</div>
-        <div class="empty-title">{{ $t('home.noProducts') || '暂无商品' }}</div>
+        <div class="empty-title">{{ $t('home.noProducts') }}</div>
       </div>
 
       <div v-else class="product-grid">
@@ -78,7 +78,7 @@ import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const router = useRouter();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const { categories: apiCategories, load } = useShopConfig();
 
 const emojiMap = { fashion: '👗', beauty: '💄', electronics: '📱', home: '🏠' };
@@ -123,7 +123,7 @@ async function fetchProducts(reset = false) {
     page.value += 1;
   } catch (err) {
     console.error('加载商品失败:', err);
-    loadError.value = err.response?.data?.error?.message || err.message || '网络错误';
+    loadError.value = err.response?.data?.error?.message || err.message || t('checkout.networkError');
   } finally {
     isLoading.value = false;
   }
