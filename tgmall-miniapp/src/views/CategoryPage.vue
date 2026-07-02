@@ -14,8 +14,9 @@
         class="category-card"
         @click="goToCategory(cat.value)"
       >
-        <span class="cat-emoji">{{ cat.emoji }}</span>
-        <span class="cat-name">{{ $t(`home.${cat.value}`) || cat.label }}</span>
+        <img v-if="cat.icon" :src="cat.icon" class="cat-icon" />
+        <span v-else class="cat-emoji">{{ cat.emoji }}</span>
+        <span class="cat-name">{{ cat.label }}</span>
       </div>
     </section>
 
@@ -67,21 +68,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
 import ProductCard from '@/components/common/ProductCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const router = useRouter();
+const { locale } = useI18n();
+const { categories: apiCategories, load } = useShopConfig();
 
-const categories = [
-  { value: 'fashion', label: '时尚', emoji: '👗' },
-  { value: 'beauty', label: '美妆', emoji: '💄' },
-  { value: 'electronics', label: '电子', emoji: '📱' },
-  { value: 'home', label: '家居', emoji: '🏠' },
-];
+const emojiMap = { fashion: '👗', beauty: '💄', electronics: '📱', home: '🏠' };
+const categories = computed(() => (apiCategories.value || []).map(c => ({
+  value: c.code,
+  label: c[`name_${locale.value}`] || c.name_km || c.code,
+  icon: c.icon_url,
+  emoji: emojiMap[c.code] || '📦',
+})));
 
 const products = ref([]);
 const page = ref(1);
@@ -126,6 +132,7 @@ function goToCategory(category) {
 }
 
 onMounted(() => {
+  load();
   fetchProducts(true);
 });
 </script>
@@ -172,6 +179,11 @@ onMounted(() => {
 .category-card:active {
   transform: scale(0.97);
   border-color: var(--accent);
+}
+.cat-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 .cat-emoji {
   font-size: 32px;
