@@ -95,13 +95,33 @@
     </template>
 
     <!-- ABA Pay / Wing Pay 重定向页 -->
-    <template v-else-if="(paymentMethod === 'aba_pay' || paymentMethod === 'wing_pay') && pageState !== 'loading'">
-      <div class="redirect-section">
+    <template v-else-if="paymentMethod === 'aba_pay' || paymentMethod === 'wing_pay'">
+      <!-- 加载中 -->
+      <div v-if="pageState === 'loading' || pageState === 'deep-link-loading'" class="loading-state">
+        <div class="spinner"></div>
+        <p>{{ $t('common.loading') }}</p>
+      </div>
+
+      <!-- Deep Link 就绪 -->
+      <div v-else-if="pageState === 'deep-link-ready'" class="redirect-section">
         <div class="redirect-icon">&#128230;</div>
         <h2 class="redirect-title">{{ $t('payment.redirecting') }}</h2>
         <p class="redirect-hint">{{ $t('payment.redirectHint') }}</p>
-        <button class="btn btn-primary redirect-btn" @click="openPaymentApp">
+        <button class="btn btn-primary redirect-btn" @click="openPaymentApp(deepLinkUrl)">
           {{ $t('payment.openApp') }}
+        </button>
+        <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
+          {{ $t('payment.changeMethod') }}
+        </button>
+      </div>
+
+      <!-- Deep Link 失败 -->
+      <div v-else-if="pageState === 'deep-link-error'" class="redirect-section">
+        <div class="redirect-icon">&#9888;</div>
+        <h2 class="redirect-title">{{ $t('payment.deepLinkError') }}</h2>
+        <p class="redirect-hint">{{ $t('payment.deepLinkErrorHint') }}</p>
+        <button class="btn btn-primary redirect-btn" @click="fetchDeepLink">
+          {{ $t('common.retry') }}
         </button>
         <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
           {{ $t('payment.changeMethod') }}
@@ -115,7 +135,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { createKHQRPayment, getPaymentStatus } from '@/api/payments';
+import { createKHQRPayment, createABAPayPayment, createWingPayPayment, getPaymentStatus } from '@/api/payments';
 import { cancelOrder } from '@/api/orders';
 import { useLanguageStore } from '@/stores/languageStore';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
@@ -153,6 +173,7 @@ const qrImageUrl = ref('');
 const qrData = ref('');
 const supportedBanks = ref([]);
 const expiresAt = ref(null);
+const deepLinkUrl = ref('');
 
 // ── 倒计时 ──
 const timeLeft = ref(15 * 60);
@@ -187,8 +208,7 @@ onMounted(async () => {
   }
 
   if (paymentMethod.value === 'aba_pay' || paymentMethod.value === 'wing_pay') {
-    pageState.value = 'ready';
-    setTimeout(() => openPaymentApp(), 1000);
+    await fetchDeepLink();
     startTimer();
     return;
   }
@@ -308,20 +328,35 @@ function handleTimeout() {
   });
 }
 
+// ── 获取 Deep Link ──
+async function fetchDeepLink() {
+  pageState.value = 'deep-link-loading';
+  try {
+    const apiFn = paymentMethod.value === 'aba_pay'
+      ? createABAPayPayment
+      : createWingPayPayment;
+    const res = await apiFn(orderId.value);
+    const data = res.data;
+    deepLinkUrl.value = data.deepLink || data.universalLink || '';
+    pageState.value = 'deep-link-ready';
+    // 自动打开银行 App
+    setTimeout(() => openPaymentApp(deepLinkUrl.value), 1000);
+    // 开始轮询支付状态（回调是共享的）
+    startPolling();
+  } catch (err) {
+    console.error('获取 Deep Link 失败:', err);
+    pageState.value = 'deep-link-error';
+  }
+}
+
 // ── 打开支付 App ──
-function openPaymentApp() {
+function openPaymentApp(url) {
+  if (!url) return;
   const tg = window.Telegram?.WebApp;
-  const appLinks = {
-    aba_pay: 'https://abapay.aba.com.kh/',
-    wing_pay: 'https://www.wingmoney.com.kh/',
-  };
-  const url = appLinks[paymentMethod.value];
-  if (url) {
-    if (tg?.openLink) {
-      tg.openLink(url);
-    } else {
-      window.open(url, '_blank');
-    }
+  if (tg?.openLink) {
+    tg.openLink(url);
+  } else {
+    window.open(url, '_blank');
   }
 }
 

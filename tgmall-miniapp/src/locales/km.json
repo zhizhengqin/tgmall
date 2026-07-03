@@ -215,6 +215,8 @@
     "supportedBanks": "ធនាគារដែលគាំទ្រ",
     "qrLoading": "កំពុងបង្កើត QR...",
     "qrError": "មិនអាចបង្កើត QR បានទេ",
+    "deepLinkError": "មិនអាចបើកកម្មវិធីទូទាត់",
+    "deepLinkErrorHint": "សូមព្យាយាមម្តងទៀត ឬជ្រើសរើសវិធីទូទាត់ផ្សេងទៀត",
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",

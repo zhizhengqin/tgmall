@@ -215,6 +215,8 @@
     "supportedBanks": "Supported Banks",
     "qrLoading": "Generating QR...",
     "qrError": "Failed to generate QR code",
+    "deepLinkError": "Failed to open payment app",
+    "deepLinkErrorHint": "Please try again or choose another payment method",
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",

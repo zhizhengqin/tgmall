@@ -215,6 +215,8 @@
     "supportedBanks": "支持的银行",
     "qrLoading": "生成二维码中...",
     "qrError": "无法生成二维码",
+    "deepLinkError": "打开支付应用失败",
+    "deepLinkErrorHint": "请重试或选择其他支付方式",
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",
