@@ -19,7 +19,11 @@
     "noProducts": "មិនទាន់មានទំនិញ",
     "comingSoon": "ទំនិញកំពុងឡើង សូមរង់ចាំ",
     "hotProducts": "ទំនិញពេញនិយម",
-    "loginBanner": "ចូលដើម្បីមើលការបញ្ចុះតម្លៃ"
+    "loginBanner": "ចូលដើម្បីមើលការបញ្ចុះតម្លៃ",
+    "sortNewest": "ថ្មីបំផុត",
+    "sortPriceLow": "តម្លៃ↑",
+    "sortPriceHigh": "តម្លៃ↓",
+    "sortPopular": "លក់ដាច់"
   },
   "product": {
     "addToCart": "ដាក់ក្នុងកន្ត្រក",

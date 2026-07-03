@@ -19,7 +19,11 @@
     "noProducts": "No products yet",
     "comingSoon": "Products are being added, please check back later",
     "hotProducts": "Hot Products",
-    "loginBanner": "Sign in to see exclusive deals"
+    "loginBanner": "Sign in to see exclusive deals",
+    "sortNewest": "Newest",
+    "sortPriceLow": "Price↑",
+    "sortPriceHigh": "Price↓",
+    "sortPopular": "Best Selling"
   },
   "product": {
     "addToCart": "Add to Cart",

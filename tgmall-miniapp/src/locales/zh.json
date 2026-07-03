@@ -19,7 +19,11 @@
     "noProducts": "暂无商品",
     "comingSoon": "商品正在上架中，请稍后再来",
     "hotProducts": "热门推荐",
-    "loginBanner": "登录查看专属优惠"
+    "loginBanner": "登录查看专属优惠",
+    "sortNewest": "最新",
+    "sortPriceLow": "价格↑",
+    "sortPriceHigh": "价格↓",
+    "sortPopular": "销量"
   },
   "product": {
     "addToCart": "加入购物车",
