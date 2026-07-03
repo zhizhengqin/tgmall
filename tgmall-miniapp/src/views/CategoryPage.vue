@@ -24,7 +24,7 @@
 
       <!-- 右侧内容区 -->
       <div class="main-content">
-        <!-- 排序栏 -->
+        <!-- 排序栏 + 视图切换 -->
         <div class="sort-bar">
           <button
             v-for="opt in sortOptions"
@@ -34,6 +34,11 @@
             @click="switchSort(opt.value)"
           >
             {{ opt.label }}
+          </button>
+          <div class="spacer"></div>
+          <button class="view-toggle" @click="toggleView">
+            <span v-if="viewMode === 'grid'">☰</span>
+            <span v-else>⊞</span>
           </button>
         </div>
 
@@ -52,7 +57,7 @@
             <div class="empty-title">{{ $t('home.noProducts') }}</div>
           </div>
 
-          <div v-else class="product-grid">
+          <div v-else class="product-grid" :class="{ 'grid-list': viewMode === 'list' }">
             <ProductCard
               v-for="product in products"
               :key="product.id"
@@ -64,6 +69,7 @@
               :merchant-name="product.merchantName"
               :stock="product.stock"
               :tags="product.tags"
+              :layout="viewMode"
             />
           </div>
 
@@ -116,6 +122,14 @@ const sortOptions = computed(() => [
   { value: 'price_desc', label: t('home.sortPriceHigh') },
   { value: 'popular', label: t('home.sortPopular') },
 ]);
+
+// 视图模式 (localStorage 持久化)
+const VIEW_MODE_KEY = 'categoryViewMode';
+const viewMode = ref(localStorage.getItem(VIEW_MODE_KEY) || 'grid');
+function toggleView() {
+  viewMode.value = viewMode.value === 'grid' ? 'list' : 'grid';
+  localStorage.setItem(VIEW_MODE_KEY, viewMode.value);
+}
 
 // 状态
 const activeCategory = ref('all');
@@ -310,6 +324,22 @@ onUnmounted(() => {
   color: #fff;
   border-color: var(--accent);
 }
+.spacer { flex: 1; }
+.view-toggle {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.view-toggle:active { background: var(--border); }
 
 /* 商品区域 */
 .product-section {
@@ -319,6 +349,9 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-sm);
+}
+.product-grid.grid-list {
+  grid-template-columns: 1fr;
 }
 
 /* 错误/空状态 */

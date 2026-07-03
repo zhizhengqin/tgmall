@@ -1,6 +1,6 @@
-<!-- 商品卡片 — 双列网格展示 -->
+<!-- 商品卡片 — 双列网格 / 列表行展示 -->
 <template>
-  <router-link :to="`/product/${id}`" class="product-card">
+  <router-link :to="`/product/${id}`" class="product-card" :class="{ 'card-list': layout === 'list' }">
     <div class="card-image">
       <img
         :src="thumbnail"
@@ -40,6 +40,7 @@ const props = defineProps({
   merchantName: { type: String, default: '' },
   stock: { type: Number, default: 0 },
   tags: { type: Array, default: () => [] },
+  layout: { type: String, default: 'grid' }, // 'grid' | 'list'
 });
 
 function tagDisplay(tag) {
@@ -127,5 +128,26 @@ function onImageError(e) {
   font-size: 11px;
   color: var(--muted);
   margin: 4px 0 6px;
+}
+
+/* 列表模式 — 横向布局 */
+.product-card.card-list {
+  flex-direction: row;
+}
+.product-card.card-list .card-image {
+  width: 120px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+}
+.product-card.card-list .card-body {
+  flex: 1;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.product-card.card-list .card-name {
+  -webkit-line-clamp: 3;
+  font-size: 14px;
 }
 </style>
