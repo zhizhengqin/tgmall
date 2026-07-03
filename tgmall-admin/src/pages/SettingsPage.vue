@@ -28,6 +28,11 @@
           <div class="card-title">{{ $t('settings.customerServices') }}</div>
           <div class="card-desc">{{ $t('settings.customerServices') }}</div>
         </el-card>
+        <el-card class="settings-card" @click="$router.push('/settings/flash-deals')">
+          <div class="card-icon">⚡</div>
+          <div class="card-title">限时专区</div>
+          <div class="card-desc">限时特价活动配置</div>
+        </el-card>
       </div>
     </div>
   </div>

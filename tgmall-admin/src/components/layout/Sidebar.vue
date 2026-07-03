@@ -18,6 +18,7 @@
       <el-menu-item index="/settings/cities">{{ $t('settings.cities') }}</el-menu-item>
       <el-menu-item index="/settings/delivery-rules">{{ $t('settings.deliveryRules') }}</el-menu-item>
       <el-menu-item index="/settings/customer-services">{{ $t('settings.customerServices') }}</el-menu-item>
+      <el-menu-item index="/settings/flash-deals">⚡ 限时专区</el-menu-item>
     </el-sub-menu>
   </el-menu>
 </template>

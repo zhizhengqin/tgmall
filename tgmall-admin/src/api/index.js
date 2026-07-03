@@ -68,6 +68,12 @@ export const updateCustomerService = (id, data) => api.put(`/admin/customer-serv
 export const toggleCustomerService = (id) => api.post(`/admin/customer-services/${id}/toggle`);
 export const setDefaultCustomerService = (id) => api.post(`/admin/customer-services/${id}/set-default`);
 
+// ── 限时专区管理 ──
+export const getFlashDeals = (params) => api.get('/admin/flash-deals', { params });
+export const createFlashDeal = (data) => api.post('/admin/flash-deals', data);
+export const updateFlashDeal = (id, data) => api.put(`/admin/flash-deals/${id}`, data);
+export const toggleFlashDeal = (id) => api.post(`/admin/flash-deals/${id}/toggle`);
+
 // ── 库存管理 ──
 export const getInventory = (params) => api.get('/admin/inventory', { params });
 export const adjustStock = (id, data) => api.put(`/admin/products/${id}/stock`, data);

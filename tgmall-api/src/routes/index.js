@@ -12,6 +12,7 @@ import cityRoutes from './city.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 import feedbackRoutes from './feedback.routes.js';
 import { adminRouter as shopConfigAdminRouter, publicRouter as shopConfigPublicRouter } from './shopConfig.routes.js';
+import { adminRouter as flashDealAdminRouter, publicRouter as flashDealPublicRouter } from './flashDeal.routes.js';
 
 const router = Router();
 
@@ -30,10 +31,12 @@ router.use('/payments', paymentRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/admin', adminRouter);
 router.use('/admin', shopConfigAdminRouter);
+router.use('/admin', flashDealAdminRouter);
 router.use('/cities', cityRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/feedback', feedbackRoutes);
 router.use('/', shopConfigPublicRouter);
+router.use('/', flashDealPublicRouter);
 
 // 后续 Sprint: upload
 

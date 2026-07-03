@@ -65,6 +65,7 @@ model Product {
   stockLogs       StockLog[]
   inventoryChecks InventoryCheck[]
   wishlists       Wishlist[]
+  flashDeals      FlashDeal[]
 
   @@index([category, status, createdAt(sort: Desc)])
   @@index([priceUsd])
@@ -248,6 +249,28 @@ model Banner {
   @@index([cityCode, status, sortOrder])
   @@index([startAt, endAt])
   @@map("banners")
+}
+
+model FlashDeal {
+  id           String    @id @default(uuid()) @db.Uuid
+  productId    String    @map("product_id") @db.Uuid
+  product      Product   @relation(fields: [productId], references: [id])
+  dealPriceUsd Decimal   @map("deal_price_usd") @db.Decimal(10,2)
+  dealPriceKhr Int       @map("deal_price_khr")
+  dealStock    Int       @map("deal_stock")
+  soldCount    Int       @default(0) @map("sold_count")
+  cityCode     String?   @map("city_code") @db.VarChar(50)
+  startAt      DateTime? @map("start_at") @db.Timestamptz()
+  endAt        DateTime? @map("end_at") @db.Timestamptz()
+  sortOrder    Int       @default(0) @map("sort_order")
+  status       String    @default("active") @db.VarChar(20)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status, sortOrder])
+  @@index([cityCode, status, startAt, endAt])
+  @@index([productId])
+  @@map("flash_deals")
 }
 
 model City {

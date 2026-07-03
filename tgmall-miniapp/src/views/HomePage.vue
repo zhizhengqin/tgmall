@@ -56,6 +56,16 @@
       </button>
     </div>
 
+    <!-- 限时特价横滑区 -->
+    <div class="flash-deal-section" v-if="flashDeals.length > 0">
+      <div class="flash-deal-header">
+        <h3 class="flash-deal-title">⚡ 限时特价</h3>
+      </div>
+      <div class="flash-deal-scroll">
+        <FlashDealCard v-for="deal in flashDeals" :key="deal.id" :deal="deal" />
+      </div>
+    </div>
+
     <!-- 商品区域 -->
     <section class="product-section">
       <!-- 骨架屏 -->
@@ -120,8 +130,10 @@ import { useTelegram } from '@/composables/useTelegram';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
 import ProductCard from '@/components/common/ProductCard.vue';
+import FlashDealCard from '@/components/common/FlashDealCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
+import { getFlashDeals } from '@/api/shopConfig';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
@@ -157,6 +169,7 @@ const page = ref(1);
 const hasMore = ref(true);
 const isLoading = ref(false);
 const loadError = ref('');
+const flashDeals = ref([]);
 const currentBanner = ref(0);
 const touchStartX = ref(0);
 const touchMoveDistance = ref(0);
@@ -278,6 +291,13 @@ function refreshProducts() {
   fetchProducts(true);
 }
 
+async function loadFlashDeals() {
+  try {
+    const res = await getFlashDeals(cityStore.currentCode || 'phnom_penh');
+    flashDeals.value = res.data || [];
+  } catch { /* 专区加载失败不影响首页主体 */ }
+}
+
 // 无限滚动
 function handleScroll() {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
@@ -303,6 +323,7 @@ onMounted(() => {
   // 尝试 GPS 定位匹配最近城市（仅在用户未手动选择时工作）
   cityStore.detectCityByGPS();
   fetchProducts(true);
+  loadFlashDeals();
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
 
@@ -518,4 +539,27 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* 限时特价横滑区 */
+.flash-deal-section {
+  margin-bottom: var(--space-lg);
+}
+.flash-deal-header {
+  padding: 0 var(--space-lg) var(--space-sm);
+}
+.flash-deal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0;
+}
+.flash-deal-scroll {
+  display: flex;
+  gap: var(--space-sm);
+  padding: 0 var(--space-lg);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.flash-deal-scroll::-webkit-scrollbar { display: none; }
 </style>
