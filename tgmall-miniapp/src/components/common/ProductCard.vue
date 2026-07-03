@@ -1,32 +1,47 @@
-<!-- 商品卡片 — 双列网格 / 列表行展示 -->
+<!-- 商品卡片 — 双列网格 / 列表行展示 + 快捷加购 -->
 <template>
-  <router-link :to="`/product/${id}`" class="product-card" :class="{ 'card-list': layout === 'list' }">
-    <div class="card-image">
-      <img
-        :src="thumbnail"
-        :alt="name"
-        loading="lazy"
-        @error="onImageError"
-      />
-      <span v-if="stockLabel" class="stock-badge">{{ stockLabel }}</span>
-    </div>
-    <div class="card-body">
-      <!-- 标签行 -->
-      <div v-if="tags && tags.length" class="tag-row">
-        <span v-for="(tag, i) in tags" :key="i" class="tag-chip" :style="{ color: tag.color, background: tag.bg }">
-          {{ tagDisplay(tag) }}
-        </span>
+  <div class="product-card" :class="{ 'card-list': layout === 'list' }">
+    <router-link :to="`/product/${id}`" class="card-link">
+      <div class="card-image">
+        <img
+          :src="thumbnail"
+          :alt="name"
+          loading="lazy"
+          @error="onImageError"
+        />
+        <span v-if="stockLabel" class="stock-badge">{{ stockLabel }}</span>
       </div>
-      <h3 class="card-name">{{ name }}</h3>
-      <p class="card-merchant">{{ merchantName }}</p>
-      <PriceDisplay :price-usd="priceUsd" :price-khr="priceKhr" sm />
-    </div>
-  </router-link>
+      <div class="card-body">
+        <div v-if="tags && tags.length" class="tag-row">
+          <span v-for="(tag, i) in tags" :key="i" class="tag-chip" :style="{ color: tag.color, background: tag.bg }">
+            {{ tagDisplay(tag) }}
+          </span>
+        </div>
+        <h3 class="card-name">{{ name }}</h3>
+        <p class="card-merchant">{{ merchantName }}</p>
+        <PriceDisplay :price-usd="priceUsd" :price-khr="priceKhr" sm />
+      </div>
+    </router-link>
+
+    <!-- 快捷加购按钮 -->
+    <button
+      v-if="showQuickAdd"
+      class="quick-add-btn"
+      :class="{ added: addAnimating }"
+      :disabled="stock <= 0 || adding"
+      @click.prevent.stop="quickAdd"
+    >
+      <span v-if="!addAnimating">+</span>
+      <span v-else>✓</span>
+    </button>
+  </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { addToCart } from '@/api/cart';
 import PriceDisplay from './PriceDisplay.vue';
 
 const { locale, t } = useI18n();
@@ -40,8 +55,29 @@ const props = defineProps({
   merchantName: { type: String, default: '' },
   stock: { type: Number, default: 0 },
   tags: { type: Array, default: () => [] },
-  layout: { type: String, default: 'grid' }, // 'grid' | 'list'
+  layout: { type: String, default: 'grid' },
+  showQuickAdd: { type: Boolean, default: false },
 });
+
+const emit = defineEmits(['cart-updated']);
+
+const adding = ref(false);
+const addAnimating = ref(false);
+
+async function quickAdd() {
+  if (props.stock <= 0 || adding.value) return;
+  adding.value = true;
+  try {
+    await addToCart({ product_id: props.id, quantity: 1 });
+    addAnimating.value = true;
+    emit('cart-updated');
+    setTimeout(() => { addAnimating.value = false; }, 800);
+  } catch {
+    // 加购失败不阻塞浏览
+  } finally {
+    adding.value = false;
+  }
+}
 
 function tagDisplay(tag) {
   const map = { km: 'textKm', en: 'textEn', zh: 'textZh' };
@@ -55,7 +91,6 @@ const stockLabel = computed(() => {
   return null;
 });
 
-// 图片加载失败时使用占位图
 const placeholder = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="%23e8e6e2"><rect width="400" height="400"/><text x="200" y="210" text-anchor="middle" fill="%237a7670" font-size="14">No Image</text></svg>';
 
 function onImageError(e) {
@@ -65,17 +100,22 @@ function onImageError(e) {
 
 <style scoped>
 .product-card {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   overflow: hidden;
   transition: transform 0.15s ease;
 }
-.product-card:active {
-  transform: scale(0.98);
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
 }
+.product-card:active { transform: scale(0.98); }
+
 .card-image {
   position: relative;
   aspect-ratio: 1;
@@ -130,8 +170,8 @@ function onImageError(e) {
   margin: 4px 0 6px;
 }
 
-/* 列表模式 — 横向布局 */
-.product-card.card-list {
+/* 列表模式 */
+.product-card.card-list .card-link {
   flex-direction: row;
 }
 .product-card.card-list .card-image {
@@ -149,5 +189,41 @@ function onImageError(e) {
 .product-card.card-list .card-name {
   -webkit-line-clamp: 3;
   font-size: 14px;
+}
+
+/* 快捷加购按钮 */
+.quick-add-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  transition: all 0.25s ease;
+}
+.quick-add-btn:active {
+  transform: scale(0.9);
+}
+.quick-add-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.quick-add-btn.added {
+  background: #22c55e;
+  transform: scale(1.1);
 }
 </style>

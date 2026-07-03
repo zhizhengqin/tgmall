@@ -107,6 +107,7 @@
           :merchant-name="product.merchantName"
           :stock="product.stock"
           :tags="product.tags"
+          :show-quick-add="true"
         />
       </div>
 
@@ -120,6 +121,9 @@
         {{ $t('common.noMore') }}
       </div>
     </section>
+
+    <!-- 底部购物车条 -->
+    <MiniCartBar />
 
     <!-- 底部导航 -->
     <BottomNav />
@@ -139,6 +143,7 @@ import { getProducts } from '@/api/products';
 import ProductCard from '@/components/common/ProductCard.vue';
 import FlashDealCard from '@/components/common/FlashDealCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
+import MiniCartBar from '@/components/common/MiniCartBar.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 import { getFlashDeals } from '@/api/shopConfig';
 

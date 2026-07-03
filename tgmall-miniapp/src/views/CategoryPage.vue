@@ -70,6 +70,7 @@
               :stock="product.stock"
               :tags="product.tags"
               :layout="viewMode"
+              :show-quick-add="true"
             />
           </div>
 
@@ -84,6 +85,7 @@
       </div>
     </div>
 
+    <MiniCartBar />
     <BottomNav />
   </div>
 </template>
@@ -95,6 +97,7 @@ import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
 import ProductCard from '@/components/common/ProductCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
+import MiniCartBar from '@/components/common/MiniCartBar.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
