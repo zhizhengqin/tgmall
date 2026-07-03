@@ -14,4 +14,17 @@ export default defineConfig({
       '/api': 'http://localhost:3000',
     },
   },
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+          ui: ['element-plus', '@element-plus/icons-vue'],
+          charts: ['echarts', 'vue-echarts'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 });

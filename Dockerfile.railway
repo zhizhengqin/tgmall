@@ -17,32 +17,25 @@ COPY tgmall-api/src/ src/
 FROM node:20-alpine AS miniapp-build
 WORKDIR /app
 COPY tgmall-miniapp/package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 COPY tgmall-miniapp/ ./
 # 生产构建时将 API 请求指向同域名的 /api/ 路径
 ENV VITE_API_URL=
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 RUN npx vite build --mode production
 
 
-# ── Stage 3: 商家后台构建 ──
-FROM node:20-alpine AS merchant-build
-WORKDIR /app
-COPY tgmall-merchant/package*.json ./
-RUN npm ci
-COPY tgmall-merchant/ ./
-RUN npx vite build
-
-
-# ── Stage 4: 运营后台构建 ──
+# ── Stage 3: 运营后台构建 ──
 FROM node:20-alpine AS admin-build
 WORKDIR /app
 COPY tgmall-admin/package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 COPY tgmall-admin/ ./
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 RUN npx vite build
 
 
-# ── Stage 5: Nginx + Node.js 最终镜像 ──
+# ── Stage 4: Nginx + Node.js 最终镜像 ──
 FROM node:20-alpine
 
 # 安装 Nginx + OpenSSL（Prisma 查询引擎依赖）
@@ -57,7 +50,6 @@ WORKDIR /app
 
 # 前端静态文件
 COPY --from=miniapp-build /app/dist /usr/share/nginx/html/miniapp
-COPY --from=merchant-build /app/dist /usr/share/nginx/html/merchant
 COPY --from=admin-build /app/dist /usr/share/nginx/html/admin
 
 # 启动脚本
