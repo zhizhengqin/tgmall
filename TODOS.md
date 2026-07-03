@@ -1,85 +1,218 @@
 # TODOS
 
-## Sprint 4 续 — Mini App 运营配置落地 ✅
-- ✅ 首页 Banner 轮播（调用 `GET /banners?city=`）
-- ✅ 首页品类横滑 + 分类页网格（调用 `GET /categories`）
-- ✅ 城市选择页 + 城市状态管理（调用 `GET /cities`）
-- ✅ 结算页按城市展示真实配送费、起送金额与差额提示
-- ✅ 个人中心「联系客服」入口（调用 `GET /customer-services/default`）
-- ✅ `useShopConfig` composable 单元测试
+> 最后更新: 2026-07-03 | 基于 PRD V2.1 + Backlog V1.1 vs 代码实际实现的差距分析
 
-## Sprint 5 — 支付闭环 + 库存管理后台
+---
 
-### ABA Pay / Wing Pay 真实对接
-- **Priority:** P0 — ABA Pay 后端 deep link 生成接口与回调处理
-- **Priority:** P0 — Wing Pay 后端 deep link 生成接口与回调处理
-- **Priority:** P0 — Mini App `PaymentPage.vue` 替换 ABA/Wing 占位跳转，支持真实 deep link
-- **Priority:** P0 — 支付回调验签 + 幂等处理
+## ✅ 已交付 Sprint 回顾
 
-### 库存管理后台
-- **Priority:** P0 — 管理后台库存管理页：库存列表、预警阈值、手动调整、变更日志
-- **Priority:** P0 — 商品自动下架（库存 = 0）
-- **Priority:** P0 — 库存 SELECT FOR UPDATE + 事务
+| Sprint | 交付内容 | 状态 |
+|--------|---------|------|
+| Sprint 4 续 | Banner/品类/城市/配送规则动态加载 + 客服入口 | ✅ |
+| Sprint 5 | ABA Pay + Wing Pay Deep Link、库存管理后台（预警/调整/盘点/日志） | ✅ |
+| Sprint 6 | 手机号登录/密码登录/忘记密码、城市 GPS 定位 + 手动切换 | ✅ |
+| Sprint 7 | 收藏 + 客服反馈工单 + 优惠券后台 + 商品标签 | ✅ |
+| Sprint 8 | 三语 100% 清零、高棉语行高修复、双币种全覆盖、npm audit fix、Zod 测试 61 条、图片懒加载、CSO 审计、部署文档 | ✅ |
 
-### 技术债务
-- **Priority:** P1 — 清理 V1 多商户遗留代码（`tgmall-merchant`、入驻/审核接口）
+---
 
-## Sprint 6 — 手机号登录 + 城市体验
+## P0 缺口（上线前应补齐）
 
-### 登录体系
-- **Priority:** P1 — 短信验证码服务接入（Twilio/本地短信网关）
-- **Priority:** P1 — 手机号注册/登录/密码登录后端接口
-- **Priority:** P1 — 忘记密码重置流程
-- **Priority:** P1 — Mini App 登录页（Telegram / 手机号 / 密码 Tab 切换）
+### ✅ 自动确认收货（7 天到期）— 已实现
+- **来源:** Backlog S3-12 AC3
+- **实现:** `jobs/orderAutoComplete.js` — 每天凌晨 3:00 执行
+  - 在线支付 `shipped` + `shippedAt > 7d` → `completed` + `completedAt`
+  - COD `paid` + `paidAt > 7d` → `completed` + `completedAt`
+- **测试:** 7 个新测试用例，216 total green
+- **注册:** `index.js` 中已启动 `startOrderAutoCompleteJob()`
 
-### 城市体验
-- **Priority:** P1 — 首次启动定位授权 + 城市选择页优化
-- **Priority:** P1 — 城市切换后刷新首页 Banner、配送规则、起送金额
+---
 
-## Sprint 7 — 运营体验增强
+## P1 缺口（消费者端体验增强）
 
-### 商品标签与收藏
-- **Priority:** P1 — 商品标签模型（Tag）+ 后台标签管理 + 商品打标
-- **Priority:** P1 — 商品卡片显示标签与销量
-- **Priority:** P1 — 收藏商品：Favorite 模型、API、商品详情收藏按钮、个人中心「我的收藏」
+### F-C16: 限时/低价专区
+- **来源:** PRD §4.2、Backlog S2-19 AC4
+- **现状:** HomePage 有搜索栏、Banner、品类入口、商品列表，但无"限时特价"横滑卡片区；管理后台无专区配置
+- **需要:** 
+  - **管理后台:** 限时专区配置页（选择商品、活动价/库存/时间、排序）
+  - **Mini App:** HomePage 分类网格下方新增「限时特价」横滑卡片区，商品卡片显示倒计时标签
 
-### 优惠券后台
-- **Priority:** P1 — 优惠券后台：创建/编辑/发放/统计
+### F-C17: 登录引导横幅
+- **来源:** PRD §4.2、Backlog S2-19 AC5
+- **现状:** 未登录用户在首页看不到任何登录引导
+- **需要:** 对未登录用户在首页展示"立即登录查看优惠"横幅，24h 关闭后当日不再展示
 
-### 客服与反馈
-- **Priority:** P1 — 客服反馈表单 + 图片上传 + 后台工单列表
-- **Priority:** P1 — 个人中心「关于我们」与隐私政策静态页
+### F-C18: 侧边栏分类导航
+- **来源:** PRD §4.2、Backlog S2-20 AC1~AC2
+- **现状:** CategoryPage 是图标网格 + 商品瀑布流，不是侧边栏布局
+- **需要:** 左侧一级分类侧边栏（高亮当前分类），右侧商品列表，顶部排序/筛选
 
-### 安全加固
-- **Priority:** P1 — 敏感数据（手机号）加密存储
+### F-C19: 列表/网格视图切换
+- **来源:** PRD §4.2、Backlog S2-20 AC4
+- **现状:** CategoryPage 始终是网格视图，无切换按钮
+- **需要:** 右上角视图切换按钮，列表视图单列展示更多信息，切换保留筛选和滚动位置，偏好持久化到 localStorage
 
-## Sprint 8 — Alpha 打磨与上线
+### F-C21 + F-C22: 快捷加购 + 底部购物车条
+- **来源:** PRD §4.2、Backlog S3-21
+- **现状:** ProductCard 无"+"按钮，HomePage/CategoryPage 无底部购物车条
+- **需要:**
+  - ProductCard 右下角 44x44px "⊕" 按钮 — 无规格商品直接加购 / 多规格弹出 SKU 浮层 / 库存 0 灰显
+  - HomePage + CategoryPage 底部常驻购物车条 — 件数、合计 USD/KHR、距起送金额差额
+  - 加购动画（缩略图飞入购物车图标）
 
-### 本地化与 UI
-- **Priority:** P1 — 全站三语文案验收与补漏
-- **Priority:** P1 — 双币种价格显示全页面检查
-- **Priority:** P1 — 高棉语 UI 截断/溢出检查
+### F-C23: 最低起送金额 — 购物车条联动
+- **现状:** CheckoutPage 有校验，但浏览阶段用户看不到起送状态
+- **需要:** 购物车条实时显示起送差额，达到后"去结算"高亮
 
-### 性能与弱网
-- **Priority:** P0 — 弱网环境适配：图片 WebP + CDN + 懒加载
-- **Priority:** P1 — 首页骨架屏加载状态优化
-- **Priority:** P1 — 3G 弱网真机测试 + 低端安卓机测试
-- **Priority:** P1 — 性能压测（100 并发下单）
+---
 
-### 安全与质量
-- **Priority:** P1 — 安全扫描（npm audit + OWASP）
-- **Priority:** P1 — 集成测试补充（订单/支付/库存关键链路）
-- **Priority:** P1 — 回滚方案文档与演练
+## P1 缺口（运营后台增强）
 
-### 运维
-- **Priority:** P1 — CloudFlare CDN 配置
-- **Priority:** P1 — Railway 部署配置完善
+### 数据看板增强 (F-M04)
+- **来源:** PRD §4.3、Backlog S4-01/S4-02
+- **现状:** 4 个基础指标卡片 + 7 天趋势图，缺以下：
+  - 热销商品 TOP 10 排行榜
+  - 品类销售占比饼图
+  - 支付成功率指标
+  - 自定义日期范围查询
+  - 报表导出（Excel/CSV）
 
-## P2 — 本期冻结
-- 钱包/余额功能
-- 红包/优惠券分享裂变
-- 积分体系
-- 邀请有礼
-- 商品搜索增强
+### 系统配置 — 平台级设置 (F-M06)
+- **来源:** PRD §4.3
+- **缺失:**
+  - 平台基础信息编辑（名称、Logo、联系方式）
+  - 平台公告发布 / 维护模式开关
+  - 管理员账号管理（增删改、密码重置）
+  - 操作日志查看（商品上下架、配置变更等审计日志）
 
-## Completed
+### 用户管理增强 (S4-06)
+- **来源:** PRD §4.3、Backlog S4-06
+- **现状:** 仅有列表+搜索+分页
+- **缺失:** 用户详情页、禁用/解禁操作、钱包余额/积分查看入口
+
+### 商品标签独立管理页 (F-M08)
+- **来源:** PRD §4.3
+- **现状:** 标签仅在 ProductFormPage 内嵌创建（三语文本+颜色），无独立管理
+- **需要:** 独立的标签 CRUD 页面，支持全局编辑同步
+
+### 限时专区运营管理 (F-M07 补充)
+- **来源:** 与 F-C16 联动
+- **需要:** 管理后台配置限时专区商品、活动价、活动库存、活动时间、排序
+
+### 订单 CSV 导出
+- **来源:** Backlog S4-03 AC5
+- **现状:** OrdersPage 无导出功能
+
+### 登录引导横幅配置 (F-M07 补充)
+- **来源:** 与 F-C17 联动
+- **需要:** 管理后台上传引导横幅图、设置展示频率
+
+---
+
+## Bug 修复
+
+### ✅ `merchant.service.js` — `createProduct()` 已移除未定义的 `merchantId`
+- **修复:** 从 `createProduct` 的 `prisma.product.create` data 对象中删除 `merchantId,` 行（Schema 中 Product 无此字段）
+- **提交:** 待提交
+
+### ✅ 优惠券管理端已迁移到 Service 层
+- **修复:** `admin.controller.js` 中 4 个优惠券函数改为调用 `coupon.service.js` 的 `adminListCoupons`/`adminCreateCoupon`/`adminUpdateCoupon`/`adminToggleCouponStatus`
+- **效果:** Controller 不再直接引用 `prisma` 和 `AppError`，架构一致性恢复
+- **提交:** 待提交
+
+---
+
+## 技术债务
+
+### 高优先级
+- **V1 商户代码清理:**
+  - `tgmall-api/src/services/merchant.service.js`: `registerMerchant`, `merchantLogin`, `merchantWebLogin`, `getDashboard`, `approveMerchant`, `rejectMerchant` — 这些函数引用了一个不存在的 `Merchant` 模型（Schema 中已无 merchant 表），运行时必然失败
+  - `tgmall-api/src/routes/merchant.routes.js`: 仅做 re-export，可删除
+  - `tgmall-merchant/` 目录: 独立 V1 商户前端项目，已废弃
+  - `tgmall-miniapp/src/locales/*.json` 中 `merchant` 命名空间: 包含商家入驻表单翻译，前端无对应页面
+
+### 中优先级
+- **性能压测:** 100 并发下单、商品列表 P95 ≤ 500ms（Backlog S4-17，Sprint 8 推迟）
+- **低端机兼容性测试:** 2GB RAM 安卓 + 3G 限速 1Mbps 真机验证（Backlog S4-10）
+- **文件上传服务:** `routes/index.js` 有 `"后续 Sprint: upload"` 注释，商品图片目前通过 URL 填入，无实际文件上传端点
+- **用户通知中心:** `Notification` 模型和 `notification.service.js` 存在，但无用户侧 GET 通知列表的 Route/Controller
+- **通知发送统一化:** Controller 层直接调用 `telegram.js` 发通知，绕过了 `notification.service.js`（后者有更好的重试和记录机制）
+
+### 低优先级
+- **配送区域二级粒度:** 区/县级配送范围配置、特殊区域加价（PRD F-M09）
+- **下单自动应用最优优惠券:** 结算时自动选择最优单券（Backlog S3-14）
+- **COD 收款确认 API:** `POST /api/v1/admin/orders/{id}/collect-cod`（Backlog S3-05 AC4）
+- **QA ISSUE-002:** console.error 中英混用
+- **QA ISSUE-003:** esbuild/vite dev-dep 漏洞（非生产依赖）
+- **订单状态 Tab:** OrderList 缺少 "已取消" Tab（当前仅有 全部/待付款/已付款/已发货/已完成）
+
+---
+
+## P2 — 本期冻结（不纳入当前开发计划）
+
+| 编号 | 功能 | 来源 |
+|------|------|------|
+| F-C26 | 钱包余额与充值（消费者端 + 管理后台 F-M12） | PRD §4.2 |
+| F-C27 | 红包与代金券（消费者端 + 营销管理 F-M14） | PRD §4.2 |
+| F-C28 | 积分签到/抽奖（消费者端 + 积分管理 F-M13） | PRD §4.2 |
+| F-C29 | 邀请有礼（消费者端 + 营销管理 F-M14） | PRD §4.2 |
+| — | 商品评价系统（评分+评价+图片+平台回复） | Backlog V2-01~03 |
+| — | 限时秒杀 | Backlog V2-04 |
+| — | 促销活动引擎（满减/满赠/多件折扣） | Backlog V2-05 |
+| — | VIP 会员体系 | Backlog V2-06 |
+| — | AI 商品推荐 | Backlog V2-07 |
+| — | Telegram Channels 集成推广 | Backlog V2-08 |
+| — | 批量导入商品（CSV/Excel） | Backlog V2-12 |
+
+---
+
+## 已完成 / 已验证存在
+
+<details>
+<summary>展开查看已验证的实现状态</summary>
+
+### P0 Must Have — 全部完成
+- F-C01: Telegram 一键登录 ✅
+- F-C02: 商品浏览与搜索 ✅（三语搜索、分页、分类筛选、排序）
+- F-C03: 商品详情页 ✅（图片轮播、规格联动、三语描述、收藏按钮）
+- F-C04: 购物车 ✅（Redis 后端同步、库存校验、全选/单选）
+- F-C05: 下单结算 ✅（地址选择、优惠券、4 种支付方式、价格明细、起送金额校验）
+- F-C06: KHQR/ABA/Wing/COD 支付 ✅（Deep Link + Mock/Real 双模式）
+- F-C07: 订单追踪 ✅（状态 Tab、详情、物流、取消/确认收货）
+- F-M01: 商品管理 ✅（CRUD + 三语 + 多图 + 规格 + 上下架）
+- F-M02: 订单处理 ✅（列表 + 详情 + 发货操作）
+- F-M03: 库存管理 ✅（预警、手动调整、盘点、CSV 导出、变更日志）
+- F-S01: Bot 通知 ✅（下单/支付/发货通知消费者+运营，三语模板）
+- F-S02: 三语言切换 ✅（vue-i18n、km/en/zh、后端 Accept-Language）
+- F-S03: USD/KHR 双币种 ✅（PriceDisplay 组件、所有价格点覆盖）
+
+### P1 Should Have — 已完成
+- F-C08: 个人中心 ✅（资料、地址管理 CRUD、语言切换、客服入口）
+- F-C09: 优惠券中心 ✅（可领取列表 + 我的优惠券 + 领取/使用）
+- F-C10: 手机号登录 ✅（短信+密码双 Tab、+855 校验、60s 重发、5 次锁定）
+- F-C11: 忘记密码 ✅（验证码重置、密码历史检查、tokenVersion 失效）
+- F-C12: 定位与城市选择 ✅（GPS + Telegram 定位、手动切换、配送规则联动）
+- F-C13: 首页搜索强化 ✅（常驻搜索栏 + 搜索页 + 历史搜索 + 防抖 400ms）
+- F-C14: Banner 轮播 ✅（可配置、触摸滑动、按城市+时间生效、最多 5 张）
+- F-C15: 分类图标网格 ✅（横滑图标入口、动态加载）
+- F-C20: 商品标签与销量 ✅（最多 2 个标签、已售数、点赞/收藏数）
+- F-C24: 收藏商品 ✅（详情页收藏、WishlistPage、取消收藏、下架标记）
+- F-C25: 客服与反馈 ✅（客服入口 → Telegram 链接/电话、意见反馈表 + 图片）
+- F-M04: 数据看板 ✅（基础版：GMV/用户/订单/7 天趋势图）
+- F-M06: 系统配置 ✅（Banner/品类/城市/配送规则/客服账号 5 个子模块）
+- F-M07: Banner 管理 ✅（CRUD + 跳转类型 + 城市+时间生效控制）
+- F-M08: 商品标签 ✅（嵌入 ProductFormPage，三语+颜色+每个商品最多 6 个）
+- F-M09: 配送规则 ✅（起送金额/运费/免邮门槛/预计送达天数，按城市配置）
+- F-M10: 城市管理 ✅（CRUD + 经纬度 + 启用/禁用 + 排序）
+- F-M11: 反馈管理 ✅（列表 + 状态筛选 + 标记已处理 + 图片预览）
+
+### 补充的 P1 功能 — 已完成
+- 管理员优惠券管理 ✅（CouponsPage: CRUD + 启用/停用）
+- 管理员库存管理 ✅（InventoryPage: 预警/调整/盘点/CSV/变更日志）
+- 支付结果页 ✅（PaymentResult: success/failed/timeout/cancelled/COD 五种状态）
+- 重置密码页 ✅（ResetPasswordPage: 手机号→验证码→新密码）
+- 过期订单 Cron Job ✅（`jobs/orderExpiry.js`: 每分钟取消超时订单 + 释放库存 + 退还优惠券）
+- 支付对账 Cron Job ✅（`jobs/paymentReconciliation.js`: 每 5 分钟对账 + 补漏 webhook）
+- 三语 i18n 文件完整 ✅（zh/en/km 各 270 行，18 个命名空间，结构一致）
+
+</details>

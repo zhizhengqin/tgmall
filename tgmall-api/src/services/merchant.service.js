@@ -310,7 +310,6 @@ export async function getProductById(productId) {
 export async function createProduct(body) {
   const product = await prisma.product.create({
     data: {
-      merchantId,
       nameKm: body.name_km,
       nameEn: body.name_en || null,
       nameZh: body.name_zh || null,

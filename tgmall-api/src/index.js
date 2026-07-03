@@ -3,6 +3,7 @@ import app from './app.js';
 import { config } from './config/index.js';
 import { startOrderExpiryJob } from './jobs/orderExpiry.js';
 import { startPaymentReconciliationJob } from './jobs/paymentReconciliation.js';
+import { startOrderAutoCompleteJob } from './jobs/orderAutoComplete.js';
 import { setMiniAppMenuButton } from './integrations/telegram.js';
 
 app.listen(config.port, async () => {
@@ -15,4 +16,5 @@ app.listen(config.port, async () => {
 
   startOrderExpiryJob();
   startPaymentReconciliationJob();
+  startOrderAutoCompleteJob();
 });
