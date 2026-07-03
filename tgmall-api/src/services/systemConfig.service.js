@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 
 const PLATFORM_KEYS = [
   'store_name', 'store_logo', 'contact_phone', 'contact_email',
-  'maintenance_mode', 'announcement_text',
+  'maintenance_mode', 'announcement_text', 'login_banner_image',
 ];
 
 export async function getPlatformSettings() {
@@ -22,6 +22,7 @@ export async function getPlatformSettings() {
     contactEmail: map.contact_email || '',
     maintenanceMode: map.maintenance_mode === 'true',
     announcement: map.announcement_text || '',
+    loginBannerImage: map.login_banner_image || '',
   };
 }
 
@@ -33,6 +34,7 @@ export async function updatePlatformSettings(input) {
   if (input.contact_email !== undefined) pairs.push({ key: 'contact_email', value: input.contact_email });
   if (input.maintenance_mode !== undefined) pairs.push({ key: 'maintenance_mode', value: String(input.maintenance_mode) });
   if (input.announcement !== undefined) pairs.push({ key: 'announcement_text', value: input.announcement });
+  if (input.login_banner_image !== undefined) pairs.push({ key: 'login_banner_image', value: input.login_banner_image });
 
   for (const p of pairs) {
     await prisma.systemSetting.upsert({

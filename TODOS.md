@@ -111,9 +111,13 @@
 - **实现:** commit `673c6d2`
   - GET /admin/orders/export/csv (BOM UTF-8 + 状态/日期过滤)
 
-### 登录引导横幅配置 (F-M07 补充)
+### ✅ 登录引导横幅配置 (F-M07 补充) — 已实现
 - **来源:** 与 F-C17 联动
-- **需要:** 管理后台上传引导横幅图、设置展示频率（当前已通过 localStorage 24h 关闭）
+- **实现:**
+  - 后端: SystemSetting 新增 `login_banner_image` 字段 + `GET /login-banner` 公开端点
+  - 管理后台: PlatformSettingsPage 新增「登录引导横幅图片 URL」配置
+  - Mini App: HomePage 读取 API 配置，有图显图、无图显示默认文字横幅
+  - 原有 24h localStorage 关闭逻辑不变
 
 ---
 

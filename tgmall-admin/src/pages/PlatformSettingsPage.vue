@@ -34,6 +34,16 @@
         </el-form>
       </el-card>
 
+      <el-card style="max-width:680px;margin-top:16px">
+        <template #header>登录引导横幅</template>
+        <el-form label-width="100px">
+          <el-form-item label="横幅图片 URL">
+            <el-input v-model="form.loginBannerImage" placeholder="https://... 留空使用默认文字横幅" />
+            <span style="margin-left:12px;font-size:12px;color:#999">未登录用户在首页顶部看到的引导横幅</span>
+          </el-form-item>
+        </el-form>
+      </el-card>
+
       <div style="margin-top:20px">
         <el-button type="primary" @click="save" :loading="saving">保存设置</el-button>
       </div>
@@ -50,7 +60,7 @@ import TopBar from '@/components/layout/TopBar.vue';
 
 const form = reactive({
   storeName: '', storeLogo: '', contactPhone: '', contactEmail: '',
-  maintenanceMode: false, announcement: '',
+  maintenanceMode: false, announcement: '', loginBannerImage: '',
 });
 const saving = ref(false);
 
@@ -71,6 +81,7 @@ async function save() {
       contact_email: form.contactEmail,
       maintenance_mode: form.maintenanceMode,
       announcement: form.announcement,
+      login_banner_image: form.loginBannerImage,
     });
     ElMessage.success('保存成功');
   } catch (e) {

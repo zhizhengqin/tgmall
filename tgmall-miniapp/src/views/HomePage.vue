@@ -27,7 +27,8 @@
 
     <!-- 登录引导横幅（未登录用户可见，24h 关闭） -->
     <div class="login-banner" v-if="showLoginBanner" @click="goLogin">
-      <span class="login-banner-text">🔐 {{ $t('home.loginBanner') }}</span>
+      <img v-if="loginBannerImage" :src="loginBannerImage" class="login-banner-img" alt="login banner" />
+      <span v-else class="login-banner-text">🔐 {{ $t('home.loginBanner') }}</span>
       <button class="login-banner-close" @click.stop="dismissLoginBanner">✕</button>
     </div>
 
@@ -145,7 +146,7 @@ import FlashDealCard from '@/components/common/FlashDealCard.vue';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton.vue';
 import MiniCartBar from '@/components/common/MiniCartBar.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
-import { getFlashDeals } from '@/api/shopConfig';
+import { getFlashDeals, getLoginBanner } from '@/api/shopConfig';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
@@ -167,7 +168,15 @@ function isBannerDismissedIn24h() {
   return Date.now() - parseInt(ts, 10) < 24 * 60 * 60 * 1000;
 }
 const loginBannerDismissed = ref(isBannerDismissedIn24h());
+const loginBannerImage = ref('');
 const showLoginBanner = computed(() => !userStore.isLoggedIn && !loginBannerDismissed.value);
+
+async function fetchLoginBanner() {
+  try {
+    const res = await getLoginBanner();
+    loginBannerImage.value = res.data?.image || '';
+  } catch { /* ignore — fallback to text banner */ }
+}
 function dismissLoginBanner() {
   localStorage.setItem(LOGIN_BANNER_KEY, Date.now().toString());
   loginBannerDismissed.value = true;
@@ -354,6 +363,7 @@ onMounted(() => {
   cityStore.detectCityByGPS();
   fetchProducts(true);
   loadFlashDeals();
+  fetchLoginBanner();
   window.addEventListener('scroll', handleScroll, { passive: true });
 });
 
@@ -478,6 +488,12 @@ onUnmounted(() => {
   transition: background 0.2s;
 }
 .login-banner-close:active { background: rgba(0,0,0,.12); }
+.login-banner-img {
+  width: 100%;
+  max-height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
 
 /* Banner */
 .banner-placeholder {

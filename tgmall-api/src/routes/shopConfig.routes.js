@@ -51,5 +51,6 @@ publicRouter.get('/categories', ctrl.publicCategories);
 publicRouter.get('/cities', ctrl.publicCities);
 publicRouter.get('/delivery-rules/:cityCode', ctrl.publicDeliveryRule);
 publicRouter.get('/customer-services/default', ctrl.publicDefaultCustomerService);
+publicRouter.get('/login-banner', ctrl.publicLoginBanner);
 
 export { adminRouter, publicRouter };

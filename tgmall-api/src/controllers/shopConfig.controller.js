@@ -1,5 +1,6 @@
 // 运营配置控制器
 import * as shopConfig from '../services/shopConfig.service.js';
+import * as systemConfig from '../services/systemConfig.service.js';
 import { AppError } from '../utils/AppError.js';
 import { getPagination } from '../utils/pagination.js';
 
@@ -194,5 +195,13 @@ export async function publicDefaultCustomerService(req, res, next) {
     const data = await shopConfig.getDefaultCustomerService();
     if (!data) return next(new AppError('Customer service not found', 404, 'NOT_FOUND'));
     res.json(ok(data));
+  } catch (err) { next(err); }
+}
+
+// GET /login-banner — 登录引导横幅配置
+export async function publicLoginBanner(_req, res, next) {
+  try {
+    const settings = await systemConfig.getPlatformSettings();
+    res.json({ success: true, data: { image: settings.loginBannerImage || '' } });
   } catch (err) { next(err); }
 }
