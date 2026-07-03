@@ -74,7 +74,6 @@ async function doLogin() {
     const data = res?.data || res;
     if (data?.token) {
       store.setAuth(data.token);
-      localStorage.setItem('admin_token', data.token);
       router.push('/dashboard');
     }
   } catch (e) {

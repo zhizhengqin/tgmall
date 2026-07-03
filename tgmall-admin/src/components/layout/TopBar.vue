@@ -34,7 +34,7 @@ function switchLang(code) {
 }
 
 function logout() {
-  localStorage.removeItem('admin_token');
+  sessionStorage.removeItem('admin_token');
   location.href = '/admin/';
 }
 </script>

@@ -57,10 +57,10 @@
 | SEC-05 | CORS 生产环境仍信任 localhost | `tgmall-api/src/app.js:22-28` | CSRF-like 带凭证请求 | ✅ 已修复 |
 | SEC-06 | 后台优惠券/平台设置无请求体验证 | `admin.controller.js` / `systemConfig.controller.js` | 脏数据/配置注入 | ✅ 已修复 |
 | SEC-07 | 错误处理非生产环境泄漏栈跟踪 | `tgmall-api/src/middleware/errorHandler.js:30` | 路径/依赖信息泄露 | ✅ 已修复 |
-| SEC-08 | 手动库存调整存在读-改竞争 | `tgmall-api/src/services/inventory.service.js` | 库存日志与实际不一致 | 📋 待规划 |
-| SEC-09 | 订单取消状态竞争 | `tgmall-api/src/services/order.service.js:351-398` | 并发取消重复恢复库存 | 📋 待规划 |
-| SEC-10 | `initData` 24h 有效期 | `tgmall-api/src/integrations/telegram.js:24` | 重放登录凭证 | 📋 待规划 |
-| SEC-11 | JWT 存在 localStorage | Mini App / Admin stores | XSS 场景下 Token 易被盗 | 📋 待规划 |
+| SEC-08 | 手动库存调整存在读-改竞争 | `tgmall-api/src/services/inventory.service.js` | 库存日志与实际不一致 | ✅ 已修复（adjustStock/checkInventory 内 SELECT FOR UPDATE） |
+| SEC-09 | 订单取消状态竞争 | `tgmall-api/src/services/order.service.js:351-398` | 并发取消重复恢复库存 | ✅ 已修复（事务内读取 + updateMany 原子状态流转） |
+| SEC-10 | `initData` 24h 有效期 | `tgmall-api/src/integrations/telegram.js:24` | 重放登录凭证 | ✅ 已修复（TTL 缩至 5 分钟 + Redis hash 重放保护） |
+| SEC-11 | JWT 存在 localStorage | Mini App / Admin stores | XSS 场景下 Token 易被盗 | 🟡 部分缓解：Admin 改用 sessionStorage；JWT TTL 缩短至 2h；Mini App 需后续 httpOnly cookie 改造 |
 
 ### P1 — 体验/运营缺口（Sprint 内补齐）
 

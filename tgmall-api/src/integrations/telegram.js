@@ -1,9 +1,13 @@
 // Telegram Bot API + initData 校验 + 消息发送
 import crypto from 'crypto';
 import { config } from '../config/index.js';
+import redis from '../config/redis.js';
+
+// initData 有效期：Telegram 默认 24h，本平台登录场景收紧到 5 分钟
+const INIT_DATA_TTL_SECONDS = 300;
 
 /** 校验 Telegram Mini App initData 签名 */
-export function verifyInitData(initData) {
+export async function verifyInitData(initData) {
   const params = new URLSearchParams(initData);
   const hash = params.get('hash');
   params.delete('hash');
@@ -21,9 +25,17 @@ export function verifyInitData(initData) {
   }
 
   const authDate = parseInt(params.get('auth_date'), 10);
-  if (Math.floor(Date.now() / 1000) - authDate > 86400) {
+  if (Math.floor(Date.now() / 1000) - authDate > INIT_DATA_TTL_SECONDS) {
     throw new Error('initData 已过期');
   }
+
+  // 重放保护：同一 initData hash 只能使用一次
+  const replayKey = `init_data:${hash}`;
+  const exists = await redis.get(replayKey);
+  if (exists) {
+    throw new Error('initData 已被使用');
+  }
+  await redis.set(replayKey, '1', 'EX', INIT_DATA_TTL_SECONDS);
 
   const user = JSON.parse(params.get('user') || '{}');
   return {

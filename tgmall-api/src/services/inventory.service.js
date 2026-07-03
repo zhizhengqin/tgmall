@@ -44,14 +44,24 @@ export async function listInventory({ page = 1, limit = 20, q, sortBy = 'stock_a
 }
 
 export async function adjustStock(productId, newQty, operatorId, note = null) {
-  const product = await prisma.product.findUnique({ where: { id: productId } });
-  if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
+  if (!Number.isInteger(newQty) || newQty < 0) {
+    throw new AppError('库存数量必须是非负整数', 400, 'INVALID_QUANTITY');
+  }
 
-  const beforeQty = product.stock;
-  const afterQty = newQty;
-  const changeQty = afterQty - beforeQty;
+  return prisma.$transaction(async (tx) => {
+    // 在事务内加行级锁读取，防止并发调整导致日志与实际不一致
+    const [product] = await tx.$queryRaw`
+      SELECT id, stock, name_km
+      FROM products
+      WHERE id = ${productId}::uuid
+      FOR UPDATE
+    `;
+    if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
 
-  await prisma.$transaction(async (tx) => {
+    const beforeQty = product.stock;
+    const afterQty = newQty;
+    const changeQty = afterQty - beforeQty;
+
     await tx.product.update({
       where: { id: productId },
       data: { stock: newQty, ...(newQty === 0 ? { status: 'inactive' } : {}) },
@@ -66,13 +76,12 @@ export async function adjustStock(productId, newQty, operatorId, note = null) {
         data: { productId, beforeQty: 0, afterQty: 0, changeQty: 0, reason: 'auto_delist', operatorId, note: '库存归零自动下架' },
       });
     }
-  });
 
-  const updated = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true, nameKm: true, stock: true, status: true, alertThreshold: true },
+    return tx.product.findUnique({
+      where: { id: productId },
+      select: { id: true, nameKm: true, stock: true, status: true, alertThreshold: true },
+    });
   });
-  return updated;
 }
 
 export async function getStockLogs(productId, { page = 1, limit = 20 } = {}) {
@@ -90,16 +99,23 @@ export async function getStockLogs(productId, { page = 1, limit = 20 } = {}) {
 }
 
 export async function checkInventory({ productId, actualQty, checkedBy, note }) {
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true, stock: true, nameKm: true },
-  });
-  if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
+  if (!Number.isInteger(actualQty) || actualQty < 0) {
+    throw new AppError('盘点数量必须是非负整数', 400, 'INVALID_QUANTITY');
+  }
 
-  const systemQty = product.stock;
-  const diff = actualQty - systemQty;
+  return prisma.$transaction(async (tx) => {
+    // 在事务内加行级锁读取当前库存，防止并发盘点覆盖
+    const [product] = await tx.$queryRaw`
+      SELECT id, stock, name_km
+      FROM products
+      WHERE id = ${productId}::uuid
+      FOR UPDATE
+    `;
+    if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
 
-  const record = await prisma.$transaction(async (tx) => {
+    const systemQty = product.stock;
+    const diff = actualQty - systemQty;
+
     const check = await tx.inventoryCheck.create({
       data: { productId, systemQty, actualQty, diff, note, checkedBy },
     });
@@ -114,10 +130,9 @@ export async function checkInventory({ productId, actualQty, checkedBy, note }) 
         data: { productId, beforeQty: systemQty, afterQty: actualQty, changeQty: diff, reason: 'stock_check', operatorId: checkedBy, note: note || '盘点调整' },
       });
     }
-    return check;
-  });
 
-  return { ...record, productName: product.nameKm };
+    return { ...check, productName: product.name_km };
+  });
 }
 
 export async function setAlertThreshold(productId, threshold) {

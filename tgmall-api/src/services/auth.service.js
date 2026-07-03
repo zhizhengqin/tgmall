@@ -11,7 +11,7 @@ export async function telegramLogin(initData) {
   // 1. 校验 initData 签名
   let userData;
   try {
-    userData = verifyInitData(initData);
+    userData = await verifyInitData(initData);
   } catch (err) {
     throw new AppError(err.message, 401, 'INVALID_INIT_DATA');
   }

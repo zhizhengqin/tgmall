@@ -28,7 +28,7 @@ const routes = [
 const router = createRouter({ history: createWebHistory('/admin/'), routes });
 
 router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('admin_token');
+  const token = sessionStorage.getItem('admin_token');
   if (to.meta.requiresAuth && !token) return next('/login');
   next();
 });

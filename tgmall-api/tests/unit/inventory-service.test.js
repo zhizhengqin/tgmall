@@ -21,6 +21,7 @@ const mockInventoryCheck = {
 
 const mockTx = {
   product: {
+    findUnique: jest.fn(),
     update: jest.fn(),
   },
   stockLog: {
@@ -29,6 +30,7 @@ const mockTx = {
   inventoryCheck: {
     create: jest.fn(),
   },
+  $queryRaw: jest.fn(),
 };
 
 const mockPrisma = {
@@ -52,9 +54,8 @@ describe('Inventory Service', () => {
     it('调整库存并记录 StockLog', async () => {
       const { adjustStock } = await import('../../src/services/inventory.service.js');
 
-      mockPrismaProduct.findUnique
-        .mockResolvedValueOnce({ id: 'p1', stock: 10 })
-        .mockResolvedValueOnce({ id: 'p1', stock: 25, status: 'active', alertThreshold: null });
+      mockTx.$queryRaw.mockResolvedValueOnce([{ id: 'p1', stock: 10, name_km: '测试商品' }]);
+      mockTx.product.findUnique.mockResolvedValueOnce({ id: 'p1', stock: 25, status: 'active', alertThreshold: null, nameKm: '测试商品' });
 
       const result = await adjustStock('p1', 25, 'admin1', '补货');
 
@@ -65,9 +66,8 @@ describe('Inventory Service', () => {
     it('库存归零时调用事务处理并下架', async () => {
       const { adjustStock } = await import('../../src/services/inventory.service.js');
 
-      mockPrismaProduct.findUnique
-        .mockResolvedValueOnce({ id: 'p1', stock: 5 })
-        .mockResolvedValueOnce({ id: 'p1', stock: 0, status: 'inactive', alertThreshold: null });
+      mockTx.$queryRaw.mockResolvedValueOnce([{ id: 'p1', stock: 5, name_km: '测试商品' }]);
+      mockTx.product.findUnique.mockResolvedValueOnce({ id: 'p1', stock: 0, status: 'inactive', alertThreshold: null, nameKm: '测试商品' });
 
       const result = await adjustStock('p1', 0, 'admin1', null);
 
@@ -81,7 +81,8 @@ describe('Inventory Service', () => {
     it('盘点无差异时仅创建 InventoryCheck 记录', async () => {
       const { checkInventory } = await import('../../src/services/inventory.service.js');
 
-      mockPrismaProduct.findUnique.mockResolvedValue({ id: 'p1', stock: 50, nameKm: '测试商品' });
+      mockTx.$queryRaw.mockResolvedValueOnce([{ id: 'p1', stock: 50, name_km: '测试商品' }]);
+      mockTx.inventoryCheck.create.mockResolvedValueOnce({ id: 'c1', productId: 'p1', systemQty: 50, actualQty: 50, diff: 0 });
 
       await checkInventory({ productId: 'p1', actualQty: 50, checkedBy: 'admin1', note: '月度盘点' });
       expect(mockPrisma.$transaction).toHaveBeenCalled();
@@ -90,7 +91,8 @@ describe('Inventory Service', () => {
     it('盘点有差异时自动调整库存', async () => {
       const { checkInventory } = await import('../../src/services/inventory.service.js');
 
-      mockPrismaProduct.findUnique.mockResolvedValue({ id: 'p1', stock: 50, nameKm: '测试商品' });
+      mockTx.$queryRaw.mockResolvedValueOnce([{ id: 'p1', stock: 50, name_km: '测试商品' }]);
+      mockTx.inventoryCheck.create.mockResolvedValueOnce({ id: 'c1', productId: 'p1', systemQty: 50, actualQty: 48, diff: -2 });
 
       await checkInventory({ productId: 'p1', actualQty: 48, checkedBy: 'admin1', note: null });
       expect(mockPrisma.$transaction).toHaveBeenCalled();

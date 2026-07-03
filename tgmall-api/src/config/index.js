@@ -24,7 +24,7 @@ export const config = {
   redisUrl: process.env.REDIS_URL,
   botToken: process.env.BOT_TOKEN,
   jwtSecret: process.env.JWT_SECRET,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '2h',
   aws: {
     region: process.env.AWS_REGION || 'ap-southeast-1',
     s3Bucket: process.env.S3_BUCKET || 'tgmall-images-dev',

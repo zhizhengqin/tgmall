@@ -354,23 +354,36 @@ export async function getOrderById(userId, orderId) {
 }
 
 export async function cancelOrder(userId, orderId, reason) {
-  const order = await prisma.order.findFirst({
-    where: { id: orderId, userId },
-    include: { items: true },
-  });
-  if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
-  if (!['pending_payment', 'confirmed'].includes(order.status)) {
-    throw new AppError('只有待付款或待发货订单可以取消', 400, 'ORDER_CANNOT_CANCEL');
-  }
+  return prisma.$transaction(async (tx) => {
+    // 在事务内读取订单并校验状态，防止并发重复取消/重复恢复库存
+    const order = await tx.order.findFirst({
+      where: { id: orderId, userId },
+      include: { items: true },
+    });
+    if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
+    if (!['pending_payment', 'confirmed'].includes(order.status)) {
+      throw new AppError('只有待付款或待发货订单可以取消', 400, 'ORDER_CANNOT_CANCEL');
+    }
 
-  await prisma.$transaction(async (tx) => {
-    // 恢复库存 + 写 StockLog
+    // 原子更新订单状态：只有状态仍是可取消时才更新，避免重复处理
+    const updatedOrder = await tx.order.updateMany({
+      where: { id: orderId, status: { in: ['pending_payment', 'confirmed'] } },
+      data: { status: 'cancelled', cancelledAt: new Date(), cancelReason: reason || '用户取消' },
+    });
+    if (updatedOrder.count === 0) {
+      throw new AppError('订单状态已变更，请刷新后重试', 409, 'ORDER_STATUS_CHANGED');
+    }
+
+    // 恢复库存（加行级锁）+ 写 StockLog
     for (const item of order.items) {
-      const productBefore = await tx.product.findUnique({
-        where: { id: item.productId },
-        select: { stock: true },
-      });
-      const newStock = productBefore.stock + item.quantity;
+      const [product] = await tx.$queryRaw`
+        SELECT id, stock
+        FROM products
+        WHERE id = ${item.productId}::uuid
+        FOR UPDATE
+      `;
+      if (!product) continue;
+      const newStock = product.stock + item.quantity;
 
       await tx.product.update({
         where: { id: item.productId },
@@ -380,13 +393,14 @@ export async function cancelOrder(userId, orderId, reason) {
       await tx.stockLog.create({
         data: {
           productId: item.productId,
-          beforeQty: productBefore.stock,
+          beforeQty: product.stock,
           afterQty: newStock,
           changeQty: +item.quantity,
           reason: 'order_cancel',
         },
       });
     }
+
     // 退还优惠券
     if (order.couponId) {
       await tx.userCoupon.updateMany({
@@ -394,14 +408,9 @@ export async function cancelOrder(userId, orderId, reason) {
         data: { status: 'unused', usedAt: null },
       });
     }
-    // 更新订单状态
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: 'cancelled', cancelledAt: new Date(), cancelReason: reason || '用户取消' },
-    });
-  });
 
-  return { status: 'cancelled' };
+    return { status: 'cancelled' };
+  });
 }
 
 export async function confirmOrder(userId, orderId) {
