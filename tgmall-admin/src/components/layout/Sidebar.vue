@@ -21,6 +21,7 @@
       <el-menu-item index="/settings/flash-deals">⚡ 限时专区</el-menu-item>
       <el-menu-item index="/settings/platform">⚙️ 平台设置</el-menu-item>
       <el-menu-item index="/settings/admin-users">👤 管理员账号</el-menu-item>
+      <el-menu-item index="/settings/tags">🏷️ 商品标签</el-menu-item>
     </el-sub-menu>
   </el-menu>
 </template>

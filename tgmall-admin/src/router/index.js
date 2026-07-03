@@ -13,6 +13,7 @@ const routes = [
   { path: '/settings/flash-deals', name: 'FlashDeals', component: () => import('@/pages/FlashDealsPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/platform', name: 'PlatformSettings', component: () => import('@/pages/PlatformSettingsPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/admin-users', name: 'AdminUsers', component: () => import('@/pages/AdminUsersPage.vue'), meta: { requiresAuth: true } },
+  { path: '/settings/tags', name: 'Tags', component: () => import('@/pages/TagsPage.vue'), meta: { requiresAuth: true } },
   { path: '/products', name: 'Products', component: () => import('@/pages/ProductsPage.vue'), meta: { requiresAuth: true } },
   { path: '/inventory', name: 'Inventory', component: () => import('@/pages/InventoryPage.vue'), meta: { requiresAuth: true } },
   { path: '/products/new', name: 'ProductNew', component: () => import('@/pages/ProductFormPage.vue'), meta: { requiresAuth: true } },

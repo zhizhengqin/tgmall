@@ -235,6 +235,22 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  textKm    String   @map("text_km") @db.VarChar(50)
+  textEn    String?  @map("text_en") @db.VarChar(50)
+  textZh    String?  @map("text_zh") @db.VarChar(50)
+  color     String   @default("#c4932a") @db.VarChar(20)
+  bg        String   @default("rgba(196,147,42,0.08)") @db.VarChar(30)
+  sortOrder Int      @default(0) @map("sort_order")
+  status    String   @default("active") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([status, sortOrder])
+  @@map("tags")
+}
+
 model Category {
   code       String   @id @db.VarChar(50)
   nameKm     String   @map("name_km") @db.VarChar(100)

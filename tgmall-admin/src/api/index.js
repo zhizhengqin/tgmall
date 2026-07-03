@@ -94,3 +94,9 @@ export const createSysAdmin = (data) => api.post('/admin/admins', data);
 export const resetSysAdminPassword = (id, data) => api.put(`/admin/admins/${id}/reset-password`, data);
 export const toggleSysAdminStatus = (id) => api.post(`/admin/admins/${id}/toggle`);
 export const deleteSysAdmin = (id) => api.delete(`/admin/admins/${id}`);
+
+// ── 标签管理 ──
+export const getTags = (params) => api.get('/admin/tags', { params });
+export const createTag = (data) => api.post('/admin/tags', data);
+export const updateTag = (id, data) => api.put(`/admin/tags/${id}`, data);
+export const deleteTag = (id) => api.delete(`/admin/tags/${id}`);
