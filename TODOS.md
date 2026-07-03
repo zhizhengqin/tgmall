@@ -94,10 +94,11 @@
   - 后端: GET /admin/users/:id (详情+订单数+消费) + POST /admin/users/:id/toggle
   - UsersPage: 状态标签 + 创建日期 + 禁用/启用按钮
 
-### 商品标签独立管理页 (F-M08)
+### ✅ 商品标签独立管理页 (F-M08) — 已实现
 - **来源:** PRD §4.3
-- **现状:** 标签仅在 ProductFormPage 内嵌创建（三语文本+颜色），无独立管理
-- **需要:** 独立的标签 CRUD 页面，支持全局编辑同步
+- **实现:** commit `58122de`
+  - DB: Tag 模型 (三语文本 + 颜色 + 背景色 + 排序)
+  - TagsPage: 预览 + CRUD + el-color-picker
 
 ### ✅ 限时专区运营管理 (F-M07 补充) — 已在 F-C16 完成
 - **实现:** commit `f0c7b3d`
