@@ -143,6 +143,7 @@
     "saveAsDraft": "保存草稿", "publishNow": "立即上架",
     "nameKm": "名称(高棉语)", "nameEn": "名称(英语)", "nameZh": "名称(中文)",
     "tags": "商品标签",
+    "tagLibrary": "标签库",
     "addTag": "添加标签"
   },
   "orders": {

@@ -101,9 +101,9 @@ describe('OWASP Top 10 安全测试', () => {
 
   // TC-S-011: A07 Token 过期
   it('A07: JWT 有 exp 声明', () => {
-    const tokenPayload = { userId: 'u1', role: 'user', iat: Date.now(), exp: Date.now() + 86400000 };
+    const tokenPayload = { userId: 'u1', role: 'user', iat: Date.now(), exp: Date.now() + 7200000 };
     expect(tokenPayload.exp).toBeGreaterThan(tokenPayload.iat);
-    expect(tokenPayload.exp - tokenPayload.iat).toBe(86400000); // 24h
+    expect(tokenPayload.exp - tokenPayload.iat).toBe(7200000); // 2h
   });
 
   // TC-S-012: A07 Webhook 无 Token

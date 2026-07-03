@@ -1,5 +1,6 @@
 // Vue Router 配置 — 路由懒加载
 import { createRouter, createWebHistory } from 'vue-router';
+import { useUserStore } from '@/stores/userStore.js';
 
 const routes = [
   {
@@ -109,6 +110,14 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
+  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+    return next({ name: 'Login', query: { redirect: to.fullPath } });
+  }
+  next();
 });
 
 export default router;

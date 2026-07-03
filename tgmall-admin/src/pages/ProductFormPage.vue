@@ -14,6 +14,19 @@
         <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)">{{im.url}}</el-tag></div>
         <el-form-item :label="$t('products.tags')">
           <div class="tag-editor">
+            <div v-if="allTags.length" class="tag-library">
+              <span class="tag-label">{{ $t('products.tagLibrary') }}:</span>
+              <el-tag
+                v-for="tag in allTags"
+                :key="tag.id"
+                :style="{ color: tag.color, backgroundColor: tag.bg }"
+                size="small"
+                class="library-tag"
+                @click="selectTag(tag)"
+              >
+                {{ tag.textKm }}
+              </el-tag>
+            </div>
             <div v-for="(t,i) in f.tags" :key="i" class="tag-item">
               <el-input v-model="t.textKm" placeholder="KM" size="small" style="width:70px" />
               <el-input v-model="t.textEn" placeholder="EN" size="small" style="width:60px" />
@@ -22,7 +35,7 @@
               <el-input v-model="t.bg" placeholder="#c4932a" size="small" style="width:80px" type="color" />
               <el-button size="small" @click="f.tags.splice(i,1)" type="danger" circle>X</el-button>
             </div>
-            <el-button size="small" @click="f.tags.push({textKm:'',textEn:'',textZh:'',color:'#fff',bg:'#c4932a'})" :disabled="f.tags.length >= 6">+ {{ $t('products.addTag') }}</el-button>
+            <el-button size="small" @click="f.tags.push({textKm:'',textEn:'',textZh:'',color:'#ffffff',bg:'#c4932a'})" :disabled="f.tags.length >= 6">+ {{ $t('products.addTag') }}</el-button>
           </div>
         </el-form-item>
         <el-form-item style="margin-top:20px">
@@ -34,11 +47,21 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
-const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref('');
+import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
 const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[] });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
+function selectTag(tag) {
+  if (f.tags.length >= 6) return;
+  const exists = f.tags.some((t) => t.textKm === tag.textKm && t.textEn === tag.textEn && t.textZh === tag.textZh);
+  if (exists) return;
+  f.tags.push({ textKm: tag.textKm, textEn: tag.textEn || '', textZh: tag.textZh || '', color: tag.color, bg: tag.bg });
+}
 async function save() { saving.value = true; isEdit ? await updateProduct(route.params.id, f) : await createProduct(f); router.push('/products'); }
-onMounted(async () => { if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); } });
+onMounted(async () => {
+  if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); }
+  const tagRes = await getTags({ page: 1, limit: 100 });
+  allTags.value = Array.isArray(tagRes.data) ? tagRes.data : [];
+});
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; }</style>

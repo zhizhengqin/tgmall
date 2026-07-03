@@ -66,8 +66,8 @@
 
 | 编号 | 问题 | 位置 | 影响 | 状态 |
 |------|------|------|------|------|
-| GAP-01 | Mini App 路由守卫缺失 | `tgmall-miniapp/src/router/index.js` | `requiresAuth` 未生效 | 📋 待规划 |
-| GAP-02 | 订单列表无分页加载 | `tgmall-miniapp/src/views/OrderList.vue` | 只能看第一页 | 📋 待规划 |
+| GAP-01 | Mini App 路由守卫缺失 | `tgmall-miniapp/src/router/index.js` | `requiresAuth` 未生效 | ✅ 已修复（beforeEach 检查 token，未登录跳转 /login?redirect=） |
+| GAP-02 | 订单列表无分页加载 | `tgmall-miniapp/src/views/OrderList.vue` | 只能看第一页 | ✅ 已修复（IntersectionObserver 无限滚动，支持 meta.hasNext/has_next） |
 | GAP-03 | Checkout 优惠券选择死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法选择优惠券 | 📋 待规划 |
 | GAP-04 | Checkout 新增地址死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法在结算页添加地址 | 📋 待规划 |
 | GAP-05 | 购物车未区分规格 | `tgmall-api/src/services/cart.service.js:42-58` | 同商品不同规格无法单独操作 | 📋 待规划 |
@@ -76,7 +76,7 @@
 | GAP-08 | 汇率硬编码 4000 | 多处 | 无法调整汇率 | ✅ 已修复（SystemSetting 支持 exchange_rate，order.service 读取配置） |
 | GAP-09 | 后台 OTP 登录缺失 | `tgmall-admin/src/pages/LoginPage.vue` | 只有账号密码 | 📋 待规划 |
 | GAP-10 | 商品 SKU/规格无后台 UI | `tgmall-admin/src/pages/ProductFormPage.vue` | 无法配置多规格 | 📋 待规划 |
-| GAP-11 | 商品标签库未接入商品表单 | `tgmall-admin/src/pages/ProductFormPage.vue` | 只能手动输入标签 | 📋 待规划 |
+| GAP-11 | 商品标签库未接入商品表单 | `tgmall-admin/src/pages/ProductFormPage.vue` | 只能手动输入标签 | ✅ 已修复（加载标签库，点击选择，支持自定义标签，最多 6 个） |
 | GAP-12 | 图片无上传压缩 | 全部后台表单 | 只能填 URL | 📋 待规划 |
 
 ---

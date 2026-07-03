@@ -34,7 +34,9 @@
         </div>
       </div>
 
+      <div v-if="loadingMore" class="loading-more">{{ $t('common.loading') }}</div>
       <p v-if="!hasMore && orders.length" class="no-more">{{ $t('common.noMore') }}</p>
+      <div ref="sentinel" class="sentinel"></div>
     </div>
 
     <BottomNav />
@@ -42,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
@@ -64,8 +66,11 @@ const tabs = [
 const activeTab = ref('');
 const orders = ref([]);
 const loading = ref(true);
+const loadingMore = ref(false);
 const hasMore = ref(true);
 const page = ref(1);
+const sentinel = ref(null);
+let observer = null;
 
 function statusClass(s) {
   const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
@@ -95,25 +100,75 @@ function goPay(order) {
   });
 }
 
-async function switchTab(val) { activeTab.value = val; page.value = 1; orders.value = []; hasMore.value = true; await loadOrders(); }
-async function loadOrders() {
-  loading.value = true;
+async function switchTab(val) {
+  activeTab.value = val;
+  page.value = 1;
+  orders.value = [];
+  hasMore.value = true;
+  await loadOrders();
+}
+
+async function loadOrders(append = false) {
+  if (append) {
+    if (loadingMore.value || !hasMore.value) return;
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
+  }
   try {
     const params = { page: page.value, limit: 20 };
     if (activeTab.value) params.status = activeTab.value;
     const res = await getOrders(params);
-    orders.value = res.data;
-    hasMore.value = res.meta.has_next;
-  } catch { orders.value = []; }
-  loading.value = false;
+    const list = Array.isArray(res.data) ? res.data : [];
+    const meta = res.meta || {};
+    if (append) {
+      orders.value.push(...list);
+    } else {
+      orders.value = list;
+    }
+    hasMore.value = meta.hasNext ?? meta.has_next ?? list.length === params.limit;
+  } catch {
+    if (!append) orders.value = [];
+  } finally {
+    loading.value = false;
+    loadingMore.value = false;
+  }
+}
+
+async function loadMore() {
+  if (!hasMore.value || loadingMore.value) return;
+  page.value += 1;
+  await loadOrders(true);
+}
+
+function setupObserver() {
+  if (!window.IntersectionObserver || !sentinel.value) return;
+  observer = new IntersectionObserver((entries) => {
+    const entry = entries[0];
+    if (entry.isIntersecting) loadMore();
+  }, { rootMargin: '100px' });
+  observer.observe(sentinel.value);
+}
+
+function teardownObserver() {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
 }
 
 // 语言切换后重新加载
 watch(() => languageStore.current, () => {
+  page.value = 1;
+  orders.value = [];
+  hasMore.value = true;
   loadOrders();
 });
 
-onMounted(loadOrders);
+onMounted(() => {
+  loadOrders().then(setupObserver);
+});
+onUnmounted(teardownObserver);
 </script>
 
 <style scoped>
@@ -145,4 +200,6 @@ onMounted(loadOrders);
 .btn-pay-sm { padding: 6px 14px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; border: none; cursor: pointer; white-space: nowrap; }
 .btn-pay-sm:active { opacity: 0.8; }
 .no-more { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
+.loading-more { text-align: center; padding: 16px; color: var(--muted); font-size: 13px; }
+.sentinel { height: 1px; }
 </style>

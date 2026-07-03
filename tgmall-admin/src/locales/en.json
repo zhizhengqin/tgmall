@@ -141,6 +141,7 @@
     "saveAsDraft": "Save Draft", "publishNow": "Publish",
     "nameKm": "Name (Khmer)", "nameEn": "Name (English)", "nameZh": "Name (Chinese)",
     "tags": "Tags",
+    "tagLibrary": "Tag Library",
     "addTag": "Add Tag"
   },
   "orders": {
