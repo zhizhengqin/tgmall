@@ -49,7 +49,9 @@
     "confirmRemove": "Remove this item?",
     "quantity": "Qty",
     "added": "Added to cart",
-    "addFailed": "Add to cart failed"
+    "addFailed": "Add to cart failed",
+    "minOrderHint": "$ {amount} more to order",
+    "continueShopping": "Continue"
   },
   "checkout": {
     "shippingFee": "Shipping Fee",

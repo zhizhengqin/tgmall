@@ -1,33 +1,62 @@
-<!-- 底部购物车条 — HomePage / CategoryPage 常驻 -->
+<!-- 底部购物车条 — 件数 + 合计 + 起送差额 + 结算 -->
 <template>
-  <div v-if="summary.totalItems > 0" class="mini-cart-bar">
+  <div v-if="summary.totalItems > 0" class="mini-cart-bar" :class="{ 'min-met': minMet }">
     <router-link to="/cart" class="cart-info">
       <span class="cart-icon-wrap">
         <span class="cart-icon">🛒</span>
         <span class="cart-badge">{{ summary.totalItems }}</span>
       </span>
-      <div class="cart-price">
-        <span class="price-usd">${{ summary.totalUsd.toFixed(2) }}</span>
-        <span class="price-khr">{{ formatKhr(summary.totalKhr) }}</span>
+      <div class="cart-detail">
+        <div class="cart-price">
+          <span class="price-usd">${{ summary.totalUsd.toFixed(2) }}</span>
+          <span class="price-khr">{{ formatKhr(summary.totalKhr) }}</span>
+        </div>
+        <p v-if="deliveryGap > 0" class="delivery-gap">
+          {{ $t('cart.minOrderHint', { amount: deliveryGap.toFixed(2) }) }}
+        </p>
       </div>
     </router-link>
     <router-link to="/cart" class="cart-action">
-      {{ $t('cart.checkout') }}
+      {{ minMet ? $t('cart.checkout') : $t('cart.continueShopping') }}
     </router-link>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { getCart } from '@/api/cart';
+import { getDeliveryRule } from '@/api/shopConfig';
+import { useCityStore } from '@/stores/cityStore.js';
+
+const cityStore = useCityStore();
 
 const summary = ref({ totalItems: 0, totalUsd: 0, totalKhr: 0 });
+const minOrderUsd = ref(0);
+
+const deliveryGap = computed(() => {
+  if (minOrderUsd.value <= 0 || summary.value.totalUsd <= 0) return 0;
+  const gap = minOrderUsd.value - summary.value.totalUsd;
+  return gap > 0 ? gap : 0;
+});
+
+const minMet = computed(() => {
+  if (minOrderUsd.value <= 0) return true; // 无起送限制
+  return summary.value.totalUsd >= minOrderUsd.value;
+});
 
 async function loadCart() {
   try {
     const res = await getCart();
     summary.value = res.data.summary || { totalItems: 0, totalUsd: 0, totalKhr: 0 };
-  } catch { /* 购物车加载失败不阻塞浏览 */ }
+  } catch { /* ignore */ }
+}
+
+async function loadDeliveryRule() {
+  try {
+    const code = cityStore.currentCode || 'phnom_penh';
+    const res = await getDeliveryRule(code);
+    minOrderUsd.value = Number(res.data.minOrderAmountUsd) || 0;
+  } catch { /* ignore */ }
 }
 
 function formatKhr(khr) {
@@ -41,6 +70,7 @@ function handleCartUpdate() {
 
 onMounted(() => {
   loadCart();
+  loadDeliveryRule();
   window.addEventListener('cart-updated', handleCartUpdate);
 });
 
@@ -74,14 +104,14 @@ onUnmounted(() => {
   text-decoration: none;
   color: inherit;
   flex: 1;
+  min-width: 0;
 }
 .cart-icon-wrap {
   position: relative;
   display: inline-flex;
+  flex-shrink: 0;
 }
-.cart-icon {
-  font-size: 22px;
-}
+.cart-icon { font-size: 22px; }
 .cart-badge {
   position: absolute;
   top: -6px;
@@ -98,9 +128,16 @@ onUnmounted(() => {
   justify-content: center;
   padding: 0 4px;
 }
-.cart-price {
+.cart-detail {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cart-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   line-height: 1.2;
 }
 .price-usd {
@@ -112,6 +149,14 @@ onUnmounted(() => {
   font-size: 11px;
   color: var(--muted);
 }
+.delivery-gap {
+  font-size: 11px;
+  color: var(--accent);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .cart-action {
   flex-shrink: 0;
@@ -122,8 +167,12 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s, background 0.2s;
 }
-.cart-action:active {
-  opacity: 0.85;
+.mini-cart-bar.min-met .cart-action {
+  opacity: 1;
+  background: var(--accent-red);
 }
+.cart-action:active { opacity: 0.85; }
 </style>

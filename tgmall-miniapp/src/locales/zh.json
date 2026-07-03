@@ -49,7 +49,9 @@
     "confirmRemove": "确定删除此商品?",
     "quantity": "数量",
     "added": "已加入购物车",
-    "addFailed": "加入购物车失败"
+    "addFailed": "加入购物车失败",
+    "minOrderHint": "还差 $ {amount} 起送",
+    "continueShopping": "继续选购"
   },
   "checkout": {
     "shippingFee": "配送费",

@@ -49,7 +49,9 @@
     "confirmRemove": "លុបទំនិញនេះ?",
     "quantity": "ចំនួន",
     "added": "បានដាក់ក្នុងកន្ត្រក",
-    "addFailed": "ដាក់ក្នុងកន្ត្រកមិនបាន"
+    "addFailed": "ដាក់ក្នុងកន្ត្រកមិនបាន",
+    "minOrderHint": "នៅខ្វះ $ {amount}",
+    "continueShopping": "បន្តទិញ"
   },
   "checkout": {
     "shippingFee": "ថ្លៃដឹកជញ្ជូន",
