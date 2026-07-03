@@ -150,7 +150,7 @@
 ### 低优先级
 - **配送区域二级粒度:** 区/县级配送范围配置、特殊区域加价（PRD F-M09）
 - **下单自动应用最优优惠券:** 结算时自动选择最优单券（Backlog S3-14）
-- **COD 收款确认 API:** `POST /api/v1/admin/orders/{id}/collect-cod`（Backlog S3-05 AC4）
+- **✅ COD 收款确认 API — 已完成:** `POST /api/v1/admin/orders/{id}/collect-cod` — 管理员确认 COD 现金已收，手动完成订单
 - **QA ISSUE-002:** console.error 中英混用
 - **QA ISSUE-003:** esbuild/vite dev-dep 漏洞（非生产依赖）
 - **✅ 订单状态 Tab — 已完成:** OrderList 已添加 "已取消" Tab

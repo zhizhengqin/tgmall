@@ -34,6 +34,7 @@ router.post('/products/:id/toggle', ctrl.toggleProduct);
 // 订单管理（管理员查看/处理所有订单）
 router.get('/orders', ctrl.listOrders);
 router.get('/orders/export/csv', ctrl.exportCsv);
+router.post('/orders/:id/collect-cod', ctrl.collectCod);
 router.get('/orders/:id', ctrl.getOrder);
 router.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
 

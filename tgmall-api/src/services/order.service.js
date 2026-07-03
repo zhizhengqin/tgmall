@@ -457,3 +457,26 @@ export async function exportOrdersCsv({ status, startDate, endDate }) {
 
   return [header, ...rows].join('\n');
 }
+
+/**
+ * COD 收款确认 — 管理员手动确认货到付款已收取，将订单标记为已完成
+ */
+export async function collectCodPayment(orderId) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
+  if (order.paymentMethod !== 'cod') {
+    throw new AppError('仅 COD 订单支持收款确认', 400, 'INVALID_PAYMENT_METHOD');
+  }
+  if (order.status === 'completed') {
+    throw new AppError('订单已完成，无需重复确认', 400, 'ALREADY_COMPLETED');
+  }
+  if (order.status === 'cancelled') {
+    throw new AppError('已取消的订单不支持收款确认', 400, 'ORDER_CANCELLED');
+  }
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { status: 'completed', completedAt: new Date() },
+    select: { id: true, orderNumber: true, status: true, completedAt: true },
+  });
+}

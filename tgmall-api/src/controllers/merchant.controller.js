@@ -99,3 +99,11 @@ export async function exportCsv(req, res, next) {
     res.send('﻿' + csv);
   } catch (err) { next(err); }
 }
+
+// POST /admin/orders/:id/collect-cod — COD 收款确认
+export async function collectCod(req, res, next) {
+  try {
+    const order = await orderService.collectCodPayment(req.params.id);
+    res.json({ success: true, data: order });
+  } catch (err) { next(err); }
+}
