@@ -25,7 +25,7 @@
     "todayRevenue": "Today's Revenue",
     "lowStock": "Low Stock",
     "recent7Days": "Last 7 Days Revenue",
-    "noData": "No data yet"
+    "noData": "No data yet", "paymentRate": "Payment Success", "categorySales": "Sales by Category", "topProducts": "Top 10 Products"
   },
   "merchants": {
     "title": "Merchant Management",

@@ -27,7 +27,7 @@
     "recent7Days": "近 7 天收入",
     "gmv": "交易额",
     "newUsers": "新用户",
-    "noData": "暂无数据"
+    "noData": "暂无数据", "paymentRate": "支付成功率", "categorySales": "品类销售占比", "topProducts": "热销商品 TOP 10"
   },
   "merchants": {
     "title": "商家管理",

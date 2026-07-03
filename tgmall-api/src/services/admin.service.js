@@ -36,11 +36,58 @@ export async function getPlatformDashboard() {
     if (dailyMap[key]) dailyMap[key].newUsers += 1;
   }
 
+  // TOP 10 热销商品（按销量排序）
+  const topProducts = await prisma.product.findMany({
+    where: { status: 'active' },
+    orderBy: { salesCount: 'desc' },
+    take: 10,
+    select: {
+      id: true, nameEn: true, nameKm: true, nameZh: true,
+      priceUsd: true, salesCount: true, thumbnail: true,
+    },
+  });
+
+  // 品类销售占比（通过 order_items → product 关联获取 category）
+  const categoryOrders = await prisma.order.findMany({
+    where: { status: { in: ['paid', 'shipped', 'completed'] } },
+    select: { items: { select: { priceUsd: true, quantity: true, product: { select: { category: true } } } } },
+  });
+  const categorySalesMap = {};
+  for (const order of categoryOrders) {
+    for (const item of order.items) {
+      const cat = item.product?.category || 'other';
+      categorySalesMap[cat] = (categorySalesMap[cat] || 0) + Number(item.priceUsd) * item.quantity;
+    }
+  }
+  const categorySales = Object.entries(categorySalesMap)
+    .map(([category, gmv]) => ({ category, gmv: Math.round(gmv * 100) / 100 }))
+    .sort((a, b) => b.gmv - a.gmv);
+
+  // 支付成功率
+  const [totalPaymentOrders, successfulPaymentOrders] = await Promise.all([
+    prisma.order.count({ where: { paymentMethod: { not: 'cod' } } }),
+    prisma.order.count({ where: { paymentMethod: { not: 'cod' }, status: { in: ['paid', 'shipped', 'completed'] } } }),
+  ]);
+
   return {
     gmvToday: Number(gmvToday._sum.totalUsd || 0),
     gmvThisMonth: Number(gmvMonth._sum.totalUsd || 0),
     totalMerchants: 0, pendingAudit: 0, totalUsers, totalOrders,
     recent7DaysTrend: Object.values(dailyMap),
+    topProducts: topProducts.map(p => ({
+      id: p.id,
+      name: p.nameEn || p.nameKm,
+      nameKm: p.nameKm,
+      nameEn: p.nameEn,
+      nameZh: p.nameZh,
+      priceUsd: Number(p.priceUsd),
+      salesCount: p.salesCount,
+      thumbnail: p.thumbnail,
+    })),
+    categorySales,
+    paymentSuccessRate: totalPaymentOrders > 0
+      ? Math.round((successfulPaymentOrders / totalPaymentOrders) * 1000) / 10
+      : 0,
   };
 }
 

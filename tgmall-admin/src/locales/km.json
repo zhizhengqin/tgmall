@@ -27,7 +27,10 @@
     "recent7Days": "ចំណូល ៧ ថ្ងៃចុងក្រោយ",
     "gmv": "GMV",
     "newUsers": "អ្នកប្រើថ្មី",
-    "noData": "មិនទាន់មានទិន្នន័យ"
+    "noData": "មិនទាន់មានទិន្នន័យ",
+    "paymentRate": "អត្រាទូទាត់",
+    "categorySales": "ការលក់តាមប្រភេទ",
+    "topProducts": "ទំនិញលក់ដាច់បំផុត TOP 10"
   },
   "merchants": {
     "title": "គ្រប់គ្រងហាង",
