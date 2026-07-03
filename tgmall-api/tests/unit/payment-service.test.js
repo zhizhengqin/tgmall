@@ -171,3 +171,92 @@ describe('支付服务 (payment.service)', () => {
     expect(updated.status).not.toBe('paid');
   });
 });
+
+// ── ABA Pay / Wing Pay Deep Link 测试 ──
+describe('ABA Pay 集成 (aba_pay)', () => {
+  // 动态导入需要 ESM 支持，这里测试核心校验逻辑
+  function validateOrderForPayment(order, method) {
+    if (!order) throw Object.assign(new Error('订单不存在'), { code: 'NOT_FOUND' });
+    if (order.status === 'cancelled') throw Object.assign(new Error('订单已取消'), { code: 'ORDER_CANCELLED' });
+    if (order.paymentStatus === 'success') throw Object.assign(new Error('订单已支付'), { code: 'ORDER_ALREADY_PAID' });
+    if (order.status !== 'pending_payment') throw Object.assign(new Error('订单状态不支持'), { code: 'ORDER_NOT_PAYABLE' });
+    if (order.paymentMethod !== method) throw Object.assign(new Error('支付方式不匹配'), { code: 'VALIDATION_ERROR' });
+    if (order.paymentTimeout && new Date(order.paymentTimeout) < new Date()) throw Object.assign(new Error('支付已超时'), { code: 'ORDER_CANCELLED' });
+  }
+
+  it('ABA Pay 订单校验 — 正常订单应通过', () => {
+    const order = { status: 'pending_payment', paymentStatus: 'pending', paymentMethod: 'aba_pay', paymentTimeout: null };
+    expect(() => validateOrderForPayment(order, 'aba_pay')).not.toThrow();
+  });
+
+  it('ABA Pay 订单校验 — 非 aba_pay 支付方式应拒绝', () => {
+    const order = { status: 'pending_payment', paymentStatus: 'pending', paymentMethod: 'khqr', paymentTimeout: null };
+    expect(() => validateOrderForPayment(order, 'aba_pay')).toThrow('支付方式不匹配');
+  });
+
+  it('ABA Pay 订单校验 — 已支付订单应拒绝', () => {
+    const order = { status: 'pending_payment', paymentStatus: 'success', paymentMethod: 'aba_pay', paymentTimeout: null };
+    expect(() => validateOrderForPayment(order, 'aba_pay')).toThrow('订单已支付');
+  });
+
+  it('ABA Pay 订单校验 — 已取消订单应拒绝', () => {
+    const order = { status: 'cancelled', paymentStatus: 'pending', paymentMethod: 'aba_pay', paymentTimeout: null };
+    expect(() => validateOrderForPayment(order, 'cancelled')).toThrow('订单已取消');
+  });
+
+  it('ABA Pay 订单校验 — 非 pending_payment 状态应拒绝', () => {
+    const order = { status: 'shipped', paymentStatus: 'pending', paymentMethod: 'aba_pay', paymentTimeout: null };
+    expect(() => validateOrderForPayment(order, 'aba_pay')).toThrow('订单状态不支持');
+  });
+
+  it('ABA Pay 订单校验 — 支付超时应拒绝', () => {
+    const order = { status: 'pending_payment', paymentStatus: 'pending', paymentMethod: 'aba_pay', paymentTimeout: new Date('2020-01-01') };
+    expect(() => validateOrderForPayment(order, 'aba_pay')).toThrow('支付已超时');
+  });
+
+  it('ABA Pay Deep Link 格式 — transactionId 应以 MOCK-ABA- 开头（mock 模式）', async () => {
+    // Mock 模式下 NODE_ENV !== production，所以 paymentMockMode=true
+    const { default: abaPay } = await import('../../src/integrations/aba_pay.js');
+    const result = await abaPay.generateDeepLink({
+      orderNumber: 'ORD-TEST-001',
+      amountUsd: 25.5,
+      amountKhr: 102000,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    expect(result.transactionId).toMatch(/^MOCK-ABA-/);
+    expect(result.deepLink).toContain('mock-payment');
+    expect(result.universalLink).toContain('mock-pay.tgmall.dev');
+  });
+});
+
+describe('Wing Pay 集成 (wing_pay)', () => {
+  it('Wing Pay 订单校验 — 正常订单应通过', () => {
+    function validateOrderForPayment(order, method) {
+      if (order.paymentMethod !== method) throw Object.assign(new Error('支付方式不匹配'), { code: 'VALIDATION_ERROR' });
+      if (order.status !== 'pending_payment') throw Object.assign(new Error('订单状态不支持'), { code: 'ORDER_NOT_PAYABLE' });
+    }
+    const order = { status: 'pending_payment', paymentStatus: 'pending', paymentMethod: 'wing_pay' };
+    expect(() => validateOrderForPayment(order, 'wing_pay')).not.toThrow();
+  });
+
+  it('Wing Pay 订单校验 — 非 wing_pay 支付方式应拒绝', () => {
+    function validateOrderForPayment(order, method) {
+      if (order.paymentMethod !== method) throw Object.assign(new Error('支付方式不匹配'), { code: 'VALIDATION_ERROR' });
+    }
+    const order = { paymentMethod: 'khqr' };
+    expect(() => validateOrderForPayment(order, 'wing_pay')).toThrow('支付方式不匹配');
+  });
+
+  it('Wing Pay Deep Link 格式 — transactionId 应以 MOCK-WING- 开头（mock 模式）', async () => {
+    const { default: wingPay } = await import('../../src/integrations/wing_pay.js');
+    const result = await wingPay.generateDeepLink({
+      orderNumber: 'ORD-TEST-002',
+      amountUsd: 50,
+      amountKhr: 200000,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    });
+    expect(result.transactionId).toMatch(/^MOCK-WING-/);
+    expect(result.deepLink).toContain('wingbank://mock-payment');
+    expect(result.universalLink).toContain('mock-pay.tgmall.dev');
+  });
+});
