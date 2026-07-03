@@ -41,6 +41,9 @@ export const toggleProduct = (id) => api.post(`/admin/products/${id}/toggle`);
 export const getOrders = (params) => api.get('/admin/orders', { params });
 export const getOrderDetail = (id) => api.get(`/admin/orders/${id}`);
 export const shipOrder = (id, data) => api.post(`/admin/orders/${id}/ship`, data);
+export const exportOrdersCsv = (params) => api.get('/admin/orders/export/csv', { params, responseType: 'blob' });
+export const toggleUserStatus = (id) => api.post(`/admin/users/${id}/toggle`);
+export const getUserDetail = (id) => api.get(`/admin/users/${id}`);
 
 // ── 运营配置 ──
 export const getCategories = (params) => api.get('/admin/categories', { params });

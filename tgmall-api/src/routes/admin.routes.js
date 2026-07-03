@@ -21,6 +21,8 @@ router.use(adminAuth);
 router.get('/dashboard', adminCtrl.dashboard);
 router.get('/merchants', adminCtrl.listMerchants);
 router.get('/users', adminCtrl.listUsers);
+router.get('/users/:id', adminCtrl.getUserDetail);
+router.post('/users/:id/toggle', adminCtrl.toggleUserStatus);
 
 // 商品管理（管理员直接管理所有商品）
 router.get('/products', ctrl.listProducts);
@@ -31,6 +33,7 @@ router.post('/products/:id/toggle', ctrl.toggleProduct);
 
 // 订单管理（管理员查看/处理所有订单）
 router.get('/orders', ctrl.listOrders);
+router.get('/orders/export/csv', ctrl.exportCsv);
 router.get('/orders/:id', ctrl.getOrder);
 router.post('/orders/:id/ship', validate(shipOrderSchema), ctrl.shipOrder);
 

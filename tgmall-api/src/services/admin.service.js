@@ -106,3 +106,36 @@ export async function getUsers({ q, page, limit }) {
   ]);
   return { items, total, page, limit };
 }
+
+// GET /admin/users/:id — 用户详情
+export async function getUserDetail(id) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true, telegramId: true, firstName: true, lastName: true,
+      phone: true, status: true, createdAt: true, updatedAt: true,
+    },
+  });
+  if (!user) throw Object.assign(new Error('用户不存在'), { statusCode: 404, code: 'NOT_FOUND' });
+
+  const [orderCount, totalSpent] = await Promise.all([
+    prisma.order.count({ where: { userId: id, status: { in: ['paid', 'shipped', 'completed'] } } }),
+    prisma.order.aggregate({ _sum: { totalUsd: true }, where: { userId: id, status: { in: ['paid', 'shipped', 'completed'] } } }),
+  ]);
+
+  return {
+    ...user,
+    orderCount,
+    totalSpentUsd: Number(totalSpent._sum.totalUsd || 0),
+  };
+}
+
+// POST /admin/users/:id/toggle — 禁用/启用用户
+export async function toggleUserStatus(id) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw Object.assign(new Error('用户不存在'), { statusCode: 404, code: 'NOT_FOUND' });
+
+  const newStatus = user.status === 'active' ? 'disabled' : 'active';
+  await prisma.user.update({ where: { id }, data: { status: newStatus } });
+  return { id, status: newStatus };
+}

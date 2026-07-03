@@ -41,3 +41,13 @@ export async function confirm(req, res, next) {
     res.json({ success: true, data: result });
   } catch (err) { next(err); }
 }
+
+export async function exportCsv(req, res, next) {
+  try {
+    const { status, startDate, endDate } = req.query;
+    const csv = await orderService.exportOrdersCsv({ status, startDate, endDate });
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=orders-${new Date().toISOString().slice(0, 10)}.csv`);
+    res.send('﻿' + csv); // BOM for Excel UTF-8
+  } catch (err) { next(err); }
+}

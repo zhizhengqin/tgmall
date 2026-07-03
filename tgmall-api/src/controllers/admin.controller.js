@@ -13,6 +13,14 @@ export async function listUsers(req, res, next) {
   try { const { page, limit } = getPagination(req.query); const { q } = req.query; const result = await adminService.getUsers({ q, page, limit }); res.json({ success: true, data: result.items, meta: { total: result.total, page: result.page, limit: result.limit } }); } catch (err) { next(err); }
 }
 
+export async function getUserDetail(req, res, next) {
+  try { const data = await adminService.getUserDetail(req.params.id); res.json({ success: true, data }); } catch (err) { next(err); }
+}
+
+export async function toggleUserStatus(req, res, next) {
+  try { const data = await adminService.toggleUserStatus(req.params.id); res.json({ success: true, data }); } catch (err) { next(err); }
+}
+
 // ---- 优惠券管理 ----
 
 /** GET /admin/coupons — 优惠券列表 */

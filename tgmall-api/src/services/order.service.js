@@ -426,3 +426,34 @@ function normalizeProvinceToCityCode(province) {
   };
   return map[province.trim().toLowerCase()] || null;
 }
+
+// GET /admin/orders/export — 导出订单 CSV
+export async function exportOrdersCsv({ status, startDate, endDate }) {
+  const where = {};
+  if (status && status !== 'all') where.status = status;
+  if (startDate || endDate) {
+    where.createdAt = {};
+    if (startDate) where.createdAt.gte = new Date(startDate);
+    if (endDate) where.createdAt.lte = new Date(endDate);
+  }
+
+  const orders = await prisma.order.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      orderNumber: true, status: true, totalUsd: true, totalKhr: true,
+      paymentMethod: true, paidAt: true, createdAt: true,
+      shippingAddress: true, shippingContact: true, shippingPhone: true,
+      items: { select: { productId: true, quantity: true, priceUsd: true } },
+    },
+    take: 10000,
+  });
+
+  const header = 'OrderNumber,Status,TotalUSD,TotalKHR,PaymentMethod,ItemCount,Phone,CreatedAt';
+  const rows = orders.map(o => {
+    const itemCount = o.items.reduce((s, i) => s + i.quantity, 0);
+    return `"${o.orderNumber}","${o.status}",${Number(o.totalUsd).toFixed(2)},${o.totalKhr},"${o.paymentMethod}",${itemCount},"${o.shippingPhone || ''}","${o.createdAt.toISOString()}"`;
+  });
+
+  return [header, ...rows].join('\n');
+}
