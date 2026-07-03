@@ -4,7 +4,7 @@ import redis from '../config/redis.js';
 import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
 
-const VALID_SCENES = ['login', 'reset_password', 'set_password', 'bind_phone'];
+const VALID_SCENES = ['login', 'reset_password', 'set_password', 'bind_phone', 'admin_login'];
 const PHONE_REGEX = /^\+855[1-9]\d{7,8}$/;
 
 function cooldownKey(phone) { return `sms:cooldown:${phone}`; }

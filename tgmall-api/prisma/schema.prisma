@@ -204,6 +204,7 @@ model Notification {
 model AdminUser {
   id           String   @id @default(uuid()) @db.Uuid
   username     String   @unique @db.VarChar(50)
+  phone        String?  @unique @db.VarChar(20)
   passwordHash String   @map("password_hash") @db.VarChar(255)
   displayName  String?  @map("display_name") @db.VarChar(100)
   role         String   @default("admin") @db.VarChar(20)

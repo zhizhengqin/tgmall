@@ -10,8 +10,8 @@
         <el-form-item :label="$t('products.stock')"><el-input-number v-model="f.stock" :min="0" /></el-form-item>
         <el-form-item :label="$t('inventory.alertThreshold')"><el-input-number v-model="f.alertThreshold" :min="0" placeholder="留空表示不预警" /></el-form-item>
         <el-form-item :label="$t('products.category')"><el-input v-model="f.category" /></el-form-item>
-        <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button></el-form-item>
-        <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)">{{im.url}}</el-tag></div>
+        <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button><ImageUploader @update:modelValue="onUploadImage" style="margin-left:8px" /></el-form-item>
+        <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)"><img :src="im.url" class="img-tag" /> {{im.url}}</el-tag></div>
         <el-form-item :label="$t('products.tags')">
           <div class="tag-editor">
             <div v-if="allTags.length" class="tag-library">
@@ -38,6 +38,31 @@
             <el-button size="small" @click="f.tags.push({textKm:'',textEn:'',textZh:'',color:'#ffffff',bg:'#c4932a'})" :disabled="f.tags.length >= 6">+ {{ $t('products.addTag') }}</el-button>
           </div>
         </el-form-item>
+        <el-form-item :label="$t('products.specs')">
+          <div class="spec-editor">
+            <div v-for="(s, si) in f.specs" :key="si" class="spec-group">
+              <div class="spec-header">
+                <el-input v-model="s.nameEn" :placeholder="$t('products.specNameEn')" size="small" style="width:120px" />
+                <el-input v-model="s.nameKm" :placeholder="$t('products.specNameKm')" size="small" style="width:120px" />
+                <el-input v-model="s.nameZh" :placeholder="$t('products.specNameZh')" size="small" style="width:120px" />
+                <el-button size="small" type="danger" circle @click="f.specs.splice(si,1)">X</el-button>
+              </div>
+              <div class="spec-values">
+                <div v-for="(v, vi) in s.values" :key="vi" class="spec-value-row">
+                  <el-input v-model="v.valueEn" :placeholder="$t('products.specValueEn')" size="small" style="width:100px" />
+                  <el-input v-model="v.valueKm" :placeholder="$t('products.specValueKm')" size="small" style="width:100px" />
+                  <el-input v-model="v.valueZh" :placeholder="$t('products.specValueZh')" size="small" style="width:100px" />
+                  <el-input-number v-model="v.priceUsd" :min="0" :precision="2" :controls="false" size="small" style="width:90px" :placeholder="$t('products.priceUsd')" />
+                  <el-input-number v-model="v.priceKhr" :min="0" :step="100" :controls="false" size="small" style="width:90px" :placeholder="$t('products.priceKhr')" />
+                  <el-input-number v-model="v.stock" :min="0" :controls="false" size="small" style="width:80px" :placeholder="$t('products.stock')" />
+                  <el-button size="small" type="danger" circle @click="s.values.splice(vi,1)">X</el-button>
+                </div>
+                <el-button size="small" @click="addValue(s)">+ {{ $t('products.addSpecValue') }}</el-button>
+              </div>
+            </div>
+            <el-button size="small" @click="addSpec" :disabled="f.specs.length >= 6">+ {{ $t('products.addSpec') }}</el-button>
+          </div>
+        </el-form-item>
         <el-form-item style="margin-top:20px">
           <el-button type="primary" @click="save" :loading="saving">{{ $t('common.save') }}</el-button>
           <el-button @click="$router.back()">{{ $t('common.cancel') }}</el-button>
@@ -47,15 +72,22 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue'; import ImageUploader from '@/components/common/ImageUploader.vue';
 const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
 const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[] });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
+function onUploadImage(url) { if (url) f.images.push({ url }); }
 function selectTag(tag) {
   if (f.tags.length >= 6) return;
   const exists = f.tags.some((t) => t.textKm === tag.textKm && t.textEn === tag.textEn && t.textZh === tag.textZh);
   if (exists) return;
   f.tags.push({ textKm: tag.textKm, textEn: tag.textEn || '', textZh: tag.textZh || '', color: tag.color, bg: tag.bg });
+}
+function addSpec() {
+  f.specs.push({ nameEn: '', nameKm: '', nameZh: '', values: [] });
+}
+function addValue(spec) {
+  spec.values.push({ valueEn: '', valueKm: '', valueZh: '', priceUsd: null, priceKhr: null, stock: null });
 }
 async function save() { saving.value = true; isEdit ? await updateProduct(route.params.id, f) : await createProduct(f); router.push('/products'); }
 onMounted(async () => {
@@ -64,4 +96,4 @@ onMounted(async () => {
   allTags.value = Array.isArray(tagRes.data) ? tagRes.data : [];
 });
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; } .spec-editor { display: flex; flex-direction: column; gap: 12px; } .spec-group { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; background: #fafafa; } .spec-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; } .spec-values { display: flex; flex-direction: column; gap: 8px; } .spec-value-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .img-tag { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 4px; }</style>

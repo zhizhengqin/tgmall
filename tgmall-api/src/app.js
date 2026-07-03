@@ -143,7 +143,14 @@ setTimeout(() => {
 // 6. 业务路由
 app.use('/api/v1', routes);
 
-// 7. 全局错误处理（必须在路由之后）
+// 7. 静态资源（上传图片）
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 8. 全局错误处理（必须在路由之后）
 app.use(errorHandler);
 
 export default app;

@@ -6,6 +6,12 @@
       </div>
       <h2>{{ t('login.title') }}</h2>
 
+    <div class="tabs">
+      <button class="tab" :class="{ active: mode === 'password' }" @click="mode = 'password'">{{ t('login.passwordLogin') }}</button>
+      <button class="tab" :class="{ active: mode === 'otp' }" @click="mode = 'otp'">{{ t('login.otpLogin') }}</button>
+    </div>
+
+    <template v-if="mode === 'password'">
       <div class="field">
         <label>{{ t('login.username') }}</label>
         <input class="input" v-model="username" :placeholder="t('login.usernamePlaceholder')" autocomplete="username" />
@@ -14,10 +20,25 @@
         <label>{{ t('login.password') }}</label>
         <input class="input" v-model="password" type="password" :placeholder="t('login.passwordPlaceholder')" autocomplete="current-password" @keyup.enter="doLogin" />
       </div>
-
       <button class="login-btn" @click="doLogin" :disabled="loading">
         {{ loading ? t('common.loading') : t('login.loginBtn') }}
       </button>
+    </template>
+
+    <template v-else>
+      <div class="field">
+        <label>{{ t('login.phone') }}</label>
+        <input class="input" v-model="phone" type="tel" :placeholder="t('login.phonePlaceholder')" autocomplete="tel" />
+      </div>
+      <div class="field otp-field">
+        <label>{{ t('login.verifyCode') }}</label>
+        <input class="input" v-model="otp" :placeholder="t('login.verifyCodePlaceholder')" @keyup.enter="doOtpLogin" />
+        <button class="send-btn" @click="sendOtp" :disabled="sendingOtp || countdown > 0">{{ countdown > 0 ? t('login.resendAfter', { s: countdown }) : t('login.sendCode') }}</button>
+      </div>
+      <button class="login-btn" @click="doOtpLogin" :disabled="loading">
+        {{ loading ? t('common.loading') : t('login.loginBtn') }}
+      </button>
+    </template>
       <div v-if="error" class="error">{{ error }}</div>
     </div>
   </div>
@@ -34,9 +55,14 @@ import zh from '@/locales/zh.json';
 
 const router = useRouter();
 const store = useUserStore();
+const mode = ref('password');
 const username = ref('');
 const password = ref('');
+const phone = ref('');
+const otp = ref('');
 const loading = ref(false);
+const sendingOtp = ref(false);
+const countdown = ref(0);
 const error = ref('');
 const locale = ref(localStorage.getItem('admin_lang') || 'km');
 
@@ -62,7 +88,7 @@ function switchLang(code) {
 async function doLogin() {
   error.value = '';
   if (!username.value || !password.value) {
-    error.value = '请输入用户名和密码';
+    error.value = t('login.missingFields');
     return;
   }
   loading.value = true;
@@ -77,7 +103,56 @@ async function doLogin() {
       router.push('/dashboard');
     }
   } catch (e) {
-    error.value = e?.response?.data?.error?.message || '登录失败';
+    error.value = e?.response?.data?.error?.message || t('login.loginFailed');
+  } finally {
+    loading.value = false;
+  }
+}
+
+let timer = null;
+function startCountdown() {
+  countdown.value = 60;
+  timer = setInterval(() => {
+    countdown.value -= 1;
+    if (countdown.value <= 0) clearInterval(timer);
+  }, 1000);
+}
+
+async function sendOtp() {
+  error.value = '';
+  if (!phone.value) {
+    error.value = t('login.missingPhone');
+    return;
+  }
+  sendingOtp.value = true;
+  try {
+    await api.post('/auth/admin-login/send-otp', { phone: phone.value.trim() });
+    startCountdown();
+  } catch (e) {
+    error.value = e?.response?.data?.error?.message || t('login.sendFailed');
+  }
+  sendingOtp.value = false;
+}
+
+async function doOtpLogin() {
+  error.value = '';
+  if (!phone.value || !otp.value) {
+    error.value = t('login.missingFields');
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await api.post('/auth/admin-login/otp', {
+      phone: phone.value.trim(),
+      code: otp.value.trim(),
+    });
+    const data = res?.data || res;
+    if (data?.token) {
+      store.setAuth(data.token);
+      router.push('/dashboard');
+    }
+  } catch (e) {
+    error.value = e?.response?.data?.error?.message || t('login.loginFailed');
   } finally {
     loading.value = false;
   }
@@ -85,6 +160,13 @@ async function doLogin() {
 </script>
 
 <style scoped>
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #eee; }
+.tab { flex: 1; padding: 10px; background: none; border: none; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.active { color: #c4932a; border-bottom-color: #c4932a; font-weight: 600; }
+.otp-field { position: relative; }
+.otp-field .input { padding-right: 100px; }
+.send-btn { position: absolute; right: 4px; top: 26px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; color: #666; cursor: pointer; }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 20px; }
 .card { width: 400px; max-width: 100%; background: #fff; border-radius: 12px; padding: 32px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 .lang-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }

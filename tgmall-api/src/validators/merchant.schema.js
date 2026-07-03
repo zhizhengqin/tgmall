@@ -18,8 +18,17 @@ export const merchantProductSchema = z.object({
     thumb_url: z.string().url('缩略图URL格式无效').optional(),
   })).min(1, '至少上传一张图片').max(10, '最多10张图片'),
   specs: z.array(z.object({
-    name: z.string(),
-    values: z.array(z.string()),
+    nameEn: z.string(),
+    nameKm: z.string().optional(),
+    nameZh: z.string().optional(),
+    values: z.array(z.object({
+      valueEn: z.string(),
+      valueKm: z.string().optional(),
+      valueZh: z.string().optional(),
+      priceUsd: z.number().nonnegative().optional(),
+      priceKhr: z.number().int().nonnegative().optional(),
+      stock: z.number().int().nonnegative().optional(),
+    })).max(50),
   })).max(20, '最多20个规格').optional().default([]),
   category: z.string().min(1, '品类必填').max(50, '品类最长50字符'),
   tags: z.array(z.object({

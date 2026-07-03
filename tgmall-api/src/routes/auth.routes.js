@@ -13,6 +13,8 @@ const router = Router();
 router.post('/telegram', validate(telegramLoginSchema), authController.telegramLogin);
 router.post('/web-login', authController.webLogin);
 router.post('/admin-login', adminAuthController.login);
+router.post('/admin-login/send-otp', adminAuthController.sendOtp);
+router.post('/admin-login/otp', adminAuthController.otpLogin);
 
 // 手机号认证
 router.post('/send-sms', validate(sendSmsSchema), authController.sendSms);

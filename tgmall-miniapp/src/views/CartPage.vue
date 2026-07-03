@@ -13,8 +13,8 @@
     <div v-else>
       <div v-for="group in groups" :key="group.merchantId" class="merchant-group">
         <p class="merchant-name">{{ group.merchantName }}</p>
-        <div v-for="item in group.items" :key="item.productId" class="cart-item">
-          <input type="checkbox" :checked="isChecked(item.productId)" @change="toggleCheck(item.productId)" class="item-check" />
+        <div v-for="item in group.items" :key="item.id" class="cart-item">
+          <input type="checkbox" :checked="isChecked(item.id)" @change="toggleCheck(item.id)" class="item-check" />
           <img :src="item.thumbnail" class="item-thumb" loading="lazy" decoding="async" />
           <div class="item-body">
             <p class="item-name">{{ item.productName }}</p>
@@ -97,25 +97,25 @@ function toggleCheck(id) {
 function toggleAll() {
   if (allChecked.value) { checkedIds.value = []; return; }
   const ids = [];
-  for (const g of groups.value) for (const i of g.items) ids.push(i.productId);
+  for (const g of groups.value) for (const i of g.items) ids.push(i.id);
   checkedIds.value = ids;
 }
 
 async function decreaseQty(item) {
   if (item.quantity <= 1) {
     if (confirm($t('cart.confirmRemove'))) {
-      await removeCartItem(item.productId);
+      await removeCartItem(item.id);
       await loadCart();
     }
     return;
   }
-  try { await updateCartItem(item.productId, { quantity: item.quantity - 1 }); }
+  try { await updateCartItem(item.id, { quantity: item.quantity - 1 }); }
   catch { item.quantity = Math.max(1, item.quantity); }
 }
 
 async function increaseQty(item) {
   if (item.quantity >= item.maxQuantity) return;
-  try { await updateCartItem(item.productId, { quantity: item.quantity + 1 }); }
+  try { await updateCartItem(item.id, { quantity: item.quantity + 1 }); }
   catch { item.quantity = Math.min(item.maxQuantity, item.quantity); }
 }
 
@@ -135,7 +135,7 @@ function goCheckout() {
   const items = [];
   for (const g of groups.value) {
     for (const i of g.items) {
-      if (checkedIds.value.includes(i.productId)) {
+      if (checkedIds.value.includes(i.id)) {
         items.push({ productId: i.productId, quantity: i.quantity, spec: i.spec, priceUsd: i.priceUsd, priceKhr: i.priceKhr, productName: i.productName, thumbnail: i.thumbnail, merchantId: i.merchantId, merchantName: i.merchantName });
       }
     }

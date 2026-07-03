@@ -16,6 +16,7 @@ import { adminRouter as flashDealAdminRouter, publicRouter as flashDealPublicRou
 import systemConfigRoutes from './systemConfig.routes.js';
 import tagRoutes from './tag.routes.js';
 import notificationRoutes from './notification.routes.js';
+import uploadRoutes from './upload.routes.js';
 
 const router = Router();
 
@@ -37,6 +38,7 @@ router.use('/admin', shopConfigAdminRouter);
 router.use('/admin', flashDealAdminRouter);
 router.use('/admin', systemConfigRoutes);
 router.use('/admin', tagRoutes);
+router.use('/admin/upload', uploadRoutes);
 router.use('/cities', cityRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/feedback', feedbackRoutes);

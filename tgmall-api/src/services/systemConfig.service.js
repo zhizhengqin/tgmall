@@ -66,14 +66,14 @@ export async function listAdminUsers() {
   return users;
 }
 
-export async function createAdminUser({ username, password, displayName }) {
+export async function createAdminUser({ username, password, displayName, phone, role }) {
   const exists = await prisma.adminUser.findUnique({ where: { username } });
   if (exists) throw Object.assign(new Error('用户名已存在'), { statusCode: 409, code: 'DUPLICATE' });
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.adminUser.create({
-    data: { username, passwordHash, displayName: displayName || username, role: 'admin', status: 'active' },
-    select: { id: true, username: true, displayName: true, role: true, status: true, createdAt: true },
+    data: { username, passwordHash, phone: phone || null, displayName: displayName || username, role: role || 'admin', status: 'active' },
+    select: { id: true, username: true, phone: true, displayName: true, role: true, status: true, createdAt: true },
   });
   return user;
 }

@@ -33,7 +33,7 @@
       <!-- 优惠券 -->
       <div class="section" @click="showCouponPicker = true">
         <span>{{ $t('checkout.couponLabel') }}</span>
-        <span class="right-arrow">{{ selectedCoupon ? selectedCoupon.title : $t('checkout.selectCoupon') }} ›</span>
+        <span class="right-arrow">{{ selectedCouponTitle || $t('checkout.selectCoupon') }} ›</span>
       </div>
 
       <!-- 支付方式 -->
@@ -79,12 +79,65 @@
     <!-- 地址选择弹窗 -->
     <div v-if="showAddressPicker" class="modal-mask" @click.self="showAddressPicker = false">
       <div class="modal">
-        <h3>{{ $t('checkout.selectAddress') }}</h3>
-        <div v-for="a in addresses" :key="a.id" class="addr-option" :class="{ selected: selectedAddress?.id === a.id }" @click="selectAddress(a)">
-          <p>{{ a.recipient_name }} {{ a.phone }}</p>
-          <p class="addr-sub">{{ a.province }} {{ a.district }} {{ a.detail }}</p>
+        <template v-if="!showAddressForm">
+          <h3>{{ $t('checkout.selectAddress') }}</h3>
+          <div v-for="a in addresses" :key="a.id" class="addr-option" :class="{ selected: selectedAddress?.id === a.id }" @click="selectAddress(a)">
+            <p>{{ a.recipient_name }} {{ a.phone }}</p>
+            <p class="addr-sub">{{ a.province }} {{ a.district }} {{ a.detail }}</p>
+          </div>
+          <button class="add-new" @click="showAddressForm = true">{{ $t('checkout.addNewAddress') }}</button>
+        </template>
+        <template v-else>
+          <h3>{{ $t('checkout.addNewAddress') }}</h3>
+          <div class="form-fields">
+            <label class="form-field">
+              <span>{{ $t('profile.form.name') }}</span>
+              <input v-model="addressForm.recipient_name" type="text" />
+            </label>
+            <label class="form-field">
+              <span>{{ $t('profile.form.phone') }}</span>
+              <input v-model="addressForm.phone" type="tel" placeholder="+855..." />
+            </label>
+            <label class="form-field">
+              <span>{{ $t('profile.form.province') }}</span>
+              <input v-model="addressForm.province" type="text" />
+            </label>
+            <label class="form-field">
+              <span>{{ $t('profile.form.district') }}</span>
+              <input v-model="addressForm.district" type="text" />
+            </label>
+            <label class="form-field">
+              <span>{{ $t('profile.form.detail') }}</span>
+              <textarea v-model="addressForm.detail" rows="2"></textarea>
+            </label>
+            <label class="form-field checkbox">
+              <input v-model="addressForm.is_default" type="checkbox" />
+              <span>{{ $t('profile.form.setDefault') }}</span>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" @click="showAddressForm = false">{{ $t('common.cancel') }}</button>
+            <button class="btn-primary" :disabled="savingAddress" @click="saveAddress">{{ $t('common.save') }}</button>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- 优惠券选择弹窗 -->
+    <div v-if="showCouponPicker" class="modal-mask" @click.self="showCouponPicker = false">
+      <div class="modal">
+        <h3>{{ $t('checkout.selectCoupon') }}</h3>
+        <div v-if="!usableCoupons.length" class="empty-modal">{{ $t('coupons.noCoupons') }}</div>
+        <div v-for="uc in usableCoupons" :key="uc.id" class="coupon-option" :class="{ selected: selectedCoupon?.id === uc.id }" @click="selectCoupon(uc)">
+          <div class="coupon-left" :style="{ background: uc.coupon?.bg || 'var(--accent)' }">
+            <span class="coupon-value">{{ couponValueText(uc.coupon) }}</span>
+          </div>
+          <div class="coupon-right">
+            <p class="coupon-title">{{ couponTitle(uc.coupon) }}</p>
+            <p class="coupon-meta">{{ $t('coupons.minSpend', { amount: `$${Number(uc.coupon?.minSpend || 0).toFixed(2)}` }) }} · {{ $t('coupons.validUntil', { date: formatDate(uc.coupon?.endDate) }) }}</p>
+          </div>
         </div>
-        <button class="add-new" @click="showAddressForm = true">{{ $t('checkout.addNewAddress') }}</button>
+        <button v-if="selectedCoupon" class="add-new" @click="selectedCoupon = null; showCouponPicker = false">{{ $t('common.cancel') }}</button>
       </div>
     </div>
   </div>
@@ -94,7 +147,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { getAddresses } from '@/api/addresses';
+import { getAddresses, createAddress } from '@/api/addresses';
 import { getMyCoupons } from '@/api/coupons';
 import { createOrder } from '@/api/orders';
 import { useCityStore } from '@/stores/cityStore.js';
@@ -102,7 +155,7 @@ import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const cityStore = useCityStore();
 const { deliveryRule, loadDeliveryRule } = useShopConfig();
 const items = ref(JSON.parse(localStorage.getItem('checkout_items') || '[]'));
@@ -115,6 +168,8 @@ const showAddressPicker = ref(false);
 const showCouponPicker = ref(false);
 const showAddressForm = ref(false);
 const submitting = ref(false);
+const savingAddress = ref(false);
+const addressForm = ref({ recipient_name: '', phone: '', province: '', district: '', detail: '', is_default: false });
 
 const paymentMethods = computed(() => [
   { value: 'khqr', label: t('payment.khqr') },
@@ -124,9 +179,27 @@ const paymentMethods = computed(() => [
 ]);
 
 const subtotal = computed(() => items.value.reduce((s, i) => s + i.priceUsd * i.quantity, 0));
+const usableCoupons = computed(() => {
+  const now = new Date();
+  return coupons.value.filter((uc) => {
+    const c = uc.coupon;
+    if (!c) return false;
+    if (new Date(c.endDate) < now) return false;
+    if (subtotal.value < Number(c.minSpend || 0)) return false;
+    return true;
+  });
+});
+const selectedCouponTitle = computed(() => {
+  if (!selectedCoupon.value) return '';
+  const c = selectedCoupon.value.coupon;
+  if (!c) return '';
+  return `${couponTitle(c)} ${couponValueText(c)}`;
+});
 const discount = computed(() => {
   if (!selectedCoupon.value) return 0;
-  return selectedCoupon.value.type === 'fixed' ? selectedCoupon.value.value : Math.round(subtotal.value * selectedCoupon.value.value / 100 * 100) / 100;
+  const c = selectedCoupon.value.coupon;
+  if (!c) return 0;
+  return c.type === 'fixed' ? Number(c.value) : Math.round(subtotal.value * Number(c.value) / 100 * 100) / 100;
 });
 
 const shippingFee = computed(() => {
@@ -157,7 +230,45 @@ const canSubmit = computed(() =>
 );
 
 function selectAddress(a) { selectedAddress.value = a; showAddressPicker.value = false; }
+function selectCoupon(uc) { selectedCoupon.value = uc; showCouponPicker.value = false; }
 function specStr(spec) { return Object.values(spec || {}).join(' / '); }
+
+async function saveAddress() {
+  if (!addressForm.value.recipient_name || !addressForm.value.phone || !addressForm.value.province || !addressForm.value.district || !addressForm.value.detail) {
+    alert(t('checkout.formIncomplete'));
+    return;
+  }
+  savingAddress.value = true;
+  try {
+    const res = await createAddress(addressForm.value);
+    const newAddr = res.data;
+    addresses.value.unshift(newAddr);
+    selectAddress(newAddr);
+    addressForm.value = { recipient_name: '', phone: '', province: '', district: '', detail: '', is_default: false };
+    showAddressForm.value = false;
+  } catch (e) {
+    alert(t('checkout.saveAddressFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));
+  }
+  savingAddress.value = false;
+}
+
+function couponTitle(c) {
+  if (!c) return '';
+  if (locale.value === 'en') return c.titleEn || c.titleKm || '';
+  if (locale.value === 'zh') return c.titleZh || c.titleKm || '';
+  return c.titleKm || '';
+}
+function couponValueText(c) {
+  if (!c) return '';
+  return c.type === 'fixed' ? `-$${Number(c.value).toFixed(2)}` : `-${c.value}%`;
+}
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  if (locale.value === 'zh') return date.toLocaleDateString('zh-CN');
+  if (locale.value === 'km') return date.toLocaleDateString('km-KH');
+  return date.toLocaleDateString('en-US');
+}
 
 async function submitOrder() {
   if (!selectedAddress.value) return;
@@ -166,7 +277,7 @@ async function submitOrder() {
     const res = await createOrder({
       items: items.value.map(i => ({ product_id: i.productId, quantity: i.quantity, spec: i.spec })),
       shipping_address_id: selectedAddress.value.id,
-      coupon_id: selectedCoupon.value?.id,
+      coupon_id: selectedCoupon.value?.coupon?.id,
       payment_method: paymentMethod.value,
     });
     localStorage.removeItem('checkout_items');
@@ -242,4 +353,22 @@ watch(() => cityStore.currentCity.code, (code) => {
 .addr-option.selected { border-color: var(--accent); }
 .addr-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .add-new { color: var(--accent); font-size: 14px; margin-top: 8px; }
+.empty-modal { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
+.form-fields { display: flex; flex-direction: column; gap: 12px; }
+.form-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.form-field span { color: var(--muted); }
+.form-field input, .form-field textarea { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; background: var(--surface); }
+.form-field.checkbox { flex-direction: row; align-items: center; gap: 8px; }
+.form-field.checkbox input { width: auto; }
+.form-actions { display: flex; gap: 12px; margin-top: 16px; }
+.form-actions button { flex: 1; padding: 12px; border-radius: var(--radius-sm); border: none; font-size: 14px; cursor: pointer; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--fg); }
+.coupon-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; }
+.coupon-option.selected { border-color: var(--accent); background: oklch(64% 0.16 82 / 0.05); }
+.coupon-left { width: 56px; height: 56px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.coupon-value { font-size: 13px; font-weight: 700; }
+.coupon-right { flex: 1; }
+.coupon-title { font-size: 13px; font-weight: 600; }
+.coupon-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
 </style>

@@ -100,3 +100,6 @@ export const getTags = (params) => api.get('/admin/tags', { params });
 export const createTag = (data) => api.post('/admin/tags', data);
 export const updateTag = (id, data) => api.put(`/admin/tags/${id}`, data);
 export const deleteTag = (id) => api.delete(`/admin/tags/${id}`);
+
+// ── 图片上传 ──
+export const uploadImage = (data) => api.post('/admin/upload/image', data);

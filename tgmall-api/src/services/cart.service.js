@@ -5,6 +5,19 @@ import { AppError } from '../utils/AppError.js';
 
 function cartKey(userId) { return `cart:${userId}`; }
 
+function specKey(spec) {
+  if (!spec || Object.keys(spec).length === 0) return '';
+  return Object.keys(spec)
+    .sort()
+    .map((k) => `${k}:${spec[k]}`)
+    .join('|');
+}
+
+function makeItemId(productId, spec) {
+  const key = specKey(spec);
+  return key ? `${productId}::${key}` : productId;
+}
+
 export async function getCart(userId) {
   const raw = await redis.get(cartKey(userId));
   if (!raw) return { groups: [], summary: { totalItems: 0, totalUsd: 0, totalKhr: 0 } };
@@ -26,13 +39,14 @@ export async function addCartItem(userId, { product_id, quantity, spec = {} }) {
   const items = raw ? JSON.parse(raw) : [];
 
   // 查重：同商品+同规格 → 累加数量
+  const itemId = makeItemId(productId, spec);
   const index = items.findIndex(
-    (i) => i.productId === productId && JSON.stringify(i.spec) === JSON.stringify(spec),
+    (i) => i.id === itemId,
   );
   if (index >= 0) {
     items[index].quantity += quantity;
   } else {
-    items.push({ productId, quantity, spec });
+    items.push({ id: itemId, productId, quantity, spec });
   }
 
   await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
@@ -42,8 +56,7 @@ export async function addCartItem(userId, { product_id, quantity, spec = {} }) {
 export async function updateCartItem(userId, itemId, { quantity }) {
   const raw = await redis.get(cartKey(userId));
   const items = raw ? JSON.parse(raw) : [];
-  // itemId = productId（简化处理，实际用 productId+spec 定位）
-  const item = items.find((i) => i.productId === itemId);
+  const item = items.find((i) => i.id === itemId);
   if (!item) throw new AppError('购物车商品不存在', 404, 'NOT_FOUND');
   item.quantity = quantity;
   await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
@@ -53,7 +66,7 @@ export async function updateCartItem(userId, itemId, { quantity }) {
 export async function removeCartItem(userId, itemId) {
   const raw = await redis.get(cartKey(userId));
   const items = raw ? JSON.parse(raw) : [];
-  const filtered = items.filter((i) => i.productId !== itemId);
+  const filtered = items.filter((i) => i.id !== itemId);
   await redis.set(cartKey(userId), JSON.stringify(filtered), 'EX', 7 * 86400);
 }
 
@@ -81,7 +94,7 @@ async function enrichCartItem(item) {
     : 'not_found';
 
   return {
-    id: item.productId,
+    id: item.id,
     productId: item.productId,
     productName: product?.nameKm || '',
     thumbnail: product?.images?.[0]?.thumb_url || '',

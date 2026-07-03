@@ -25,6 +25,7 @@ export const couponStatusSchema = z.object({
 export const adminUserSchema = z.object({
   username: z.string().min(3).max(50),
   password: z.string().min(6).max(100),
+  phone: z.string().regex(/^\+855[1-9]\d{7,8}$/, '手机号格式应为 +855 开头').optional().nullable(),
   displayName: z.string().max(100).optional().nullable(),
   role: z.enum(['admin', 'operator', 'cs', 'warehouse']).default('operator'),
 });
