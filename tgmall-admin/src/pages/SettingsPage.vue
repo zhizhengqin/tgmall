@@ -33,6 +33,16 @@
           <div class="card-title">限时专区</div>
           <div class="card-desc">限时特价活动配置</div>
         </el-card>
+        <el-card class="settings-card" @click="$router.push('/settings/platform')">
+          <div class="card-icon">⚙️</div>
+          <div class="card-title">平台设置</div>
+          <div class="card-desc">商城名称/Logo/联系方式/维护模式</div>
+        </el-card>
+        <el-card class="settings-card" @click="$router.push('/settings/admin-users')">
+          <div class="card-icon">👤</div>
+          <div class="card-title">管理员账号</div>
+          <div class="card-desc">管理员增删改/密码重置</div>
+        </el-card>
       </div>
     </div>
   </div>

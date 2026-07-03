@@ -13,6 +13,7 @@ import wishlistRoutes from './wishlist.routes.js';
 import feedbackRoutes from './feedback.routes.js';
 import { adminRouter as shopConfigAdminRouter, publicRouter as shopConfigPublicRouter } from './shopConfig.routes.js';
 import { adminRouter as flashDealAdminRouter, publicRouter as flashDealPublicRouter } from './flashDeal.routes.js';
+import systemConfigRoutes from './systemConfig.routes.js';
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use('/webhooks', webhookRoutes);
 router.use('/admin', adminRouter);
 router.use('/admin', shopConfigAdminRouter);
 router.use('/admin', flashDealAdminRouter);
+router.use('/admin', systemConfigRoutes);
 router.use('/cities', cityRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/feedback', feedbackRoutes);

@@ -80,3 +80,14 @@ export const adjustStock = (id, data) => api.put(`/admin/products/${id}/stock`, 
 export const getStockLogs = (id, params) => api.get(`/admin/products/${id}/stock-logs`, { params });
 export const checkInventory = (data) => api.post('/admin/inventory/check', data);
 export const setAlertThreshold = (id, data) => api.put(`/admin/products/${id}/alert-threshold`, data);
+
+// ── 平台设置 ──
+export const getPlatformSettings = () => api.get('/admin/platform-settings');
+export const updatePlatformSettings = (data) => api.put('/admin/platform-settings', data);
+
+// ── 管理员账号管理 ──
+export const getSysAdmins = () => api.get('/admin/admins');
+export const createSysAdmin = (data) => api.post('/admin/admins', data);
+export const resetSysAdminPassword = (id, data) => api.put(`/admin/admins/${id}/reset-password`, data);
+export const toggleSysAdminStatus = (id) => api.post(`/admin/admins/${id}/toggle`);
+export const deleteSysAdmin = (id) => api.delete(`/admin/admins/${id}`);

@@ -214,6 +214,27 @@ model AdminUser {
   @@map("admin_users")
 }
 
+model SystemSetting {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  adminId   String?  @map("admin_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  detail    String?  @db.Text
+  ip        String?  @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([action, createdAt])
+  @@index([adminId])
+  @@map("audit_logs")
+}
+
 model Category {
   code       String   @id @db.VarChar(50)
   nameKm     String   @map("name_km") @db.VarChar(100)
