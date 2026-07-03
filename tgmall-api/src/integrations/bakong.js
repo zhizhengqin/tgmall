@@ -129,6 +129,10 @@ export function verifySignature(payload, signature, provider = 'bakong') {
     }
   }
 
+  if (!signature || typeof signature !== 'string') {
+    return false;
+  }
+
   const secretMap = {
     bakong: config.bakongWebhookSecret,
     aba_pay: config.abaPaySecret,

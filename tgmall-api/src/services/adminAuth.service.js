@@ -23,6 +23,7 @@ export async function adminLogin(username, password) {
     userId: user.id,
     username: user.username,
     role: user.role,
+    tokenVersion: user.tokenVersion,
     type: 'admin',
   });
 

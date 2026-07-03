@@ -303,7 +303,11 @@ export async function shipOrder(orderId, logisticsInfo) {
     },
   });
   if (!order) throw new AppError('订单不存在或不属于您的店铺', 404, 'NOT_FOUND');
-  if (order.status !== 'paid') {
+  if (order.paymentMethod === 'cod') {
+    if (!['confirmed', 'paid'].includes(order.status)) {
+      throw new AppError('COD 订单需处于待发货或已收款状态才能发货', 400, 'ORDER_CANNOT_SHIP');
+    }
+  } else if (order.status !== 'paid') {
     throw new AppError('只有已付款订单才能发货', 400, 'ORDER_CANNOT_SHIP');
   }
 

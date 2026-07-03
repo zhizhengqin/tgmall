@@ -1,4 +1,5 @@
-// SMS 服务 — Mock 验证码发送与校验
+// SMS 服务 — 验证码发送与校验
+import crypto from 'crypto';
 import redis from '../config/redis.js';
 import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
@@ -12,7 +13,14 @@ function errorsKey(scene, phone) { return `sms:errors:${scene}:${phone}`; }
 function blockedKey(scene, phone) { return `sms:blocked:${scene}:${phone}`; }
 
 /**
- * 发送短信验证码（Mock — 固定返回 "123456"）
+ * 生成 6 位数字验证码
+ */
+function generateCode() {
+  return crypto.randomInt(100000, 999999).toString();
+}
+
+/**
+ * 发送短信验证码
  * @param {string} phone — 手机号，格式 +855xxxxxxxx
  * @param {string} scene — login | reset_password | set_password | bind_phone
  * @returns {{ success: boolean, cooldown: number }}
@@ -29,7 +37,21 @@ export async function sendSms(phone, scene) {
   const blocked = await redis.get(blockedKey(scene, phone));
   if (blocked) throw new AppError('验证码错误次数过多，请 15 分钟后重试', 429, 'SMS_BLOCKED');
 
-  const code = config.sms.mockCode;
+  const { provider, mockEnabled } = config.sms;
+
+  // 生产环境未配置真实短信网关时拒绝发送
+  if (config.nodeEnv === 'production' && provider === 'mock' && !mockEnabled) {
+    throw new AppError('短信服务未配置', 503, 'SMS_GATEWAY_NOT_CONFIGURED');
+  }
+
+  let code;
+  if (provider === 'mock' && mockEnabled) {
+    code = generateCode();
+  } else {
+    // 真实短信网关未实现，拒绝发送
+    throw new AppError('短信服务未配置', 503, 'SMS_GATEWAY_NOT_CONFIGURED');
+  }
+
   await redis.set(codeKey(scene, phone), code, 'EX', config.sms.codeTtlSeconds);
   await redis.set(cooldownKey(phone), '1', 'EX', config.sms.cooldownSeconds);
 

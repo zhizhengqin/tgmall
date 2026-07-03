@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { auth } from '../middleware/auth.js';
+import { adminAuth } from '../middleware/adminAuth.js';
 import * as ctrl from '../controllers/tag.controller.js';
 
 const router = Router();
-router.use(authenticate);
-router.use(requireAdmin);
+router.use(auth);
+router.use(adminAuth);
 
 router.get('/tags', ctrl.list);
 router.post('/tags', ctrl.create);

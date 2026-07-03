@@ -53,4 +53,16 @@ function generateMockDeepLink({ orderNumber, amountUsd, amountKhr, expiresAt }) 
   };
 }
 
-export default { generateDeepLink, isMockMode };
+/**
+ * 验证 ABA Pay 回调签名
+ * 真实算法需对接 ABA 官方文档；目前未实现真实验签，生产环境应拒绝。
+ */
+export function verifySignature(payload, signature) {
+  if (isMockMode()) {
+    return signature === 'mock-signature' || signature?.startsWith('MOCK-');
+  }
+  console.error('ABA Pay 真实回调验签未实现，拒绝回调');
+  return false;
+}
+
+export default { generateDeepLink, isMockMode, verifySignature };

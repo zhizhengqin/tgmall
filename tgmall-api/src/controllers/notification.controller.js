@@ -6,7 +6,7 @@ import { getPagination } from '../utils/pagination.js';
 export async function list(req, res, next) {
   try {
     const { page, limit } = getPagination(req.query);
-    const result = await notificationService.getUserNotifications(req.user.id, { page, limit });
+    const result = await notificationService.getUserNotifications(req.user.userId, { page, limit });
     res.json({
       success: true,
       data: result.items,

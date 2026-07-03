@@ -7,6 +7,11 @@ import {
   merchantProductSchema,
   shipOrderSchema,
 } from '../validators/merchant.schema.js';
+import {
+  couponSchema,
+  couponUpdateSchema,
+  couponStatusSchema,
+} from '../validators/admin.schema.js';
 import * as ctrl from '../controllers/merchant.controller.js';
 import * as adminCtrl from '../controllers/admin.controller.js';
 import * as feedbackCtrl from '../controllers/feedback.controller.js';
@@ -47,8 +52,8 @@ router.patch('/feedback/:id/resolve', feedbackCtrl.resolve);
 
 // 优惠券管理
 router.get('/coupons', adminCtrl.listCoupons);
-router.post('/coupons', adminCtrl.createCoupon);
-router.put('/coupons/:id', adminCtrl.updateCoupon);
-router.patch('/coupons/:id/status', adminCtrl.toggleCouponStatus);
+router.post('/coupons', validate(couponSchema), adminCtrl.createCoupon);
+router.put('/coupons/:id', validate(couponUpdateSchema), adminCtrl.updateCoupon);
+router.patch('/coupons/:id/status', validate(couponStatusSchema), adminCtrl.toggleCouponStatus);
 
 export default router;

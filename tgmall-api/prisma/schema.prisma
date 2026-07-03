@@ -208,6 +208,7 @@ model AdminUser {
   displayName  String?  @map("display_name") @db.VarChar(100)
   role         String   @default("admin") @db.VarChar(20)
   status       String   @default("active") @db.VarChar(20)
+  tokenVersion Int      @default(0) @map("token_version")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 

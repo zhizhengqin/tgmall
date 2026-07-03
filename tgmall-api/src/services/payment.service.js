@@ -260,8 +260,18 @@ export async function handlePaymentCallback(payload) {
     signature,
   } = payload;
 
-  // ---- 1. 验签 ----
-  const isValid = bakong.verifySignature(payload, signature, provider);
+  // ---- 1. 按 provider 验签 ----
+  const verifyFns = {
+    bakong: bakong.verifySignature,
+    aba_pay: abaPay.verifySignature,
+    wing_pay: wingPay.verifySignature,
+  };
+  const verifyFn = verifyFns[provider];
+  if (!verifyFn) {
+    console.error(`未知支付渠道回调: provider=${provider}`);
+    throw new AppError('未知的支付渠道', 400, 'INVALID_PROVIDER');
+  }
+  const isValid = verifyFn(payload, signature);
   if (!isValid) {
     console.error(`支付回调验签失败: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     throw new AppError('签名验证失败', 401, 'UNAUTHORIZED');
@@ -286,12 +296,21 @@ export async function handlePaymentCallback(payload) {
     throw new AppError('订单不存在', 404, 'NOT_FOUND');
   }
 
-  // ---- 4. 处理支付结果 ----
+  // ---- 4. 校验回调金额与订单金额一致 ----
+  const callbackAmount = Number(amount);
+  const orderAmount = Number(order.totalUsd);
+  if (!Number.isNaN(callbackAmount) && callbackAmount !== orderAmount) {
+    console.error(`支付回调金额不匹配: provider=${provider}, order=${orderNumber}, txn=${transactionId}, callback=${callbackAmount}, order=${orderAmount}`);
+    throw new AppError('支付金额不匹配', 400, 'AMOUNT_MISMATCH');
+  }
+
+  // ---- 5. 处理支付结果 ----
   if (status === 'success') {
+    let transactionCommitted = false;
     // 成功：更新订单状态
     try {
       await prisma.$transaction(async (tx) => {
-        // 4a. 检查订单是否已经被处理过（双重保险：DB 级别幂等）
+        // 5a. 检查订单是否已经被处理过（双重保险：DB 级别幂等）
         const currentOrder = await tx.order.findUnique({
           where: { id: order.id },
         });
@@ -301,7 +320,7 @@ export async function handlePaymentCallback(payload) {
           return;
         }
 
-        // 4b. 更新订单支付状态
+        // 5b. 更新订单支付状态
         const parsedPaidAt = paidAt ? new Date(paidAt) : new Date();
         await tx.order.update({
           where: { id: order.id },
@@ -312,7 +331,7 @@ export async function handlePaymentCallback(payload) {
           },
         });
 
-        // 4c. 增加商品销量计数
+        // 5c. 增加商品销量计数
         const orderItems = await tx.orderItem.findMany({
           where: { orderId: order.id },
           select: { productId: true, quantity: true },
@@ -324,9 +343,13 @@ export async function handlePaymentCallback(payload) {
             data: { salesCount: { increment: item.quantity } },
           });
         }
-        // 4d. 事务成功后才设置幂等标记，防止事务失败导致订单 stuck
-        await redis.set(idempotencyKey, '1', 'EX', 86400);
+        transactionCommitted = true;
       });
+
+      // 5d. 事务成功后才设置幂等标记，防止事务失败导致订单 stuck
+      if (transactionCommitted) {
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
 
       console.log(`支付成功: order=${orderNumber}, txn=${transactionId}, amount=${amount}`);
 
@@ -349,7 +372,7 @@ export async function handlePaymentCallback(payload) {
       }
     } catch (err) {
       console.error(`支付成功处理异常: ${err.message}`, err);
-      // 幂等标记已设置，不会重复处理；抛出异常让调用方感知
+      // 事务失败时幂等标记不会设置，允许后续真实回调重试
       throw new AppError('支付处理异常，请人工核查', 500, 'INTERNAL_ERROR');
     }
   } else if (status === 'failed') {

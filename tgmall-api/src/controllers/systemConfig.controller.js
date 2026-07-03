@@ -12,7 +12,7 @@ export async function getPlatformSettings(req, res, next) {
 // PUT /admin/platform-settings
 export async function updatePlatformSettings(req, res, next) {
   try {
-    const data = await service.updatePlatformSettings(req.body);
+    const data = await service.updatePlatformSettings(req.validatedBody);
     res.json({ success: true, data });
   } catch (err) { next(err); }
 }
@@ -28,7 +28,7 @@ export async function listAdminUsers(req, res, next) {
 // POST /admin/admins
 export async function createAdminUser(req, res, next) {
   try {
-    const data = await service.createAdminUser(req.body);
+    const data = await service.createAdminUser(req.validatedBody);
     res.status(201).json({ success: true, data });
   } catch (err) { next(err); }
 }
@@ -36,7 +36,7 @@ export async function createAdminUser(req, res, next) {
 // PUT /admin/admins/:id/reset-password
 export async function resetAdminPassword(req, res, next) {
   try {
-    await service.resetAdminPassword(req.params.id, req.body.password);
+    await service.resetAdminPassword(req.params.id, req.validatedBody.password);
     res.json({ success: true });
   } catch (err) { next(err); }
 }

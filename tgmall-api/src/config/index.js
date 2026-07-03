@@ -35,7 +35,7 @@ export const config = {
   bakongApiUrl: process.env.BAKONG_API_URL || '',
   bakongMerchantId: process.env.BAKONG_MERCHANT_ID || 'MOCK_MERCHANT',
   bakongWebhookSecret: process.env.BAKONG_WEBHOOK_SECRET || '',
-  paymentMockMode: process.env.PAYMENT_MOCK_MODE === 'true' || process.env.NODE_ENV !== 'production',
+  paymentMockMode: process.env.PAYMENT_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test',
   abaPaySecret: process.env.ABA_PAY_SECRET || '',
   wingPaySecret: process.env.WING_PAY_SECRET || '',
   adminTelegramIds: process.env.ADMIN_TELEGRAM_IDS || '',
@@ -43,9 +43,13 @@ export const config = {
   // Mini App
   miniAppUrl: process.env.MINI_APP_URL || '',
   botUsername: process.env.BOT_USERNAME || '',
-  // SMS Mock 配置
+  // SMS 配置
   sms: {
-    mockCode: process.env.SMS_MOCK_CODE || '123456',
+    provider: process.env.SMS_PROVIDER || 'mock',
+    mockEnabled: process.env.SMS_MOCK_ENABLED === 'true' || process.env.NODE_ENV !== 'production',
+    apiKey: process.env.SMS_API_KEY || '',
+    apiSecret: process.env.SMS_API_SECRET || '',
+    senderId: process.env.SMS_SENDER_ID || '',
     cooldownSeconds: 60,
     codeTtlSeconds: 300,
     maxAttempts: 5,

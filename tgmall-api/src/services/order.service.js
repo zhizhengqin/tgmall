@@ -28,24 +28,31 @@ export async function createOrder(userId, body) {
   try {
     // 3. 使用事务：校验库存 → 预扣 → 创建订单
     const order = await prisma.$transaction(async (tx) => {
-      // 3a. 逐商品校验库存并计算价格
+      // 3a. 逐商品校验库存并计算价格（加 SELECT FOR UPDATE 防止并发超卖）
       let totalUsd = 0;
       let totalKhr = 0;
       const itemDetails = []; // 记录每个商品的单价快照
+      const productMap = new Map(); // 锁定后的商品快照，供后续扣减库存使用
 
       for (const item of items) {
-        const product = await tx.product.findUnique({ where: { id: item.productId } });
+        const [product] = await tx.$queryRaw`
+          SELECT id, name_km, name_en, name_zh, price_usd, price_khr, stock, status, images
+          FROM products
+          WHERE id = ${item.productId}::uuid
+          FOR UPDATE
+        `;
         if (!product) throw new AppError(`商品不存在: ${item.productId}`, 404, 'NOT_FOUND');
         if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
         if (product.stock < item.quantity) {
-          throw new AppError(`"${product.nameKm}"库存不足，仅剩${product.stock}件`, 400, 'INSUFFICIENT_STOCK');
+          throw new AppError(`"${product.name_km}"库存不足，仅剩${product.stock}件`, 400, 'INSUFFICIENT_STOCK');
         }
 
-        const unitPriceUsd = Number(product.priceUsd);
-        const unitPriceKhr = product.priceKhr;
+        const unitPriceUsd = Number(product.price_usd);
+        const unitPriceKhr = product.price_khr;
         totalUsd += unitPriceUsd * item.quantity;
         totalKhr += unitPriceKhr * item.quantity;
         itemDetails.push({ ...item, unitPriceUsd, unitPriceKhr });
+        productMap.set(item.productId, product);
       }
 
       // 1.1 校验地址城市与配送规则
@@ -90,10 +97,7 @@ export async function createOrder(userId, body) {
 
       // 3c. 预扣库存 + 写 StockLog
       for (const item of items) {
-        const productBefore = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { stock: true },
-        });
+        const productBefore = productMap.get(item.productId);
         const newStock = productBefore.stock - item.quantity;
 
         await tx.product.update({
@@ -185,7 +189,8 @@ export async function createOrder(userId, body) {
           totalKhr: finalTotalKhr,
           discountUsd,
           shippingFeeUsd,
-          status: paymentMethod === 'cod' ? 'paid' : 'pending_payment',
+          status: paymentMethod === 'cod' ? 'confirmed' : 'pending_payment',
+          paymentStatus: paymentMethod === 'cod' ? 'pending_cod' : 'pending',
           paymentMethod,
           paymentTimeout: paymentMethod !== 'cod' ? new Date(Date.now() + 15 * 60 * 1000) : null,
           couponId,
@@ -354,8 +359,8 @@ export async function cancelOrder(userId, orderId, reason) {
     include: { items: true },
   });
   if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
-  if (order.status !== 'pending_payment') {
-    throw new AppError('只有待付款订单可以取消', 400, 'ORDER_CANNOT_CANCEL');
+  if (!['pending_payment', 'confirmed'].includes(order.status)) {
+    throw new AppError('只有待付款或待发货订单可以取消', 400, 'ORDER_CANNOT_CANCEL');
   }
 
   await prisma.$transaction(async (tx) => {
@@ -443,8 +448,7 @@ export async function exportOrdersCsv({ status, startDate, endDate }) {
     select: {
       orderNumber: true, status: true, totalUsd: true, totalKhr: true,
       paymentMethod: true, paidAt: true, createdAt: true,
-      shippingAddress: true, shippingContact: true, shippingPhone: true,
-      items: { select: { productId: true, quantity: true, priceUsd: true } },
+      shippingAddress: true, items: { select: { productId: true, quantity: true, priceUsd: true } },
     },
     take: 10000,
   });
@@ -452,14 +456,17 @@ export async function exportOrdersCsv({ status, startDate, endDate }) {
   const header = 'OrderNumber,Status,TotalUSD,TotalKHR,PaymentMethod,ItemCount,Phone,CreatedAt';
   const rows = orders.map(o => {
     const itemCount = o.items.reduce((s, i) => s + i.quantity, 0);
-    return `"${o.orderNumber}","${o.status}",${Number(o.totalUsd).toFixed(2)},${o.totalKhr},"${o.paymentMethod}",${itemCount},"${o.shippingPhone || ''}","${o.createdAt.toISOString()}"`;
+    const phone = o.shippingAddress?.phone || '';
+    return `"${o.orderNumber}","${o.status}",${Number(o.totalUsd).toFixed(2)},${o.totalKhr},"${o.paymentMethod}",${itemCount},"${phone}","${o.createdAt.toISOString()}"`;
   });
 
   return [header, ...rows].join('\n');
 }
 
 /**
- * COD 收款确认 — 管理员手动确认货到付款已收取，将订单标记为已完成
+ * COD 收款确认 — 管理员手动确认货到付款已收取
+ * 状态流转：confirmed/shipped → paid（记录收款信息）
+ * 之后由自动确认收货任务或用户手动确认 → completed
  */
 export async function collectCodPayment(orderId) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
@@ -473,10 +480,28 @@ export async function collectCodPayment(orderId) {
   if (order.status === 'cancelled') {
     throw new AppError('已取消的订单不支持收款确认', 400, 'ORDER_CANCELLED');
   }
+  if (order.status === 'paid') {
+    throw new AppError('COD 货款已确认收取', 400, 'ALREADY_PAID');
+  }
+  if (!['confirmed', 'shipped'].includes(order.status)) {
+    throw new AppError('订单状态不支持收款确认', 400, 'ORDER_CANNOT_COLLECT');
+  }
 
+  const collectedAt = new Date();
   return prisma.order.update({
     where: { id: orderId },
-    data: { status: 'completed', completedAt: new Date() },
-    select: { id: true, orderNumber: true, status: true, completedAt: true },
+    data: {
+      status: 'paid',
+      paymentStatus: 'success',
+      paidAt: collectedAt,
+      logisticsInfo: {
+        ...(order.logisticsInfo || {}),
+        codCollectionInfo: {
+          collectedAt: collectedAt.toISOString(),
+          note: '管理员确认已收取 COD 货款',
+        },
+      },
+    },
+    select: { id: true, orderNumber: true, status: true, paidAt: true, paymentStatus: true },
   });
 }

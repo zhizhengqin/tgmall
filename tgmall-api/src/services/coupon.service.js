@@ -14,31 +14,37 @@ export async function getAvailableCoupons() {
 }
 
 export async function claimCoupon(userId, couponId) {
-  const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
-  if (!coupon) throw new AppError('优惠券不存在', 404, 'NOT_FOUND');
-  if (coupon.status !== 'active' || new Date(coupon.endDate) < new Date()) {
-    throw new AppError('优惠券已过期', 400, 'COUPON_EXPIRED');
-  }
-  if (coupon.usedCount >= coupon.totalQty) {
-    throw new AppError('优惠券已抢光', 400, 'COUPON_SOLD_OUT');
-  }
+  return prisma.$transaction(async (tx) => {
+    // 1. 锁定优惠券行，防止并发超发
+    const [coupon] = await tx.$queryRaw`
+      SELECT id, status, end_date, used_count, total_qty
+      FROM coupons
+      WHERE id = ${couponId}::uuid
+      FOR UPDATE
+    `;
+    if (!coupon) throw new AppError('优惠券不存在', 404, 'NOT_FOUND');
+    if (coupon.status !== 'active' || new Date(coupon.end_date) < new Date()) {
+      throw new AppError('优惠券已过期', 400, 'COUPON_EXPIRED');
+    }
+    if (coupon.used_count >= coupon.total_qty) {
+      throw new AppError('优惠券已抢光', 400, 'COUPON_SOLD_OUT');
+    }
 
-  // 检查是否已领取
-  const existing = await prisma.userCoupon.findUnique({
-    where: { userId_couponId: { userId, couponId } },
-  });
-  if (existing) throw new AppError('已领取过此券', 400, 'COUPON_ALREADY_CLAIMED');
+    // 2. 检查是否已领取
+    const existing = await tx.userCoupon.findUnique({
+      where: { userId_couponId: { userId, couponId } },
+    });
+    if (existing) throw new AppError('已领取过此券', 400, 'COUPON_ALREADY_CLAIMED');
 
-  // 原子操作：领取 + usedCount +1
-  await prisma.$transaction([
-    prisma.userCoupon.create({ data: { userId, couponId } }),
-    prisma.coupon.update({
+    // 3. 原子领取 + 计数递增
+    await tx.userCoupon.create({ data: { userId, couponId } });
+    await tx.coupon.update({
       where: { id: couponId },
       data: { usedCount: { increment: 1 } },
-    }),
-  ]);
+    });
 
-  return { message: '领取成功' };
+    return { message: '领取成功' };
+  });
 }
 
 export async function getUserCoupons(userId, status = 'unused') {

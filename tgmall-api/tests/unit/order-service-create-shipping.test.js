@@ -29,6 +29,22 @@ jest.unstable_mockModule('../../src/config/database.js', () => ({
           return p;
         }),
       },
+      $queryRaw: jest.fn((_strings, ...values) => {
+        const productId = values[0];
+        const p = productStore.get(productId);
+        if (!p) return [];
+        return [{
+          id: p.id,
+          name_km: p.nameKm,
+          name_en: p.nameEn || null,
+          name_zh: p.nameZh || null,
+          price_usd: p.priceUsd,
+          price_khr: p.priceKhr,
+          stock: p.stock,
+          status: p.status,
+          images: p.images || null,
+        }];
+      }),
       userCoupon: { findFirst: jest.fn(() => null), findMany: jest.fn(() => []) },
       order: {
         create: jest.fn(({ data }) => ({ id: 'order-1', ...data })),
@@ -113,7 +129,7 @@ describe('createOrder 配送规则集成', () => {
     });
 
     expect(order.totalUsd).toBe(7);
-    expect(order.status).toBe('paid');
+    expect(order.status).toBe('confirmed');
   });
 
   it('子订单金额未满起送额时拒绝下单', async () => {

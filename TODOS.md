@@ -28,6 +28,59 @@
 
 ---
 
+## 🚨 2026-07-03 审计新增 — 待修复 P0/P1 缺陷
+
+> 来源：PRD/Backlog/MoSCoW 代码审计 + 三端（Mini App / Admin / API）子代理审查
+
+### P0 — 阻塞上线（立即修复）
+
+| 编号 | 问题 | 位置 | 影响 | 状态 |
+|------|------|------|------|------|
+| BUG-01 | Admin 路由导入错误 | `tgmall-api/src/routes/tag.routes.js`<br>`tgmall-api/src/routes/systemConfig.routes.js` | `authenticate`/`requireAdmin` 不存在，应用启动可能崩溃 | ✅ 已修复 |
+| BUG-02 | 通知控制器使用错误字段 | `tgmall-api/src/controllers/notification.controller.js:9` | `req.user.id` 应为 `req.user.userId`，用户查不到通知 | ✅ 已修复 |
+| BUG-03 | 订单 CSV 导出引用不存在字段 | `tgmall-api/src/services/order.service.js:446-455` | `shippingContact`/`shippingPhone` 不在 Order 模型，导出失败 | ✅ 已修复 |
+| BUG-04 | 库存扣减无行级锁 | `tgmall-api/src/services/order.service.js:36-44` | 跨用户并发可超卖 | ✅ 已修复 |
+| BUG-05 | 支付回调统一用 Bakong 验签 | `tgmall-api/src/services/payment.service.js:264` | ABA/Wing 回调可被伪造 | ✅ 已修复 |
+| BUG-06 | 回调未校验金额 | `tgmall-api/src/services/payment.service.js:290-330` | 小额支付回调可冒充高价订单成功 | ✅ 已修复 |
+| BUG-07 | 幂等标记在事务内设置 | `tgmall-api/src/services/payment.service.js:328` | 事务回滚后真实回调被拦截，订单 stuck | ✅ 已修复 |
+| BUG-08 | COD 状态机错误 | `tgmall-api/src/services/order.service.js:188` / `collectCodPayment` | 创建即 paid，收款确认直接 completed，对账失真 | ✅ 已修复 |
+| BUG-09 | `/go` 落地页 XSS | `tgmall-api/src/app.js` | `ref`/`user-agent` 直接拼 HTML | ✅ 已修复 |
+
+### 2026-07-03 安全审计追加 — 高优先级
+
+| 编号 | 问题 | 位置 | 影响 | 状态 |
+|------|------|------|------|------|
+| SEC-01 | 支付 Mock 模式在非 production 默认开启 | `tgmall-api/src/config/index.js:38` | Staging 等环境可被伪造回调 | ✅ 已修复 |
+| SEC-02 | SMS 固定验证码 `123456` | `tgmall-api/src/services/sms.service.js:32` | 任意手机号可被登录/重置密码 | ✅ 已修复 |
+| SEC-03 | 管理员 JWT 无法吊销 | `tgmall-api/src/services/adminAuth.service.js` | 禁用/改密后旧 Token 仍有效 | ✅ 已修复（需执行 prisma migrate dev 应用 schema 变更） |
+| SEC-04 | 优惠券领取并发超发 | `tgmall-api/src/services/coupon.service.js:16-39` | 热门券发放量超过总量 | ✅ 已修复 |
+| SEC-05 | CORS 生产环境仍信任 localhost | `tgmall-api/src/app.js:22-28` | CSRF-like 带凭证请求 | ✅ 已修复 |
+| SEC-06 | 后台优惠券/平台设置无请求体验证 | `admin.controller.js` / `systemConfig.controller.js` | 脏数据/配置注入 | ✅ 已修复 |
+| SEC-07 | 错误处理非生产环境泄漏栈跟踪 | `tgmall-api/src/middleware/errorHandler.js:30` | 路径/依赖信息泄露 | ✅ 已修复 |
+| SEC-08 | 手动库存调整存在读-改竞争 | `tgmall-api/src/services/inventory.service.js` | 库存日志与实际不一致 | 📋 待规划 |
+| SEC-09 | 订单取消状态竞争 | `tgmall-api/src/services/order.service.js:351-398` | 并发取消重复恢复库存 | 📋 待规划 |
+| SEC-10 | `initData` 24h 有效期 | `tgmall-api/src/integrations/telegram.js:24` | 重放登录凭证 | 📋 待规划 |
+| SEC-11 | JWT 存在 localStorage | Mini App / Admin stores | XSS 场景下 Token 易被盗 | 📋 待规划 |
+
+### P1 — 体验/运营缺口（Sprint 内补齐）
+
+| 编号 | 问题 | 位置 | 影响 | 状态 |
+|------|------|------|------|------|
+| GAP-01 | Mini App 路由守卫缺失 | `tgmall-miniapp/src/router/index.js` | `requiresAuth` 未生效 | 📋 待规划 |
+| GAP-02 | 订单列表无分页加载 | `tgmall-miniapp/src/views/OrderList.vue` | 只能看第一页 | 📋 待规划 |
+| GAP-03 | Checkout 优惠券选择死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法选择优惠券 | 📋 待规划 |
+| GAP-04 | Checkout 新增地址死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法在结算页添加地址 | 📋 待规划 |
+| GAP-05 | 购物车未区分规格 | `tgmall-api/src/services/cart.service.js:42-58` | 同商品不同规格无法单独操作 | 📋 待规划 |
+| GAP-06 | AuditLog 未写入 | `prisma/schema.prisma:225-236` | 无操作审计 | 📋 待规划 |
+| GAP-07 | 通知重试无 cron job | `src/services/notification.service.js` | 失败通知不重试 | 📋 待规划 |
+| GAP-08 | 汇率硬编码 4000 | 多处 | 无法调整汇率 | 📋 待规划 |
+| GAP-09 | 后台 OTP 登录缺失 | `tgmall-admin/src/pages/LoginPage.vue` | 只有账号密码 | 📋 待规划 |
+| GAP-10 | 商品 SKU/规格无后台 UI | `tgmall-admin/src/pages/ProductFormPage.vue` | 无法配置多规格 | 📋 待规划 |
+| GAP-11 | 商品标签库未接入商品表单 | `tgmall-admin/src/pages/ProductFormPage.vue` | 只能手动输入标签 | 📋 待规划 |
+| GAP-12 | 图片无上传压缩 | 全部后台表单 | 只能填 URL | 📋 待规划 |
+
+---
+
 ## P1 缺口（消费者端体验增强）
 
 ### ✅ F-C16: 限时/低价专区 — 已实现

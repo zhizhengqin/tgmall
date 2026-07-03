@@ -73,7 +73,10 @@ export async function resetAdminPassword(id, newPassword) {
   if (!user) throw Object.assign(new Error('管理员不存在'), { statusCode: 404, code: 'NOT_FOUND' });
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await prisma.adminUser.update({ where: { id }, data: { passwordHash } });
+  await prisma.adminUser.update({
+    where: { id },
+    data: { passwordHash, tokenVersion: { increment: 1 } },
+  });
   return { success: true };
 }
 
@@ -82,7 +85,14 @@ export async function toggleAdminStatus(id) {
   if (!user) throw Object.assign(new Error('管理员不存在'), { statusCode: 404, code: 'NOT_FOUND' });
 
   const newStatus = user.status === 'active' ? 'disabled' : 'active';
-  await prisma.adminUser.update({ where: { id }, data: { status: newStatus } });
+  await prisma.adminUser.update({
+    where: { id },
+    data: {
+      status: newStatus,
+      // 禁用时递增 tokenVersion，使该管理员所有已签发 JWT 立即失效
+      ...(newStatus === 'disabled' ? { tokenVersion: { increment: 1 } } : {}),
+    },
+  });
   return { id, status: newStatus };
 }
 

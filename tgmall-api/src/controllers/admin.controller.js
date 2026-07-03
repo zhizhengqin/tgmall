@@ -36,7 +36,7 @@ export async function listCoupons(req, res, next) {
 /** POST /admin/coupons — 创建优惠券 */
 export async function createCoupon(req, res, next) {
   try {
-    const coupon = await couponService.adminCreateCoupon(req.body);
+    const coupon = await couponService.adminCreateCoupon(req.validatedBody);
     res.status(201).json({ success: true, data: coupon });
   } catch (err) { next(err); }
 }
@@ -44,7 +44,7 @@ export async function createCoupon(req, res, next) {
 /** PUT /admin/coupons/:id — 更新优惠券 */
 export async function updateCoupon(req, res, next) {
   try {
-    const coupon = await couponService.adminUpdateCoupon(req.params.id, req.body);
+    const coupon = await couponService.adminUpdateCoupon(req.params.id, req.validatedBody);
     res.json({ success: true, data: coupon });
   } catch (err) { next(err); }
 }
@@ -52,7 +52,7 @@ export async function updateCoupon(req, res, next) {
 /** PATCH /admin/coupons/:id/status — 启用/停用优惠券 */
 export async function toggleCouponStatus(req, res, next) {
   try {
-    const coupon = await couponService.adminToggleCouponStatus(req.params.id, req.body.status);
+    const coupon = await couponService.adminToggleCouponStatus(req.params.id, req.validatedBody.status);
     res.json({ success: true, data: coupon });
   } catch (err) { next(err); }
 }

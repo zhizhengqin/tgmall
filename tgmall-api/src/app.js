@@ -13,17 +13,37 @@ registerBigIntSerializer();
 
 const app = express();
 
+// HTML 转义辅助函数 —— 防止反射型 XSS
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // 1. 安全头（关闭 CSP，落地页 /go 有内联样式和脚本）
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
 
-// 2. CORS（开发阶段允许本地前端）
+// 2. CORS（生产环境读取 ALLOWED_ORIGINS，默认不再信任 localhost）
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
+if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
+  allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
+}
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ],
+  origin: (origin, callback) => {
+    // 允许无 origin 的请求（如移动 App、服务器间调用）
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS 策略拒绝来源: ${origin}`));
+  },
   credentials: true,
 }));
 
@@ -49,18 +69,21 @@ app.use((req, _res, next) => {
 // 5. 扫码落地页 —— 智能引导用户进入 Mini App
 app.get('/go', (req, res) => {
   const ref = req.query.ref || '';
-  const botUsername = process.env.BOT_USERNAME || 'xhzmall_bot';
-  const miniAppUrl = process.env.MINI_APP_URL || 'https://tgmall-production.up.railway.app';
+  const rawBotUsername = process.env.BOT_USERNAME || 'xhzmall_bot';
+  const rawMiniAppUrl = process.env.MINI_APP_URL || 'https://tgmall-production.up.railway.app';
+  const botUsername = escapeHtml(rawBotUsername);
+  const miniAppUrl = escapeHtml(rawMiniAppUrl);
 
   // 检测是否在 Telegram 环境内
-  const ua = req.headers['user-agent'] || '';
-  const isTelegram = ua.includes('Telegram') || req.query.tg;
+  const rawUa = req.headers['user-agent'] || '';
+  const ua = escapeHtml(rawUa);
+  const isTelegram = rawUa.includes('Telegram') || req.query.tg;
 
   // Telegram 内直接跳转
   if (isTelegram) {
     const directLink = ref
-      ? `https://t.me/${botUsername}?startapp=${encodeURIComponent(ref)}`
-      : `https://t.me/${botUsername}`;
+      ? `https://t.me/${rawBotUsername}?startapp=${encodeURIComponent(ref)}`
+      : `https://t.me/${rawBotUsername}`;
     return res.redirect(directLink);
   }
 
