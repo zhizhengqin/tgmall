@@ -71,9 +71,9 @@
 | GAP-03 | Checkout 优惠券选择死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法选择优惠券 | 📋 待规划 |
 | GAP-04 | Checkout 新增地址死按钮 | `tgmall-miniapp/src/views/CheckoutPage.vue` | 无法在结算页添加地址 | 📋 待规划 |
 | GAP-05 | 购物车未区分规格 | `tgmall-api/src/services/cart.service.js:42-58` | 同商品不同规格无法单独操作 | 📋 待规划 |
-| GAP-06 | AuditLog 未写入 | `prisma/schema.prisma:225-236` | 无操作审计 | 📋 待规划 |
-| GAP-07 | 通知重试无 cron job | `src/services/notification.service.js` | 失败通知不重试 | 📋 待规划 |
-| GAP-08 | 汇率硬编码 4000 | 多处 | 无法调整汇率 | 📋 待规划 |
+| GAP-06 | AuditLog 未写入 | `prisma/schema.prisma:225-236` | 无操作审计 | ✅ 已修复（新增 auditLog.service，平台设置/管理员操作已接入） |
+| GAP-07 | 通知重试无 cron job | `src/services/notification.service.js` | 失败通知不重试 | ✅ 已修复（新增 notificationRetry job，每 5 分钟执行） |
+| GAP-08 | 汇率硬编码 4000 | 多处 | 无法调整汇率 | ✅ 已修复（SystemSetting 支持 exchange_rate，order.service 读取配置） |
 | GAP-09 | 后台 OTP 登录缺失 | `tgmall-admin/src/pages/LoginPage.vue` | 只有账号密码 | 📋 待规划 |
 | GAP-10 | 商品 SKU/规格无后台 UI | `tgmall-admin/src/pages/ProductFormPage.vue` | 无法配置多规格 | 📋 待规划 |
 | GAP-11 | 商品标签库未接入商品表单 | `tgmall-admin/src/pages/ProductFormPage.vue` | 只能手动输入标签 | 📋 待规划 |

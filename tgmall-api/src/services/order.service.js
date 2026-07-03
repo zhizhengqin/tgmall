@@ -6,6 +6,7 @@ import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
 import { sendOrderNotification } from '../integrations/telegram.js';
 import { calculateShippingFee } from './shopConfig.service.js';
+import { getExchangeRate } from './systemConfig.service.js';
 
 export async function createOrder(userId, body) {
   const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
@@ -134,10 +135,13 @@ export async function createOrder(userId, body) {
         throw new AppError(`订单金额未满 $${minOrderAmountUsd} 起送`, 400, 'ORDER_MIN_AMOUNT_NOT_MET');
       }
 
+      // 获取当前 USD→KHR 汇率
+      const exchangeRate = await getExchangeRate();
+
       // 3d. 创建订单 — 折扣按原价比例分摊，确保总额精确
       const orderNumber = generateOrderNumber();
       const finalTotalUsd = Math.round((totalUsd - discountUsd + shippingFeeUsd) * 100) / 100;
-      const finalTotalKhr = Math.round(totalKhr - (discountUsd * 4000) + (shippingFeeUsd * 4000));
+      const finalTotalKhr = Math.round(totalKhr - (discountUsd * exchangeRate) + (shippingFeeUsd * exchangeRate));
 
       // 按原价比例分摊折扣金额
       const discountPerUsd = totalUsd > 0 ? discountUsd / totalUsd : 0;
@@ -172,7 +176,7 @@ export async function createOrder(userId, body) {
 
       // KHR 同理
       let distributedKhr = itemPrices.map((ip) =>
-        Math.round((ip.unitPriceKhr * ip.quantity) - (ip.itemDiscountUsd * 4000))
+        Math.round((ip.unitPriceKhr * ip.quantity) - (ip.itemDiscountUsd * exchangeRate))
       );
       const distributedTotalKhr = distributedKhr.reduce((s, v) => s + v, 0);
       const khrDiff = finalTotalKhr - distributedTotalKhr;

@@ -4,6 +4,7 @@ import { config } from './config/index.js';
 import { startOrderExpiryJob } from './jobs/orderExpiry.js';
 import { startPaymentReconciliationJob } from './jobs/paymentReconciliation.js';
 import { startOrderAutoCompleteJob } from './jobs/orderAutoComplete.js';
+import { startNotificationRetryJob } from './jobs/notificationRetry.js';
 import { setMiniAppMenuButton } from './integrations/telegram.js';
 
 if (config.paymentMockMode) {
@@ -21,4 +22,5 @@ app.listen(config.port, async () => {
   startOrderExpiryJob();
   startPaymentReconciliationJob();
   startOrderAutoCompleteJob();
+  startNotificationRetryJob();
 });

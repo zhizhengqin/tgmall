@@ -7,6 +7,7 @@ jest.unstable_mockModule('../../src/config/database.js', () => ({
   default: {
     address: { findFirst: jest.fn() },
     deliveryRule: { findFirst: jest.fn() },
+    systemSetting: { findMany: jest.fn(() => [{ key: 'exchange_rate', value: '4000' }]) },
     product: {
       findUnique: jest.fn(({ where }) => productStore.get(where.id) || null),
       update: jest.fn(({ where, data }) => {

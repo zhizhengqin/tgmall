@@ -9,4 +9,5 @@ export const platformSettingsSchema = z.object({
   maintenance_mode: z.boolean().optional(),
   announcement_text: z.string().max(2000).optional().nullable(),
   login_banner_image: z.string().url().max(500).optional().nullable(),
+  exchange_rate: z.coerce.number().positive().optional(),
 });

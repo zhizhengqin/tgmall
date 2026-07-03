@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 const PLATFORM_KEYS = [
   'store_name', 'store_logo', 'contact_phone', 'contact_email',
   'maintenance_mode', 'announcement_text', 'login_banner_image',
+  'exchange_rate',
 ];
 
 export async function getPlatformSettings() {
@@ -23,6 +24,7 @@ export async function getPlatformSettings() {
     maintenanceMode: map.maintenance_mode === 'true',
     announcement: map.announcement_text || '',
     loginBannerImage: map.login_banner_image || '',
+    exchangeRate: Number(map.exchange_rate) || 4000,
   };
 }
 
@@ -35,6 +37,7 @@ export async function updatePlatformSettings(input) {
   if (input.maintenance_mode !== undefined) pairs.push({ key: 'maintenance_mode', value: String(input.maintenance_mode) });
   if (input.announcement !== undefined) pairs.push({ key: 'announcement_text', value: input.announcement });
   if (input.login_banner_image !== undefined) pairs.push({ key: 'login_banner_image', value: input.login_banner_image });
+  if (input.exchange_rate !== undefined) pairs.push({ key: 'exchange_rate', value: String(input.exchange_rate) });
 
   for (const p of pairs) {
     await prisma.systemSetting.upsert({
@@ -44,6 +47,13 @@ export async function updatePlatformSettings(input) {
     });
   }
   return getPlatformSettings();
+}
+
+/** 获取当前 USD→KHR 汇率（带缓存） */
+export async function getExchangeRate() {
+  const settings = await getPlatformSettings();
+  const rate = Number(settings.exchangeRate);
+  return Number.isFinite(rate) && rate > 0 ? rate : 4000;
 }
 
 // ---- 管理员账号管理 ----
