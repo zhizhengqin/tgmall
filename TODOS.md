@@ -53,10 +53,12 @@
   - 右侧排序栏（最新/价格↑/价格↓/销量）+ 商品双列网格
   - 切换分类/排序自动重载，无限滚动
 
-### F-C19: 列表/网格视图切换
+### ✅ F-C19: 列表/网格视图切换 — 已实现
 - **来源:** PRD §4.2、Backlog S2-20 AC4
-- **现状:** CategoryPage 始终是网格视图，无切换按钮
-- **需要:** 右上角视图切换按钮，列表视图单列展示更多信息，切换保留筛选和滚动位置，偏好持久化到 localStorage
+- **实现:** commit `7d44411`
+  - ProductCard layout 属性支持 grid/list 两种模式
+  - CategoryPage 排序栏右侧 ☰/⊞ 切换按钮
+  - viewMode 偏好 localStorage 持久化
 
 ### ✅ F-C21 + F-C22: 快捷加购 + 底部购物车条 — 已实现
 - **来源:** PRD §4.2、Backlog S3-21
@@ -119,23 +121,24 @@
 
 ### ✅ `merchant.service.js` — `createProduct()` 已移除未定义的 `merchantId`
 - **修复:** 从 `createProduct` 的 `prisma.product.create` data 对象中删除 `merchantId,` 行（Schema 中 Product 无此字段）
-- **提交:** 待提交
+- **提交:** `bdffc65`（随 P1 补全一起提交）
 
 ### ✅ 优惠券管理端已迁移到 Service 层
 - **修复:** `admin.controller.js` 中 4 个优惠券函数改为调用 `coupon.service.js` 的 `adminListCoupons`/`adminCreateCoupon`/`adminUpdateCoupon`/`adminToggleCouponStatus`
 - **效果:** Controller 不再直接引用 `prisma` 和 `AppError`，架构一致性恢复
-- **提交:** 待提交
+- **提交:** `bdffc65`（随 P1 补全一起提交）
 
 ---
 
 ## 技术债务
 
 ### 高优先级
-- **V1 商户代码清理:**
-  - `tgmall-api/src/services/merchant.service.js`: `registerMerchant`, `merchantLogin`, `merchantWebLogin`, `getDashboard`, `approveMerchant`, `rejectMerchant` — 这些函数引用了一个不存在的 `Merchant` 模型（Schema 中已无 merchant 表），运行时必然失败
-  - `tgmall-api/src/routes/merchant.routes.js`: 仅做 re-export，可删除
-  - `tgmall-merchant/` 目录: 独立 V1 商户前端项目，已废弃
-  - `tgmall-miniapp/src/locales/*.json` 中 `merchant` 命名空间: 包含商家入驻表单翻译，前端无对应页面
+- **✅ V1 商户代码清理 — 已完成:**
+  - ~~`tgmall-api/src/services/merchant.service.js`: `registerMerchant`, `merchantLogin`, `merchantWebLogin`, `getDashboard`, `approveMerchant`, `rejectMerchant`~~ — 已删除（619→335 行，移除 6 个死函数）
+  - ~~`tgmall-api/src/routes/merchant.routes.js`~~ — 已删除（未被任何文件引用）
+  - ~~`tgmall-merchant/` 目录~~ — 已删除（仅 dist/node_modules，src 空目录）
+  - ~~`tgmall-miniapp/src/locales/*.json` 中 `merchant` 命名空间~~ — 已删除（3 个 locale 文件，未见组件引用）
+  - **额外修复:** `exportCsv` Controller 函数缺失导致 CSV 导出路由无效 → 已添加
 
 ### 中优先级
 - **性能压测:** 100 并发下单、商品列表 P95 ≤ 500ms（Backlog S4-17，Sprint 8 推迟）

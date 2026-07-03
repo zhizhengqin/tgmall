@@ -1,5 +1,6 @@
 // 管理员商品/订单管理控制器（V2 公司自营模式）
 import * as merchantService from '../services/merchant.service.js';
+import * as orderService from '../services/order.service.js';
 import { getPagination } from '../utils/pagination.js';
 
 // GET /admin/products — 商品列表
@@ -81,5 +82,20 @@ export async function shipOrder(req, res, next) {
   try {
     const order = await merchantService.shipOrder(req.params.id, req.validatedBody);
     res.json({ success: true, data: order });
+  } catch (err) { next(err); }
+}
+
+// GET /admin/orders/export/csv — 订单 CSV 导出
+export async function exportCsv(req, res, next) {
+  try {
+    const { status, start_date, end_date } = req.query;
+    const csv = await orderService.exportOrdersCsv({
+      status,
+      startDate: start_date,
+      endDate: end_date,
+    });
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().slice(0,10)}.csv"`);
+    res.send('﻿' + csv);
   } catch (err) { next(err); }
 }
