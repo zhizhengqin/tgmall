@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { khqrPaymentSchema } from '../validators/payment.schema.js';
+import { khqrPaymentSchema, abaPayPaymentSchema, wingPayPaymentSchema } from '../validators/payment.schema.js';
 import * as ctrl from '../controllers/payment.controller.js';
 
 const router = Router();
@@ -16,8 +16,7 @@ router.post('/khqr', validate(khqrPaymentSchema), ctrl.khqr);
 // 查询支付状态（前端轮询）
 router.get('/status/:orderId', ctrl.status);
 
-// 后续 Sprint: ABA Pay / Wing Pay Deep Link 生成接口
-// router.post('/aba_pay', validate(abaPayPaymentSchema), ctrl.abaPay);
-// router.post('/wing_pay', validate(wingPayPaymentSchema), ctrl.wingPay);
+router.post('/aba_pay', validate(abaPayPaymentSchema), ctrl.abaPay);
+router.post('/wing_pay', validate(wingPayPaymentSchema), ctrl.wingPay);
 
 export default router;

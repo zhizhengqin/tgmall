@@ -14,6 +14,32 @@ export async function khqr(req, res, next) {
   }
 }
 
+/** POST /payments/aba_pay — 发起 ABA Pay 支付（Deep Link） */
+export async function abaPay(req, res, next) {
+  try {
+    const result = await paymentService.createABAPayPayment(
+      req.user.userId,
+      req.validatedBody.order_id,
+    );
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/** POST /payments/wing_pay — 发起 Wing Pay 支付（Deep Link） */
+export async function wingPay(req, res, next) {
+  try {
+    const result = await paymentService.createWingPayPayment(
+      req.user.userId,
+      req.validatedBody.order_id,
+    );
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 /** GET /payments/status/:orderId — 查询支付状态（前端轮询） */
 export async function status(req, res, next) {
   try {

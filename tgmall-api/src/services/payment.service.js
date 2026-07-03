@@ -3,6 +3,8 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import * as bakong from '../integrations/bakong.js';
+import * as abaPay from '../integrations/aba_pay.js';
+import * as wingPay from '../integrations/wing_pay.js';
 import { sendOrderNotification } from '../integrations/telegram.js';
 
 /**
@@ -88,6 +90,109 @@ export async function createKHQRPayment(userId, orderId) {
       { name: 'ACLEDA Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/acleda.png' },
       { name: 'Wing Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/wing.png' },
     ],
+  };
+}
+
+/**
+ * 发起 ABA Pay 支付 — 生成 Deep Link 跳转 ABA Mobile App
+ * POST /payments/aba_pay
+ *
+ * 验证逻辑与 createKHQRPayment 相同，但返回 Deep Link 而非 QR 码。
+ * 支付完成后通过统一 Webhook 回调确认。
+ */
+export async function createABAPayPayment(userId, orderId) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+  });
+
+  if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
+  if (order.status === 'cancelled') throw new AppError('订单已取消', 400, 'ORDER_CANCELLED');
+  if (order.paymentStatus === 'success') throw new AppError('订单已支付，无需重复支付', 400, 'ORDER_ALREADY_PAID');
+  if (order.status !== 'pending_payment') throw new AppError('订单状态不支持支付', 400, 'ORDER_NOT_PAYABLE');
+  if (order.paymentMethod !== 'aba_pay') throw new AppError('该订单未选择 ABA Pay 支付方式', 400, 'VALIDATION_ERROR');
+  if (order.paymentTimeout && new Date() > order.paymentTimeout) throw new AppError('支付已超时，请重新下单', 400, 'ORDER_CANCELLED');
+
+  let result;
+  try {
+    result = await abaPay.generateDeepLink({
+      orderNumber: order.orderNumber,
+      amountUsd: Number(order.totalUsd),
+      amountKhr: order.totalKhr,
+      expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+    });
+  } catch (err) {
+    console.error('ABA Pay Deep Link 生成失败:', err.message);
+    throw new AppError('支付服务暂不可用，请稍后重试或选择其他支付方式', 503, 'PAYMENT_SERVICE_UNAVAILABLE');
+  }
+
+  // 缓存支付信息到 Redis
+  const paymentKey = `payment:${order.id}`;
+  await redis.set(paymentKey, JSON.stringify({
+    transactionId: result.transactionId,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    createdAt: new Date().toISOString(),
+    expiresAt: order.paymentTimeout?.toISOString() || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  }), 'EX', 1800);
+
+  return {
+    orderNumber: order.orderNumber,
+    deepLink: result.deepLink,
+    universalLink: result.universalLink,
+    transactionId: result.transactionId,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+  };
+}
+
+/**
+ * 发起 Wing Pay 支付 — 生成 Deep Link 跳转 Wing Bank App
+ * POST /payments/wing_pay
+ */
+export async function createWingPayPayment(userId, orderId) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+  });
+
+  if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
+  if (order.status === 'cancelled') throw new AppError('订单已取消', 400, 'ORDER_CANCELLED');
+  if (order.paymentStatus === 'success') throw new AppError('订单已支付，无需重复支付', 400, 'ORDER_ALREADY_PAID');
+  if (order.status !== 'pending_payment') throw new AppError('订单状态不支持支付', 400, 'ORDER_NOT_PAYABLE');
+  if (order.paymentMethod !== 'wing_pay') throw new AppError('该订单未选择 Wing Pay 支付方式', 400, 'VALIDATION_ERROR');
+  if (order.paymentTimeout && new Date() > order.paymentTimeout) throw new AppError('支付已超时，请重新下单', 400, 'ORDER_CANCELLED');
+
+  let result;
+  try {
+    result = await wingPay.generateDeepLink({
+      orderNumber: order.orderNumber,
+      amountUsd: Number(order.totalUsd),
+      amountKhr: order.totalKhr,
+      expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+    });
+  } catch (err) {
+    console.error('Wing Pay Deep Link 生成失败:', err.message);
+    throw new AppError('支付服务暂不可用，请稍后重试或选择其他支付方式', 503, 'PAYMENT_SERVICE_UNAVAILABLE');
+  }
+
+  // 缓存支付信息到 Redis
+  const paymentKey = `payment:${order.id}`;
+  await redis.set(paymentKey, JSON.stringify({
+    transactionId: result.transactionId,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    createdAt: new Date().toISOString(),
+    expiresAt: order.paymentTimeout?.toISOString() || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  }), 'EX', 1800);
+
+  return {
+    orderNumber: order.orderNumber,
+    deepLink: result.deepLink,
+    universalLink: result.universalLink,
+    transactionId: result.transactionId,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
   };
 }
 
