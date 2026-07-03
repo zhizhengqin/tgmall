@@ -18,7 +18,8 @@
     "home": "家居",
     "noProducts": "暂无商品",
     "comingSoon": "商品正在上架中，请稍后再来",
-    "hotProducts": "热门推荐"
+    "hotProducts": "热门推荐",
+    "loginBanner": "登录查看专属优惠"
   },
   "product": {
     "addToCart": "加入购物车",

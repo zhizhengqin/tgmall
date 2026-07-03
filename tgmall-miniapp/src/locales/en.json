@@ -18,7 +18,8 @@
     "home": "Home",
     "noProducts": "No products yet",
     "comingSoon": "Products are being added, please check back later",
-    "hotProducts": "Hot Products"
+    "hotProducts": "Hot Products",
+    "loginBanner": "Sign in to see exclusive deals"
   },
   "product": {
     "addToCart": "Add to Cart",

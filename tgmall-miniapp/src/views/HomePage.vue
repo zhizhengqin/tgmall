@@ -25,6 +25,12 @@
       </div>
     </header>
 
+    <!-- 登录引导横幅（未登录用户可见，24h 关闭） -->
+    <div class="login-banner" v-if="showLoginBanner" @click="goLogin">
+      <span class="login-banner-text">🔐 {{ $t('home.loginBanner') }}</span>
+      <button class="login-banner-close" @click.stop="dismissLoginBanner">✕</button>
+    </div>
+
     <!-- Banner 轮播 -->
     <div class="banner-wrap" v-if="banners.length > 0">
       <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
@@ -126,6 +132,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useCityStore } from '@/stores/cityStore.js';
+import { useUserStore } from '@/stores/userStore';
 import { useTelegram } from '@/composables/useTelegram';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getProducts } from '@/api/products';
@@ -138,6 +145,7 @@ import { getFlashDeals } from '@/api/shopConfig';
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const cityStore = useCityStore();
+const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const { enableCloseConfirmation } = useTelegram();
@@ -145,6 +153,23 @@ const { banners, categories: apiCategories, cities: shopCities, load } = useShop
 
 // 开启 Mini App 关闭确认
 enableCloseConfirmation();
+
+// 登录引导横幅 — 24h 关闭逻辑
+const LOGIN_BANNER_KEY = 'loginBannerDismissedAt';
+function isBannerDismissedIn24h() {
+  const ts = localStorage.getItem(LOGIN_BANNER_KEY);
+  if (!ts) return false;
+  return Date.now() - parseInt(ts, 10) < 24 * 60 * 60 * 1000;
+}
+const loginBannerDismissed = ref(isBannerDismissedIn24h());
+const showLoginBanner = computed(() => !userStore.isLoggedIn && !loginBannerDismissed.value);
+function dismissLoginBanner() {
+  localStorage.setItem(LOGIN_BANNER_KEY, Date.now().toString());
+  loginBannerDismissed.value = true;
+}
+function goLogin() {
+  router.push('/login');
+}
 
 // 品类列表（接入后台配置，保留 all 为第一个选项）
 const categories = computed(() => [
@@ -413,6 +438,41 @@ onUnmounted(() => {
   color: #fff;
   border-color: var(--accent);
 }
+
+/* 登录引导横幅 */
+.login-banner {
+  margin: var(--space-md) var(--space-lg) 0;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, oklch(64% 0.16 82 / 0.12), oklch(64% 0.16 82 / 0.06));
+  border: 1px solid oklch(64% 0.16 82 / 0.25);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.login-banner:active { background: oklch(64% 0.16 82 / 0.18); }
+.login-banner-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.login-banner-close {
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,.06);
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.login-banner-close:active { background: rgba(0,0,0,.12); }
 
 /* Banner */
 .banner-placeholder {
