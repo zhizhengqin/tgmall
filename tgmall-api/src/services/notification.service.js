@@ -193,3 +193,28 @@ export async function notifyAuditResult(merchant, status, reason) {
     text: result.text || '',
   });
 }
+
+/**
+ * 查询用户通知列表（分页）
+ */
+export async function getUserNotifications(userId, { page = 1, limit = 20 } = {}) {
+  const skip = (page - 1) * limit;
+  const [items, total] = await Promise.all([
+    prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        type: true,
+        params: true,
+        content: true,
+        status: true,
+        createdAt: true,
+      },
+    }),
+    prisma.notification.count({ where: { userId } }),
+  ]);
+  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+}

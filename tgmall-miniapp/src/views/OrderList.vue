@@ -59,6 +59,7 @@ const tabs = [
   { value: 'paid', labelKey: 'paid' },
   { value: 'shipped', labelKey: 'shipped' },
   { value: 'completed', labelKey: 'completed' },
+  { value: 'cancelled', labelKey: 'cancelled' },
 ];
 const activeTab = ref('');
 const orders = ref([]);

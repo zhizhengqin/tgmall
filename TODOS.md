@@ -144,7 +144,7 @@
 - **性能压测:** 100 并发下单、商品列表 P95 ≤ 500ms（Backlog S4-17，Sprint 8 推迟）
 - **低端机兼容性测试:** 2GB RAM 安卓 + 3G 限速 1Mbps 真机验证（Backlog S4-10）
 - **文件上传服务:** `routes/index.js` 有 `"后续 Sprint: upload"` 注释，商品图片目前通过 URL 填入，无实际文件上传端点
-- **用户通知中心:** `Notification` 模型和 `notification.service.js` 存在，但无用户侧 GET 通知列表的 Route/Controller
+- **✅ 用户通知中心 — 已完成:** `GET /api/v1/notifications` 用户通知列表（auth + 分页），三层架构完整
 - **通知发送统一化:** Controller 层直接调用 `telegram.js` 发通知，绕过了 `notification.service.js`（后者有更好的重试和记录机制）
 
 ### 低优先级
@@ -153,7 +153,7 @@
 - **COD 收款确认 API:** `POST /api/v1/admin/orders/{id}/collect-cod`（Backlog S3-05 AC4）
 - **QA ISSUE-002:** console.error 中英混用
 - **QA ISSUE-003:** esbuild/vite dev-dep 漏洞（非生产依赖）
-- **订单状态 Tab:** OrderList 缺少 "已取消" Tab（当前仅有 全部/待付款/已付款/已发货/已完成）
+- **✅ 订单状态 Tab — 已完成:** OrderList 已添加 "已取消" Tab
 
 ---
 
