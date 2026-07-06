@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# 安装 OpenSSL，使 Prisma 能正确检测并链接 OpenSSL 3.0 引擎
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 COPY package*.json ./
