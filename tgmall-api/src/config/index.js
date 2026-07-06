@@ -18,8 +18,8 @@ for (const varName of requiredEnvVars) {
 
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  // Railway 通过 PORT 环境变量暴露内部端口，必须优先监听该端口
-  port: parseInt(process.env.PORT || process.env.API_PORT) || 3001,
+  // Railway 通过 PORT 环境变量或默认 3000 暴露服务；EXPOSE 3000 与此保持一致
+  port: parseInt(process.env.PORT) || 3000,
   databaseUrl: process.env.DATABASE_URL,
   redisUrl: process.env.REDIS_URL,
   botToken: process.env.BOT_TOKEN,
