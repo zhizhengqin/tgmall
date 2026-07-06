@@ -158,7 +158,8 @@ const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 7.1 管理后台静态文件（同域部署）
-const adminDistPath = path.join(__dirname, 'public/admin');
+// Dockerfile 将 public/ 复制到 /app/public；本地启动时工作目录为 tgmall-api
+const adminDistPath = path.join(process.cwd(), 'public/admin');
 app.use('/admin', express.static(adminDistPath));
 app.get('/admin/*', (_req, res) => {
   res.sendFile(path.join(adminDistPath, 'index.html'));
