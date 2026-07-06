@@ -150,12 +150,19 @@ setTimeout(() => {
 // 6. 业务路由
 app.use('/api/v1', routes);
 
-// 7. 静态资源（上传图片）
+// 7. 静态资源
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// 7.1 管理后台静态文件（同域部署）
+const adminDistPath = path.join(__dirname, 'public/admin');
+app.use('/admin', express.static(adminDistPath));
+app.get('/admin/*', (_req, res) => {
+  res.sendFile(path.join(adminDistPath, 'index.html'));
+});
 
 // 8. 全局错误处理（必须在路由之后）
 app.use(errorHandler);
