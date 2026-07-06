@@ -7,6 +7,7 @@ import {
 import { paymentWebhookSchema } from '../../src/validators/payment.schema.js';
 import { createOrderSchema } from '../../src/validators/order.schema.js';
 import { merchantProductSchema } from '../../src/validators/merchant.schema.js';
+import { couponSchema, couponUpdateSchema } from '../../src/validators/admin.schema.js';
 
 // === AUTH SCHEMAS ===
 describe('telegramLoginSchema', () => {
@@ -394,5 +395,49 @@ describe('merchantProductSchema', () => {
     const r = merchantProductSchema.safeParse(validProduct);
     expect(r.success).toBe(true);
     expect(r.data.status).toBe('active');
+  });
+});
+
+// === COUPON SCHEMAS ===
+describe('couponSchema', () => {
+  const validCoupon = {
+    titleKm: 'គុណបុណ្យពិសេស',
+    titleEn: 'Special Discount',
+    titleZh: '特别优惠',
+    type: 'fixed',
+    value: 5,
+    minSpend: 10,
+    totalQty: 100,
+    startDate: new Date('2026-07-01T00:00:00Z'),
+    endDate: new Date('2026-07-31T23:59:59Z'),
+  };
+
+  it('TC-Z-COUP-001: 接受有效优惠券', () => {
+    const r = couponSchema.safeParse(validCoupon);
+    expect(r.success).toBe(true);
+  });
+
+  it('TC-Z-COUP-002: 拒绝结束时间早于开始时间', () => {
+    const r = couponSchema.safeParse({
+      ...validCoupon,
+      startDate: new Date('2026-07-31T00:00:00Z'),
+      endDate: new Date('2026-07-01T00:00:00Z'),
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('TC-Z-COUP-003: couponUpdateSchema 应支持 partial()', () => {
+    expect(typeof couponUpdateSchema.safeParse).toBe('function');
+  });
+
+  it('TC-Z-COUP-004: couponUpdateSchema 接受部分字段更新', () => {
+    const r = couponUpdateSchema.safeParse({ titleEn: 'Updated Title' });
+    expect(r.success).toBe(true);
+    expect(r.data.titleEn).toBe('Updated Title');
+  });
+
+  it('TC-Z-COUP-005: couponUpdateSchema 仍校验类型取值范围', () => {
+    const r = couponUpdateSchema.safeParse({ type: 'invalid_type' });
+    expect(r.success).toBe(false);
   });
 });
