@@ -14,6 +14,9 @@ registerBigIntSerializer();
 
 const app = express();
 
+// 信任 Railway 反向代理，确保 req.protocol 反映真实访问协议
+app.set('trust proxy', 1);
+
 // HTML 转义辅助函数 —— 防止反射型 XSS
 function escapeHtml(str) {
   return String(str)
@@ -38,15 +41,18 @@ if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
   allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
 }
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (isCorsOriginAllowed(origin, allowedOrigins, process.env.NODE_ENV)) {
-      return callback(null, true);
-    }
-    callback(new Error(`CORS 策略拒绝来源: ${origin}`));
-  },
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  const selfOrigin = `${req.protocol}://${req.headers.host}`;
+  cors({
+    origin: (origin, callback) => {
+      if (isCorsOriginAllowed(origin, allowedOrigins, process.env.NODE_ENV, selfOrigin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS 策略拒绝来源: ${origin}`));
+    },
+    credentials: true,
+  })(req, res, next);
+});
 
 // 3. 全局速率限制
 app.use(rateLimit({
