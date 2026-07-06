@@ -18,8 +18,8 @@ for (const varName of requiredEnvVars) {
 
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  // Node.js 监听固定内部端口 3001，不与 Railway PORT（Nginx 监听）冲突
-  port: parseInt(process.env.API_PORT) || 3001,
+  // Railway 通过 PORT 环境变量暴露内部端口，必须优先监听该端口
+  port: parseInt(process.env.PORT || process.env.API_PORT) || 3001,
   databaseUrl: process.env.DATABASE_URL,
   redisUrl: process.env.REDIS_URL,
   botToken: process.env.BOT_TOKEN,
