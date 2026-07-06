@@ -24,3 +24,10 @@ app.listen(config.port, async () => {
   startOrderAutoCompleteJob();
   startNotificationRetryJob();
 });
+
+// Railway 边缘路由可能固定指向 3000，额外监听该端口做兼容兜底
+if (config.port !== 3000) {
+  app.listen(3000, () => {
+    console.log(`🛡️ 兼容监听端口 3000 → http://localhost:3000`);
+  });
+}
