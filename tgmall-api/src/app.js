@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import { registerBigIntSerializer } from './utils/jsonSerializer.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
+import { isCorsOriginAllowed } from './utils/cors.js';
 
 // Prisma 的 telegramId 等字段使用 BigInt，Express res.json() 默认无法序列化。
 // 在应用最顶层注册 toJSON，使所有 JSON.stringify 统一把 BigInt 输出为字符串。
@@ -39,9 +40,9 @@ if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
 
 app.use(cors({
   origin: (origin, callback) => {
-    // 允许无 origin 的请求（如移动 App、服务器间调用）
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isCorsOriginAllowed(origin, allowedOrigins, process.env.NODE_ENV)) {
+      return callback(null, true);
+    }
     callback(new Error(`CORS 策略拒绝来源: ${origin}`));
   },
   credentials: true,

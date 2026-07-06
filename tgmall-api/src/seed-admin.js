@@ -7,21 +7,24 @@ const p = new PrismaClient();
 (async () => {
   try {
     const existing = await p.adminUser.findFirst().catch(() => null);
-    const envHash = process.env.ADMIN_PASSWORD;
+    const envPassword = process.env.ADMIN_PASSWORD;
 
-    if (envHash) {
-      // 有环境变量: 创建或更新为指定密码
+    if (envPassword) {
+      // 如果环境变量是明文密码，自动 bcrypt；如果已是 bcrypt hash（以 $2a$/$2b$/$2y$ 开头），直接存储
+      const isAlreadyHash = /^\$2[aby]\$\d+\$/.test(envPassword);
+      const passwordHash = isAlreadyHash ? envPassword : await bcrypt.hash(envPassword, 10);
+
       if (existing) {
         await p.adminUser.update({
           where: { id: existing.id },
-          data: { passwordHash: envHash },
+          data: { passwordHash },
         });
         console.log('✅ Admin password updated (from ADMIN_PASSWORD)');
       } else {
         await p.adminUser.create({
           data: {
             username: 'admin',
-            passwordHash: envHash,
+            passwordHash,
             displayName: '管理员',
             role: 'admin',
           },
