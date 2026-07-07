@@ -26,7 +26,7 @@ const products = [
   { id: '20000000-0000-0000-0000-000000000009', nameEn: 'Double-Layer Lunch Box', category: 'home', icon: '🍱' },
   { id: '20000000-0000-0000-0000-000000000010', nameEn: 'Desktop Organizer Set', category: 'home', icon: '🗂️' },
   { id: '20000000-0000-0000-0000-000000000011', nameEn: 'Cambodian Coffee Beans', category: 'food', icon: '☕' },
-  { id: '20000000-0000-0000-0000-000000000012', nameEn: 'Premium Instant Noodles', category: 'food', icon: '🍜' },
+  { id: '20000000-0000-0000-0000-000000000012', nameEn: 'Premium Instant Noodles (5 packs)', category: 'food', icon: '🍜' },
 ];
 
 const banners = [

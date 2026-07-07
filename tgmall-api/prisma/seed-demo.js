@@ -539,7 +539,7 @@ async function main() {
       stock: 300,
       alertThreshold: 50,
       category: 'food',
-      images: [{ url: '/images/products/premium-instant-noodles.svg', thumb_url: '/images/products/premium-instant-noodles.svg' }],
+      images: [{ url: '/images/products/premium-instant-noodles-5-packs.svg', thumb_url: '/images/products/premium-instant-noodles-5-packs.svg' }],
       specs: [
         { nameKm: 'រសជាតិ', nameEn: 'Flavor', nameZh: '口味', values: [
           { valueKm: 'កម្ទេច', valueEn: 'Beef', valueZh: '牛肉味', priceUsd: 0, stock: 150 },
