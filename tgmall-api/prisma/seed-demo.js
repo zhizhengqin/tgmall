@@ -294,7 +294,7 @@ async function main() {
       stock: 120,
       alertThreshold: 20,
       category: 'fashion',
-      images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '颜色', values: [
           { valueKm: 'ខ្មៅ', valueEn: 'Black', valueZh: '黑色', priceUsd: 0, stock: 40 },
@@ -322,7 +322,7 @@ async function main() {
       stock: 200,
       alertThreshold: 30,
       category: 'fashion',
-      images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '颜色', values: [
           { valueKm: 'ខៀវ', valueEn: 'Blue', valueZh: '蓝色', priceUsd: 0, stock: 70 },
@@ -350,7 +350,7 @@ async function main() {
       stock: 60,
       alertThreshold: 10,
       category: 'fashion',
-      images: ['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '颜色', values: [
           { valueKm: 'ត្នោត', valueEn: 'Brown', valueZh: '棕色', priceUsd: 0, stock: 25 },
@@ -374,7 +374,7 @@ async function main() {
       stock: 85,
       alertThreshold: 15,
       category: 'beauty',
-      images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'មាឌ', nameEn: 'Volume', nameZh: '容量', values: [
           { valueKm: '30ml', valueEn: '30ml', valueZh: '30ml', priceUsd: 0, stock: 50 },
@@ -396,7 +396,7 @@ async function main() {
       stock: 150,
       alertThreshold: 25,
       category: 'beauty',
-      images: ['https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '色号', values: [
           { valueKm: 'ក្រហមចាស់', valueEn: 'Ruby Red', valueZh: '复古红', priceUsd: 0, stock: 60 },
@@ -420,7 +420,7 @@ async function main() {
       stock: 75,
       alertThreshold: 15,
       category: 'electronics',
-      images: ['https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '颜色', values: [
           { valueKm: 'ស', valueEn: 'White', valueZh: '白色', priceUsd: 0, stock: 35 },
@@ -442,7 +442,7 @@ async function main() {
       stock: 100,
       alertThreshold: 20,
       category: 'electronics',
-      images: ['https://images.unsplash.com/photo-1586816879360-004f5b0c51e9?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1586816879360-004f5b0c51e9?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1586816879360-004f5b0c51e9?w=600&h=600&fit=crop' }],
       specs: [],
       tags: [tags[2]],
       salesCount: 78,
@@ -459,7 +459,7 @@ async function main() {
       stock: 40,
       alertThreshold: 8,
       category: 'electronics',
-      images: ['https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1557324232-b8917d3c3dcb?w=600&h=600&fit=crop' }],
       specs: [],
       tags: [tags[4]],
       salesCount: 23,
@@ -477,7 +477,7 @@ async function main() {
       stock: 180,
       alertThreshold: 30,
       category: 'home',
-      images: ['https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ពណ៌', nameEn: 'Color', nameZh: '颜色', values: [
           { valueKm: 'ផ្កាឈូក', valueEn: 'Pink', valueZh: '粉色', priceUsd: 0, stock: 90 },
@@ -499,7 +499,7 @@ async function main() {
       stock: 95,
       alertThreshold: 15,
       category: 'home',
-      images: ['https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=600&h=600&fit=crop' }],
       specs: [],
       tags: [tags[2]],
       salesCount: 54,
@@ -517,7 +517,7 @@ async function main() {
       stock: 130,
       alertThreshold: 20,
       category: 'food',
-      images: ['https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'ទម្ងន់', nameEn: 'Weight', nameZh: '重量', values: [
           { valueKm: '250g', valueEn: '250g', valueZh: '250g', priceUsd: 0, stock: 70 },
@@ -539,7 +539,7 @@ async function main() {
       stock: 300,
       alertThreshold: 50,
       category: 'food',
-      images: ['https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&h=600&fit=crop'],
+      images: [{ url: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&h=600&fit=crop', thumb_url: 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&h=600&fit=crop' }],
       specs: [
         { nameKm: 'រសជាតិ', nameEn: 'Flavor', nameZh: '口味', values: [
           { valueKm: 'កម្ទេច', valueEn: 'Beef', valueZh: '牛肉味', priceUsd: 0, stock: 150 },

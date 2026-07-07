@@ -36,7 +36,18 @@
     <div class="banner-wrap" v-if="banners.length > 0">
       <div class="banner-track" :style="trackStyle" @touchstart="onTouchStart" @touchmove="onTouchMove" @touchend="onTouchEnd">
         <div v-for="banner in banners" :key="banner.id" class="banner-slide" @click="onBannerClick(banner)">
-          <img :src="banner.imageUrl" :alt="bannerTitle(banner)" class="banner-img" loading="lazy" decoding="async" />
+          <img
+            v-if="!bannerLoadFailed[banner.id]"
+            :src="banner.imageUrl"
+            :alt="bannerTitle(banner)"
+            class="banner-img"
+            loading="lazy"
+            decoding="async"
+            @error="bannerLoadFailed[banner.id] = true"
+          />
+          <div v-else class="banner-fallback">
+            <span class="banner-fallback-text">{{ bannerTitle(banner) }}</span>
+          </div>
         </div>
       </div>
       <div class="banner-dots" v-if="banners.length > 1">
@@ -212,6 +223,7 @@ const flashDeals = ref([]);
 const currentBanner = ref(0);
 const touchStartX = ref(0);
 const touchMoveDistance = ref(0);
+const bannerLoadFailed = reactive({});
 const SWIPE_THRESHOLD = 40;
 const CLICK_MOVE_THRESHOLD = 10;
 
@@ -530,6 +542,22 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.banner-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, oklch(64% 0.16 82 / 0.2), oklch(52% 0.20 24 / 0.15));
+  text-align: center;
+}
+.banner-fallback-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.4;
 }
 .banner-dots {
   position: absolute;

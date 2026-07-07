@@ -4,7 +4,7 @@
     <router-link :to="`/product/${id}`" class="card-link">
       <div class="card-image">
         <img
-          :src="thumbnail"
+          :src="thumbnail || placeholder"
           :alt="name"
           loading="lazy"
           @error="onImageError"

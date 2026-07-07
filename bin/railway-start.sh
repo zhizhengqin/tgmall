@@ -22,6 +22,9 @@ timeout 60 npx prisma db push --skip-generate || {
 echo "--- 种子默认管理员 ---"
 node src/seed-admin.js || echo "⚠️ 种子脚本执行失败"
 
+echo "--- 修复商品图片历史数据 ---"
+node src/migrations/fix-product-images.js || echo "⚠️ 商品图片格式修复失败，继续启动..."
+
 # 2. 动态生成 Nginx 配置
 # Railway 可能从 PORT 环境变量或 EXPOSE 推断端口，也可能默认转发到 3000
 # 为保险起见，同时监听分配的端口 + 3000
