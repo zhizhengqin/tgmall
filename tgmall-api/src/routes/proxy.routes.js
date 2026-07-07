@@ -1,4 +1,4 @@
-// 图片代理 — 用于 Telegram 头像等被用户网络拦截的外部图片
+// 图片代理 — 用于 Telegram 头像等被用户网络或服务器网络拦截的外部图片
 import express from 'express';
 import { AppError } from '../utils/AppError.js';
 
@@ -20,6 +20,23 @@ function isAllowedUrl(urlString) {
   }
 }
 
+async function fetchImage(url) {
+  return fetch(url, {
+    timeout: 10000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    },
+  });
+}
+
+async function pipeImage(response, res) {
+  const contentType = response.headers.get('content-type') || 'image/svg+xml';
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  response.body.pipe(res);
+}
+
 router.get('/', async (req, res, next) => {
   const { url } = req.query;
   if (!url || typeof url !== 'string') {
@@ -30,24 +47,31 @@ router.get('/', async (req, res, next) => {
   }
 
   try {
-    const response = await fetch(url, {
-      timeout: 10000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; TGMall/1.0)',
-      },
-    });
+    // 1. 直接获取源图片
+    let response = await fetchImage(url);
+
+    // 2. 如果直接获取失败（如服务器网络被拦截），回退到 wsrv.nl 公共图片代理
+    if (!response.ok) {
+      const fallbackUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+      response = await fetchImage(fallbackUrl);
+    }
 
     if (!response.ok) {
       return next(new AppError('源图片获取失败', 502, 'UPSTREAM_ERROR'));
     }
 
-    const contentType = response.headers.get('content-type') || 'image/svg+xml';
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-
-    // node-fetch body 是可读流，直接管道给响应
-    response.body.pipe(res);
+    return pipeImage(response, res);
   } catch (err) {
+    try {
+      // 3. 直接 fetch 抛异常时，也尝试 wsrv.nl 兜底
+      const fallbackUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+      const response = await fetchImage(fallbackUrl);
+      if (response.ok) {
+        return pipeImage(response, res);
+      }
+    } catch (fallbackErr) {
+      // fallback 也失败，返回原始错误
+    }
     next(new AppError(`图片代理失败: ${err.message}`, 502, 'PROXY_ERROR'));
   }
 });
