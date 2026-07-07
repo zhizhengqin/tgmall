@@ -43,7 +43,7 @@ export async function getPlatformDashboard() {
     take: 10,
     select: {
       id: true, nameEn: true, nameKm: true, nameZh: true,
-      priceUsd: true, salesCount: true, thumbnail: true,
+      priceUsd: true, salesCount: true, images: true,
     },
   });
 
@@ -82,7 +82,7 @@ export async function getPlatformDashboard() {
       nameZh: p.nameZh,
       priceUsd: Number(p.priceUsd),
       salesCount: p.salesCount,
-      thumbnail: p.thumbnail,
+      thumbnail: p.images?.[0]?.thumb_url || p.images?.[0]?.url || null,
     })),
     categorySales,
     paymentSuccessRate: totalPaymentOrders > 0
