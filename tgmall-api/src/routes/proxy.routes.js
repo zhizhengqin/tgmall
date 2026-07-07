@@ -1,5 +1,6 @@
 // 图片代理 — 用于 Telegram 头像等被用户网络或服务器网络拦截的外部图片
 import express from 'express';
+import { Readable } from 'stream';
 import { AppError } from '../utils/AppError.js';
 
 const router = express.Router();
@@ -34,7 +35,8 @@ async function pipeImage(response, res) {
   const contentType = response.headers.get('content-type') || 'image/svg+xml';
   res.setHeader('Content-Type', contentType);
   res.setHeader('Cache-Control', 'public, max-age=3600');
-  response.body.pipe(res);
+  // Node fetch 返回的是 Web ReadableStream，需要转成 Node Readable 再 pipe
+  Readable.fromWeb(response.body).pipe(res);
 }
 
 router.get('/', async (req, res, next) => {
