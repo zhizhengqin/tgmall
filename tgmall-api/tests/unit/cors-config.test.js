@@ -34,6 +34,19 @@ describe('isCorsOriginAllowed', () => {
     ).toBe(true);
   });
 
+  it('反向代理导致 protocol 不一致时，只要 hostname 一致就放行', () => {
+    const origins = ['https://admin.example.com'];
+    // 请求来源是 https，但 selfOrigin 被代理头算成了 http
+    expect(
+      isCorsOriginAllowed(
+        'https://tgmall-production.up.railway.app',
+        origins,
+        'production',
+        'http://tgmall-production.up.railway.app',
+      ),
+    ).toBe(true);
+  });
+
   it('开发环境传入 localhost 来源时允许，生产来源不允许', () => {
     const origins = ['http://localhost:5173', 'http://localhost:3000'];
     expect(isCorsOriginAllowed('http://localhost:5173', origins, 'development')).toBe(true);
