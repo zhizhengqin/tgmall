@@ -18,8 +18,9 @@ for (const varName of requiredEnvVars) {
 
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  // Railway 通过 PORT 环境变量或默认 3000 暴露服务；EXPOSE 3000 与此保持一致
-  port: parseInt(process.env.PORT) || 3000,
+  // Railway Docker + Nginx 模式下使用 API_PORT 作为内部 API 端口
+  // 本地开发或直接暴露 Node.js 时使用 PORT；默认 3000
+  port: parseInt(process.env.API_PORT || process.env.PORT) || 3000,
   databaseUrl: process.env.DATABASE_URL,
   redisUrl: process.env.REDIS_URL,
   botToken: process.env.BOT_TOKEN,

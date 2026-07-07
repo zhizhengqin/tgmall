@@ -26,7 +26,8 @@ app.listen(config.port, async () => {
 });
 
 // Railway 边缘路由可能固定指向 3000，额外监听该端口做兼容兜底
-if (config.port !== 3000) {
+// 当显式指定 API_PORT 时（Railway Docker + Nginx 代理模式），不再监听 3000，避免与 Nginx 冲突
+if (config.port !== 3000 && !process.env.API_PORT) {
   app.listen(3000, () => {
     console.log(`🛡️ 兼容监听端口 3000 → http://localhost:3000`);
   });

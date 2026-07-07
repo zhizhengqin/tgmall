@@ -94,7 +94,7 @@ echo "--- 启动 Node.js (端口 3001) ---"
 (
   while true; do
     echo "[$(date)] Node.js 启动中..."
-    node src/index.js || true
+    API_PORT=3001 node src/index.js || true
     echo "[$(date)] Node.js 异常退出，3秒后重启..."
     sleep 3
   done
