@@ -22,7 +22,7 @@ function isAllowedUrl(urlString) {
 
 async function fetchImage(url) {
   return fetch(url, {
-    timeout: 10000,
+    signal: AbortSignal.timeout(8000),
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -63,7 +63,7 @@ router.get('/', async (req, res, next) => {
     return pipeImage(response, res);
   } catch (err) {
     try {
-      // 3. 直接 fetch 抛异常时，也尝试 wsrv.nl 兜底
+      // 3. 直接 fetch 抛异常（超时/网络不通）时，使用 wsrv.nl 兜底
       const fallbackUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
       const response = await fetchImage(fallbackUrl);
       if (response.ok) {
