@@ -103,6 +103,8 @@ onMounted(() => {
             : (e?.message || 'unknown');
           debugInfo.storeUser += ' | API_ERR:' + errMsg;
         }
+      } else {
+        debugInfo.storeUser += ' | SDK_NO_INITDATA: 请通过 Bot 的 Mini App 按钮打开';
       }
 
       return;
@@ -111,8 +113,8 @@ onMounted(() => {
     if (attempts >= maxAttempts) {
       clearInterval(timer);
       debugInfo.hasTg = false;
-      debugInfo.storeUser = 'TIMEOUT: Telegram SDK not found';
-      // 超时：非 Telegram 环境或 SDK 注入异常
+      debugInfo.storeUser = 'NOT_MINI_APP: 未检测到 Telegram SDK，请通过 Bot 菜单的 Mini App 按钮打开，不要在聊天中点击链接';
+      // 超时：非 Telegram Mini App 环境或 SDK 注入异常
     }
   }, 100);
 });

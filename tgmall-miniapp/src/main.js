@@ -11,6 +11,11 @@ import zh from './locales/zh.json';
 
 import './assets/styles/tokens.css';
 
+// 开发环境注入 Telegram SDK Mock（生产环境跳过）
+if (import.meta.env.DEV) {
+  import('./dev/telegram-mock.js').then((m) => m.installTelegramMock());
+}
+
 const i18n = createI18n({
   legacy: false,
   locale: localStorage.getItem('lang') || 'zh',

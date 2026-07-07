@@ -68,7 +68,8 @@ test.describe('Telegram Mini App 用户信息获取', () => {
   });
 
   test('无头像用户回退显示 👤 emoji', async ({ page }) => {
-    const noPhotoUser = { ...MOCK_USER, photo_url: undefined };
+    // 去掉头像、姓名和用户名，触发最终的 👤 回退
+    const noPhotoUser = { ...MOCK_USER, photo_url: undefined, first_name: '', last_name: '', username: '' };
     const noPhotoInitData = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(noPhotoUser))}&auth_date=1717900000&hash=mockhash123`;
 
     await page.addInitScript((initData, user) => {
