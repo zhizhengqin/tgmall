@@ -165,6 +165,11 @@ app.get('/admin/*', (_req, res) => {
   res.sendFile(path.join(adminDistPath, 'index.html'));
 });
 
+// 7.2 兼容常见短路径：直接访问 /login 也进入后台登录页
+app.get('/login', (_req, res) => {
+  res.redirect('/admin/login');
+});
+
 // 8. 全局错误处理（必须在路由之后）
 app.use(errorHandler);
 
