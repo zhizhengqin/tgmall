@@ -12,10 +12,19 @@ export async function auth(req, _res, next) {
     const payload = verifyToken(header.slice(7));
 
     // tokenVersion 校验：密码重置后旧 JWT 失效
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, tokenVersion: true, status: true },
-    });
+    // admin 类型 Token 对应 adminUser 表，其余对应 user 表
+    let user;
+    if (payload.type === 'admin') {
+      user = await prisma.adminUser.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, tokenVersion: true, status: true },
+      });
+    } else {
+      user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, tokenVersion: true, status: true },
+      });
+    }
     if (!user) return next(new AppError('用户不存在', 401, 'UNAUTHORIZED'));
     if (user.status !== 'active') return next(new AppError('账户已被禁用', 403, 'FORBIDDEN'));
     if (payload.tokenVersion !== undefined && user.tokenVersion !== payload.tokenVersion) {
