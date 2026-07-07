@@ -4,8 +4,8 @@
     <div class="profile-header">
       <div class="avatar">
         <img
-          v-if="(userStore.user?.photoUrl || userStore.user?.avatarUrl) && !avatarError"
-          :src="userStore.user?.photoUrl || userStore.user?.avatarUrl"
+          v-if="avatarUrl && !avatarError"
+          :src="avatarUrl"
           alt="avatar"
           class="avatar-img"
           @error="avatarError = true"
@@ -100,12 +100,18 @@ import { useUserStore } from '@/stores/userStore';
 import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
 import { sendSms, bindPhone as bindPhoneApi } from '@/api/auth';
 import { useShopConfig } from '@/composables/useShopConfig.js';
+import { proxifyImageUrl } from '@/utils/imageProxy.js';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 const { customerService, loadCustomerService } = useShopConfig();
+
+const avatarUrl = computed(() => {
+  const url = userStore.user?.photoUrl || userStore.user?.avatarUrl;
+  return url ? proxifyImageUrl(url) : null;
+});
 
 const displayName = computed(() => {
   const u = userStore.user;

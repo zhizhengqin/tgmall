@@ -1,17 +1,34 @@
 import { test, expect } from '@playwright/test';
 
-// 模拟 Telegram WebApp SDK 数据
+// 模拟 Telegram WebApp SDK 数据（使用 Telegram CDN URL，测试图片代理路径）
 const MOCK_USER = {
   id: 123456789,
   first_name: 'Sokha',
   last_name: 'Chea',
   username: 'sokha_chea',
   language_code: 'km',
-  photo_url: 'https://i.pravatar.cc/150?u=sokha',
+  photo_url: 'https://t.me/i/userpic/320/sokha.jpg',
 };
+
+// 1x1 透明 PNG，用于拦截代理头像请求
+const MOCK_PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 // 构建模拟的 initData 字符串（hash 无效，但前端 SDK 数据可用）
 const MOCK_INIT_DATA = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(MOCK_USER))}&auth_date=1717900000&hash=mockhash123`;
+
+/**
+ * 拦截头像代理请求，避免测试依赖外部 Telegram CDN
+ */
+async function mockTelegramAvatar(page) {
+  await page.route('/api/v1/proxy/image*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(MOCK_PNG_BASE64, 'base64'),
+      headers: { 'Cache-Control': 'public, max-age=3600' },
+    });
+  });
+}
 
 /**
  * 在页面上下文中注入 Telegram WebApp SDK Mock
@@ -38,6 +55,8 @@ test.describe('Telegram Mini App 用户信息获取', () => {
   });
 
   test('SDK 就绪后自动获取用户信息并显示在 Profile 页', async ({ page }) => {
+    await mockTelegramAvatar(page);
+
     // 1. 打开首页，App.vue 的轮询会检测到 SDK
     await page.goto('/');
 
@@ -53,10 +72,11 @@ test.describe('Telegram Mini App 用户信息获取', () => {
     await expect(nameEl).toBeVisible();
     await expect(nameEl).toHaveText('Sokha Chea');
 
-    // 5. 验证头像显示为真实图片（不是 👤）
+    // 5. 验证头像显示为真实图片（不是 👤），且经过同域代理
     const avatarImg = page.locator('.avatar-img');
     await expect(avatarImg).toBeVisible();
-    await expect(avatarImg).toHaveAttribute('src', MOCK_USER.photo_url);
+    const proxiedSrc = `/api/v1/proxy/image?url=${encodeURIComponent(MOCK_USER.photo_url)}`;
+    await expect(avatarImg).toHaveAttribute('src', proxiedSrc);
 
     // 6. 截图留档
     await page.screenshot({ path: 'e2e/screenshots/profile-user-info.png', fullPage: true });
@@ -106,6 +126,8 @@ test.describe('Telegram Mini App 用户信息获取', () => {
   });
 
   test('SDK 延迟注入场景 — 轮询等待机制', async ({ page }) => {
+    await mockTelegramAvatar(page);
+
     // 先不注入 SDK，打开页面
     await page.goto('/');
     await page.waitForTimeout(200);
