@@ -17,6 +17,7 @@ import systemConfigRoutes from './systemConfig.routes.js';
 import tagRoutes from './tag.routes.js';
 import notificationRoutes from './notification.routes.js';
 import uploadRoutes from './upload.routes.js';
+import proxyRoutes from './proxy.routes.js';
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.use('/cities', cityRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/feedback', feedbackRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/proxy/image', proxyRoutes);
 router.use('/', shopConfigPublicRouter);
 router.use('/', flashDealPublicRouter);
 

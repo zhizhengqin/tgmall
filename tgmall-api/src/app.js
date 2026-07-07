@@ -42,7 +42,12 @@ if (process.env.NODE_ENV !== 'production' && allowedOrigins.length === 0) {
 }
 
 app.use((req, res, next) => {
-  const selfOrigin = `${req.protocol}://${req.headers.host}`;
+  // 优先使用反向代理传递的真实协议和域名，避免 trust proxy 层级导致 req.protocol 为 http
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const forwardedHost = req.headers['x-forwarded-host'];
+  const selfOrigin = forwardedHost
+    ? `${forwardedProto || req.protocol}://${forwardedHost}`
+    : `${req.protocol}://${req.headers.host}`;
   cors({
     origin: (origin, callback) => {
       if (isCorsOriginAllowed(origin, allowedOrigins, process.env.NODE_ENV, selfOrigin)) {
