@@ -8,7 +8,7 @@
 
   <!-- 调试浮层：点击右下角 "DBG" 切换显示 -->
   <div v-if="showDebug" class="debug-panel">
-    <h4>🔧 调试信息 (v20250610-3)</h4>
+    <h4>🔧 调试信息 (v20250610-4)</h4>
     <p><b>TG.SDK:</b> {{ debugInfo.hasTg }}</p>
     <p><b>initData:</b> {{ debugInfo.initDataLen }} chars</p>
     <p><b>initDataUnsafe.user:</b> {{ debugInfo.hasUser }}</p>

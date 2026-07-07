@@ -1,7 +1,13 @@
 // 本地开发用的 Telegram WebApp SDK Mock
 // 仅在 Vite 开发模式下注入，生产环境不会执行
 export function installTelegramMock() {
-  if (typeof window === 'undefined' || window.Telegram?.WebApp) return;
+  if (typeof window === 'undefined') return;
+
+  // 如果已有带 initData 的 WebApp（测试注入或真实 Telegram 环境），不要覆盖
+  if (window.Telegram?.WebApp?.initData) {
+    console.info('[TG Mock] 检测到已有 Telegram WebApp，跳过 Mock');
+    return;
+  }
 
   const mockUser = {
     id: 999999999,

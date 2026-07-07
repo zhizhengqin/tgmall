@@ -11,6 +11,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    // 生产环境自托管 Telegram SDK，开发环境由 Vite 注入 Mock
+    if ('%MODE%' === 'production') {
+      document.write('<script src="/telegram-web-app.js"><\/script>');
+    }
+  </script>
 </head>
 <body>
   <div id="app"></div>
