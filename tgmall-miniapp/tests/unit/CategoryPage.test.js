@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { mount, flushPromises } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import CategoryPage from '@/views/CategoryPage.vue';
 
 // ---- shared mock state ----
@@ -54,6 +55,7 @@ function mountCategoryPage() {
       stubs: {
         ProductCard: true,
         LoadingSkeleton: true,
+        MiniCartBar: true,
         BottomNav: true,
       },
       mocks: {
@@ -65,10 +67,11 @@ function mountCategoryPage() {
   });
 }
 
-describe('CategoryPage grid from shop config', () => {
+describe('CategoryPage sidebar from shop config', () => {
   let wrapper;
 
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockCategories.value = [];
     mockLocale.value = 'km';
@@ -79,7 +82,7 @@ describe('CategoryPage grid from shop config', () => {
     wrapper?.unmount();
   });
 
-  it('renders categories supplied by useShopConfig().categories', async () => {
+  it('renders sidebar categories supplied by useShopConfig().categories', async () => {
     mockCategories.value = [
       { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
       { code: 'electronics', nameKm: 'ឧបករណ៍អេឡិចត្រូនិច', nameEn: 'Electronics', nameZh: '电子', sortOrder: 2 },
@@ -88,61 +91,25 @@ describe('CategoryPage grid from shop config', () => {
     wrapper = mountCategoryPage();
     await flushPromises();
 
-    const cards = wrapper.findAll('.category-card');
-    expect(cards).toHaveLength(2);
-    expect(cards[0].find('.cat-name').text()).toBe('ពាក់ព័ន្ធ');
-    expect(cards[1].find('.cat-name').text()).toBe('ឧបករណ៍អេឡិចត្រូនិច');
+    const items = wrapper.findAll('.sidebar-item');
+    // 包含 "all" + 2 个分类
+    expect(items).toHaveLength(3);
+    expect(items[1].find('.sidebar-label').text()).toBe('ពាក់ព័ន្ធ');
+    expect(items[2].find('.sidebar-label').text()).toBe('ឧបករណ៍អេឡិចត្រូនិច');
   });
 
-  it('displays the icon image when iconUrl is present', async () => {
+  it('displays the configured emoji for each category', async () => {
     mockCategories.value = [
-      { code: 'home', nameKm: 'ផ្ទះ', nameEn: 'Home', nameZh: '家居', iconUrl: 'https://cdn.test/home.png', sortOrder: 1 },
+      { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
+      { code: 'beauty', nameKm: 'សម្ផស្ស', nameEn: 'Beauty', nameZh: '美妆', sortOrder: 2 },
     ];
 
     wrapper = mountCategoryPage();
     await flushPromises();
 
-    const img = wrapper.find('.category-card img');
-    expect(img.exists()).toBe(true);
-    expect(img.attributes('src')).toBe('https://cdn.test/home.png');
-    expect(wrapper.find('.cat-emoji').exists()).toBe(false);
-  });
-
-  it('falls back to emoji when iconUrl is absent', async () => {
-    mockCategories.value = [
-      { code: 'beauty', nameKm: 'សម្ផស្ស', nameEn: 'Beauty', nameZh: '美妆', sortOrder: 1 },
-    ];
-
-    wrapper = mountCategoryPage();
-    await flushPromises();
-
-    expect(wrapper.find('.category-card img').exists()).toBe(false);
-    expect(wrapper.find('.cat-emoji').exists()).toBe(true);
-    expect(wrapper.find('.cat-emoji').text()).toBe('💄');
-  });
-
-  it('navigates to / with ?category={code} when a category is clicked', async () => {
-    mockCategories.value = [
-      { code: 'food', nameKm: 'អាហារ', nameEn: 'Food', nameZh: '食品', sortOrder: 1 },
-    ];
-
-    wrapper = mountCategoryPage();
-    await flushPromises();
-
-    await wrapper.find('.category-card').trigger('click');
-    expect(routerPush).toHaveBeenCalledTimes(1);
-    expect(routerPush).toHaveBeenCalledWith({ path: '/', query: { category: 'food' } });
-  });
-
-  it('silently degrades when useShopConfig fails and the page remains usable', async () => {
-    mockLoad.mockRejectedValue(new Error('network error'));
-
-    wrapper = mountCategoryPage();
-    await flushPromises();
-
-    expect(wrapper.find('.category-page').exists()).toBe(true);
-    expect(wrapper.findAll('.category-card')).toHaveLength(0);
-    expect(mockLoad).toHaveBeenCalledTimes(1);
+    const items = wrapper.findAll('.sidebar-item');
+    expect(items[1].find('.sidebar-emoji').text()).toBe('👗');
+    expect(items[2].find('.sidebar-emoji').text()).toBe('💄');
   });
 
   it('falls back to the package emoji for an unknown category code', async () => {
@@ -153,8 +120,36 @@ describe('CategoryPage grid from shop config', () => {
     wrapper = mountCategoryPage();
     await flushPromises();
 
-    expect(wrapper.find('.category-card img').exists()).toBe(false);
-    expect(wrapper.find('.cat-emoji').text()).toBe('📦');
+    expect(wrapper.findAll('.sidebar-item')[1].find('.sidebar-emoji').text()).toBe('📦');
+  });
+
+  it('switches active category and refetches products when a category is clicked', async () => {
+    mockCategories.value = [
+      { code: 'food', nameKm: 'អាហារ', nameEn: 'Food', nameZh: '食品', sortOrder: 1 },
+    ];
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    const items = wrapper.findAll('.sidebar-item');
+    await items[1].trigger('click');
+    await flushPromises();
+
+    expect(items[1].classes()).toContain('active');
+    expect(getProducts).toHaveBeenLastCalledWith(
+      expect.objectContaining({ category: 'food' }),
+    );
+  });
+
+  it('silently degrades when useShopConfig fails and the page remains usable', async () => {
+    mockLoad.mockRejectedValue(new Error('network error'));
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    expect(wrapper.find('.category-page').exists()).toBe(true);
+    expect(wrapper.findAll('.sidebar-item')).toHaveLength(1);
+    expect(mockLoad).toHaveBeenCalledTimes(1);
   });
 
   it('uses nameEn when the locale is en', async () => {
@@ -166,7 +161,7 @@ describe('CategoryPage grid from shop config', () => {
     wrapper = mountCategoryPage();
     await flushPromises();
 
-    expect(wrapper.find('.cat-name').text()).toBe('Fashion');
+    expect(wrapper.findAll('.sidebar-item')[1].find('.sidebar-label').text()).toBe('Fashion');
   });
 
   it('uses nameZh when the locale is zh', async () => {
@@ -178,6 +173,24 @@ describe('CategoryPage grid from shop config', () => {
     wrapper = mountCategoryPage();
     await flushPromises();
 
-    expect(wrapper.find('.cat-name').text()).toBe('时尚');
+    expect(wrapper.findAll('.sidebar-item')[1].find('.sidebar-label').text()).toBe('时尚');
+  });
+
+  it('toggles view mode between grid and list', async () => {
+    mockCategories.value = [
+      { code: 'fashion', nameKm: 'ពាក់ព័ន្ធ', nameEn: 'Fashion', nameZh: '时尚', sortOrder: 1 },
+    ];
+    getProducts.mockResolvedValue({
+      data: [{ id: 'p1', name: 'Product 1', priceUsd: 10, priceKhr: 40000 }],
+      meta: { hasNext: false },
+    });
+
+    wrapper = mountCategoryPage();
+    await flushPromises();
+
+    expect(wrapper.find('.product-grid').classes()).not.toContain('grid-list');
+    await wrapper.find('.view-toggle').trigger('click');
+    await nextTick();
+    expect(wrapper.find('.product-grid').classes()).toContain('grid-list');
   });
 });

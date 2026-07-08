@@ -128,10 +128,25 @@ const sortOptions = computed(() => [
 
 // 视图模式 (localStorage 持久化)
 const VIEW_MODE_KEY = 'categoryViewMode';
-const viewMode = ref(localStorage.getItem(VIEW_MODE_KEY) || 'grid');
+function safeGetItem(key, fallback) {
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+      return localStorage.getItem(key) || fallback;
+    }
+  } catch {}
+  return fallback;
+}
+function safeSetItem(key, value) {
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      localStorage.setItem(key, value);
+    }
+  } catch {}
+}
+const viewMode = ref(safeGetItem(VIEW_MODE_KEY, 'grid'));
 function toggleView() {
   viewMode.value = viewMode.value === 'grid' ? 'list' : 'grid';
-  localStorage.setItem(VIEW_MODE_KEY, viewMode.value);
+  safeSetItem(VIEW_MODE_KEY, viewMode.value);
 }
 
 // 状态

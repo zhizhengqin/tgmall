@@ -100,7 +100,7 @@ function shippingRowText(wrapper) {
 }
 
 function totalRowText(wrapper) {
-  return wrapper.findAll('.pb-row').find((r) => r.text().includes('合计'))?.text() || '';
+  return wrapper.find('.pb-row.total')?.text() || '';
 }
 
 describe('CheckoutPage delivery rules by city', () => {
@@ -265,7 +265,7 @@ describe('CheckoutPage delivery rules by city', () => {
     expect(wrapper.find('.submit-btn').text()).toContain('៛128,000');
 
     // 选择固定金额优惠券后 total = 30 - 5 + 2 = 27
-    wrapper.vm.selectedCoupon = { id: 'c2', title: '$5 off', type: 'fixed', value: 5 };
+    wrapper.vm.selectedCoupon = { id: 'c2', coupon: { id: 'c2', type: 'fixed', value: 5 } };
     await flushPromises();
 
     expect(totalRowText(wrapper)).toContain('$27.00');
