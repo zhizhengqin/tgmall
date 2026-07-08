@@ -256,7 +256,6 @@ export async function getOrders({ status, startDate, endDate, page, limit }) {
       take: limit,
       include: {
         items: {
-          take: 1,
           include: { product: { select: { nameKm: true, images: true } } },
         },
         user: { select: { firstName: true, lastName: true, phone: true } },
@@ -274,7 +273,7 @@ export async function getOrders({ status, startDate, endDate, page, limit }) {
       paymentStatus: o.paymentStatus,
       totalUsd: Number(o.totalUsd),
       totalKhr: o.totalKhr,
-      itemCount: o.items.length,
+      itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
       thumbnail: o.items[0]?.product?.images?.[0]?.thumb_url || '',
       customerName: [o.user?.firstName, o.user?.lastName].filter(Boolean).join(' ') || '—',
       customerPhone: o.user?.phone || '—',

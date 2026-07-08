@@ -58,6 +58,7 @@ const languageStore = useLanguageStore();
 const tabs = [
   { value: '', labelKey: 'all' },
   { value: 'pending_payment', labelKey: 'pending_payment' },
+  { value: 'confirmed', labelKey: 'confirmed' },
   { value: 'paid', labelKey: 'paid' },
   { value: 'shipped', labelKey: 'shipped' },
   { value: 'completed', labelKey: 'completed' },
@@ -73,7 +74,7 @@ const sentinel = ref(null);
 let observer = null;
 
 function statusClass(s) {
-  const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
+  const map = { pending_payment: 's-pending', confirmed: 's-confirmed', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
   return map[s] || '';
 }
 function formatDate(d) {
@@ -185,6 +186,7 @@ onUnmounted(teardownObserver);
 .oc-number { font-size: 12px; color: var(--muted); font-family: monospace; }
 .oc-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
 .s-pending { color: var(--accent); background: oklch(64% 0.16 82 / 0.1); }
+.s-confirmed { color: var(--accent); background: oklch(64% 0.16 82 / 0.08); }
 .s-paid { color: var(--accent-blue); background: oklch(58% 0.16 255 / 0.1); }
 .s-shipped { color: var(--accent-green); background: oklch(58% 0.16 155 / 0.1); }
 .s-done { color: var(--muted); background: oklch(90% 0.005 95); }

@@ -307,7 +307,6 @@ export async function getUserOrders(userId, { status, page, limit }) {
       take: limit,
       include: {
         items: {
-          take: 1,
           include: { product: { select: { images: true } } },
         },
       },
@@ -323,7 +322,7 @@ export async function getUserOrders(userId, { status, page, limit }) {
       paymentMethod: o.paymentMethod,
       totalUsd: Number(o.totalUsd),
       totalKhr: o.totalKhr,
-      itemCount: o.items.length,
+      itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
       thumbnail: o.items[0]?.product?.images?.[0]?.thumb_url || '',
       merchantName: 'TG Mall',
       createdAt: o.createdAt,
@@ -341,20 +340,83 @@ export async function getOrderById(userId, orderId) {
     where: { id: orderId, userId },
     include: {
       items: {
-        include: { product: { select: { images: true } } },
+        include: { product: { select: { nameKm: true, nameEn: true, nameZh: true, images: true } } },
       },
-      coupon: { select: { titleKm: true, type: true, value: true } },
+      coupon: { select: { titleKm: true, titleEn: true, titleZh: true, type: true, value: true } },
     },
   });
   if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
 
   // 当前状态允许的操作
   const actions = {
-    canCancel: order.status === 'pending_payment',
-    canConfirm: order.status === 'shipped',
+    canCancel: ['pending_payment', 'confirmed'].includes(order.status),
+    canConfirm: order.status === 'shipped' || (order.paymentMethod === 'cod' && order.status === 'paid'),
   };
 
-  return { ...order, totalUsd: Number(order.totalUsd), actions };
+  // 构建价格明细
+  const subtotalUsd = Number(order.totalUsd) + Number(order.discountUsd) - Number(order.shippingFeeUsd);
+  const priceBreakdown = {
+    subtotalUsd: Math.max(0, Math.round(subtotalUsd * 100) / 100),
+    discountUsd: Number(order.discountUsd),
+    shippingFeeUsd: Number(order.shippingFeeUsd),
+    totalUsd: Number(order.totalUsd),
+    totalKhr: order.totalKhr,
+  };
+
+  // 收货地址 snake_case → camelCase
+  const rawAddr = order.shippingAddress || {};
+  const shippingAddress = {
+    recipientName: rawAddr.recipient_name || '',
+    phone: rawAddr.phone || '',
+    province: rawAddr.province || '',
+    district: rawAddr.district || '',
+    detail: rawAddr.detail || '',
+  };
+
+  // 商品清单补齐名称/缩略图
+  const items = order.items.map((item) => {
+    const product = item.product || {};
+    const firstImage = Array.isArray(product.images) ? product.images[0] : null;
+    return {
+      ...item,
+      productName: product.nameKm || product.nameEn || '',
+      thumbnail: firstImage?.thumb_url || firstImage?.url || '',
+      priceUsd: Number(item.priceUsd),
+      priceKhr: item.priceKhr,
+    };
+  });
+
+  // 物流信息字段名与前端对齐
+  const logistics = order.logisticsInfo || null;
+
+  // 订单时间线
+  const timeline = [];
+  const statusSteps = [
+    { key: 'createdAt', label: 'orders.timeline.created' },
+    { key: 'paidAt', label: 'orders.timeline.paid' },
+    { key: 'shippedAt', label: 'orders.timeline.shipped' },
+    { key: 'completedAt', label: 'orders.timeline.completed' },
+    { key: 'cancelledAt', label: 'orders.timeline.cancelled' },
+  ];
+  for (const step of statusSteps) {
+    const time = order[step.key];
+    if (time) {
+      timeline.push({ label: step.label, time });
+    }
+  }
+
+  return {
+    ...order,
+    totalUsd: Number(order.totalUsd),
+    discountUsd: Number(order.discountUsd),
+    shippingFeeUsd: Number(order.shippingFeeUsd),
+    shippingAddress,
+    logistics,
+    items,
+    priceBreakdown,
+    timeline,
+    actions,
+  };
 }
 
 export async function cancelOrder(userId, orderId, reason) {
@@ -422,8 +484,10 @@ export async function confirmOrder(userId, orderId) {
     where: { id: orderId, userId },
   });
   if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
-  if (order.status !== 'shipped') {
-    throw new AppError('只有已发货订单可以确认收货', 400, 'ORDER_CANNOT_CONFIRM');
+  const canConfirm = order.status === 'shipped' ||
+    (order.paymentMethod === 'cod' && order.status === 'paid');
+  if (!canConfirm) {
+    throw new AppError('只有已发货或 COD 已收款订单可以确认收货', 400, 'ORDER_CANNOT_CONFIRM');
   }
 
   return prisma.order.update({
