@@ -94,7 +94,7 @@ import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const product = ref(null);
 const loading = ref(true);
