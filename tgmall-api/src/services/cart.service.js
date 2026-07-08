@@ -2,6 +2,7 @@
 import redis from '../config/redis.js';
 import prisma from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
+import { calculateShippingFee, getActiveDeliveryRule } from './shopConfig.service.js';
 
 function cartKey(userId) { return `cart:${userId}`; }
 
@@ -72,6 +73,111 @@ export async function removeCartItem(userId, itemId) {
 
 export async function clearCart(userId) {
   await redis.del(cartKey(userId));
+}
+
+// ---------- 结算预览（后端快照，替代 localStorage） ----------
+
+/**
+ * 根据购物车选中项生成实时结算快照
+ * @param {string} userId
+ * @param {string[]} itemIds — 购物车项 id 列表
+ * @param {string} [cityCode] — 用于计算运费
+ * @param {string} [couponId] — 用户优惠券 id（userCoupon.id）
+ */
+export async function checkoutPreview(userId, { itemIds, cityCode, couponId }) {
+  if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    throw new AppError('请至少选择一件商品', 400, 'VALIDATION_ERROR');
+  }
+
+  const raw = await redis.get(cartKey(userId));
+  if (!raw) throw new AppError('购物车为空', 400, 'CART_EMPTY');
+
+  const cartItems = JSON.parse(raw);
+  const selected = cartItems.filter((i) => itemIds.includes(i.id));
+  if (selected.length === 0) throw new AppError('选中的商品不存在', 400, 'CART_ITEM_NOT_FOUND');
+
+  const enriched = await Promise.all(selected.map(enrichCartItem));
+  const valid = enriched.filter((i) => i.stockStatus !== 'not_found' && i.stockStatus !== 'inactive');
+
+  if (valid.length === 0) throw new AppError('选中的商品已下架或不存在', 400, 'CART_INVALID');
+
+  const invalidItems = valid.filter((i) => i.stockStatus === 'insufficient' || i.stockStatus === 'out_of_stock');
+
+  const subtotalUsd = valid.reduce((s, i) => s + i.subtotalUsd, 0);
+  const subtotalKhr = valid.reduce((s, i) => s + i.priceKhr * i.quantity, 0);
+
+  // 运费
+  const deliveryRule = cityCode ? await getActiveDeliveryRule(prisma, cityCode) : null;
+  const shippingFeeUsd = calculateShippingFee(subtotalUsd, deliveryRule);
+  const shippingFeeKhr = Math.round(shippingFeeUsd * 4000);
+
+  // 优惠券
+  let coupon = null;
+  let discountUsd = 0;
+  let discountKhr = 0;
+  if (couponId) {
+    const userCoupon = await prisma.userCoupon.findFirst({
+      where: { id: couponId, userId, status: 'unused' },
+      include: { coupon: true },
+    });
+    if (userCoupon?.coupon) {
+      const c = userCoupon.coupon;
+      const now = new Date();
+      if (c.status === 'active' && new Date(c.startDate) <= now && new Date(c.endDate) >= now) {
+        if (subtotalUsd >= Number(c.minSpend || 0)) {
+          coupon = {
+            userCouponId: userCoupon.id,
+            id: c.id,
+            titleKm: c.titleKm,
+            titleEn: c.titleEn,
+            titleZh: c.titleZh,
+            type: c.type,
+            value: Number(c.value),
+            minSpend: Number(c.minSpend),
+          };
+          if (c.type === 'fixed') {
+            discountUsd = Number(c.value);
+          } else {
+            discountUsd = Math.round(subtotalUsd * Number(c.value) / 100 * 100) / 100;
+          }
+          discountUsd = Math.min(discountUsd, subtotalUsd);
+          discountKhr = Math.round(discountUsd * 4000);
+        }
+      }
+    }
+  }
+
+  const minOrderAmountUsd = Number(deliveryRule?.minOrderAmountUsd || 0);
+  const shortfallUsd = Math.max(0, minOrderAmountUsd - subtotalUsd);
+  const totalUsd = Math.max(0, subtotalUsd - discountUsd + shippingFeeUsd);
+  const totalKhr = Math.max(0, subtotalKhr - discountKhr + shippingFeeKhr);
+
+  return {
+    items: valid,
+    invalidItems,
+    priceBreakdown: {
+      subtotalUsd: Math.round(subtotalUsd * 100) / 100,
+      subtotalKhr,
+      discountUsd: Math.round(discountUsd * 100) / 100,
+      discountKhr,
+      shippingFeeUsd,
+      shippingFeeKhr,
+      minOrderAmountUsd,
+      shortfallUsd: Math.round(shortfallUsd * 100) / 100,
+      totalUsd: Math.round(totalUsd * 100) / 100,
+      totalKhr,
+    },
+    deliveryRule: deliveryRule
+      ? {
+          cityCode: deliveryRule.cityCode,
+          shippingFeeUsd: Number(deliveryRule.shippingFeeUsd),
+          freeShippingThresholdUsd: Number(deliveryRule.freeShippingThresholdUsd),
+          minOrderAmountUsd,
+          estimatedDeliveryDays: deliveryRule.estimatedDeliveryDays,
+        }
+      : null,
+    coupon,
+  };
 }
 
 // --- 内部工具 ---

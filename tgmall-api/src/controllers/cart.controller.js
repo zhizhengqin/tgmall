@@ -35,3 +35,15 @@ export async function clear(req, res, next) {
     res.json({ success: true, data: { message: '购物车已清空' } });
   } catch (err) { next(err); }
 }
+
+export async function checkoutPreview(req, res, next) {
+  try {
+    const { item_ids, city_code, coupon_id } = req.validatedBody;
+    const preview = await cartService.checkoutPreview(req.user.userId, {
+      itemIds: item_ids,
+      cityCode: city_code,
+      couponId: coupon_id,
+    });
+    res.json({ success: true, data: preview });
+  } catch (err) { next(err); }
+}

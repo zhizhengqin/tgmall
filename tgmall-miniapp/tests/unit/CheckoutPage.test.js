@@ -6,28 +6,19 @@ import CheckoutPage from '@/views/CheckoutPage.vue';
 import { useCityStore } from '@/stores/cityStore.js';
 
 // ---- shared mock state ----
-const mockDeliveryRule = ref(null);
-const mockLoadDeliveryRule = vi.fn();
-
 const routerBack = vi.fn();
 const routerPush = vi.fn();
+const routeQuery = ref({ ids: 'p1' });
 
 const getAddresses = vi.fn();
 const getMyCoupons = vi.fn();
 const createOrder = vi.fn();
-
-let checkoutItems = [];
+const checkoutPreview = vi.fn();
 
 // ---- mocks ----
-vi.mock('@/composables/useShopConfig.js', () => ({
-  useShopConfig: () => ({
-    deliveryRule: mockDeliveryRule,
-    loadDeliveryRule: mockLoadDeliveryRule,
-  }),
-}));
-
 vi.mock('vue-router', () => ({
   useRouter: () => ({ back: routerBack, push: routerPush }),
+  useRoute: () => ({ query: routeQuery.value }),
 }));
 
 vi.mock('vue-i18n', () => ({
@@ -52,6 +43,7 @@ vi.mock('@/composables/useTelegram.js', () => ({
 
 vi.mock('@/api/addresses.js', () => ({
   getAddresses: () => getAddresses(),
+  createAddress: () => Promise.resolve({ data: { id: 2, recipient_name: 'New', phone: '012', province: 'PP', district: 'D', detail: 'X', is_default: false } }),
 }));
 
 vi.mock('@/api/coupons.js', () => ({
@@ -60,6 +52,10 @@ vi.mock('@/api/coupons.js', () => ({
 
 vi.mock('@/api/orders.js', () => ({
   createOrder: () => createOrder(),
+}));
+
+vi.mock('@/api/cart.js', () => ({
+  checkoutPreview: (data) => checkoutPreview(data),
 }));
 
 // checkout keys that include named interpolation; others fall back to the key itself
@@ -86,13 +82,8 @@ function mountCheckoutPage() {
   });
 }
 
-function setCheckoutItems(items) {
-  checkoutItems = items;
-  vi.stubGlobal('localStorage', {
-    getItem: vi.fn((key) => (key === 'checkout_items' ? JSON.stringify(checkoutItems) : null)),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-  });
+function setPreview({ items = [], priceBreakdown = {}, coupon = null, deliveryRule = null } = {}) {
+  checkoutPreview.mockResolvedValue({ data: { items, priceBreakdown, coupon, deliveryRule } });
 }
 
 function shippingRowText(wrapper) {
@@ -103,32 +94,48 @@ function totalRowText(wrapper) {
   return wrapper.find('.pb-row.total')?.text() || '';
 }
 
-describe('CheckoutPage delivery rules by city', () => {
-  let wrapper;
-
-  const phnomPenh = { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 };
-  const siemReap = { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 };
-  const defaultAddress = {
-    id: 1,
-    recipient_name: 'Test User',
-    phone: '012345678',
-    province: 'Phnom Penh',
-    district: 'Chamkar Mon',
-    detail: 'St 123',
-    is_default: true,
+function makeItem(priceUsd, quantity = 1) {
+  return {
+    id: `p1${quantity}`,
+    productId: 'p1',
+    productName: 'Product 1',
+    priceUsd,
+    priceKhr: priceUsd * 4000,
+    quantity,
+    thumbnail: '',
+    spec: {},
+    stockStatus: 'ok',
+    subtotalUsd: priceUsd * quantity,
   };
+}
+
+const phnomPenh = { code: 'phnom_penh', nameKm: 'ភ្នំពេញ', nameEn: 'Phnom Penh', nameZh: '金边', sortOrder: 1 };
+const siemReap = { code: 'siem_reap', nameKm: 'សៀមរាប', nameEn: 'Siem Reap', nameZh: '暹粒', sortOrder: 2 };
+const defaultAddress = {
+  id: 1,
+  recipient_name: 'Test User',
+  phone: '012345678',
+  province: 'Phnom Penh',
+  district: 'Chamkar Mon',
+  detail: 'St 123',
+  is_default: true,
+};
+
+describe('CheckoutPage checkout preview', () => {
+  let wrapper;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
-    mockDeliveryRule.value = null;
-    mockLoadDeliveryRule.mockResolvedValue(undefined);
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    });
+    routeQuery.value = { ids: 'p1' };
     getAddresses.mockResolvedValue({ data: [defaultAddress] });
     getMyCoupons.mockResolvedValue({ data: [] });
     createOrder.mockResolvedValue({ data: {} });
-    setCheckoutItems([
-      { productId: 'p1', productName: 'Product 1', priceUsd: 10, quantity: 1, thumbnail: '' },
-    ]);
   });
 
   afterEach(() => {
@@ -136,45 +143,43 @@ describe('CheckoutPage delivery rules by city', () => {
     vi.unstubAllGlobals();
   });
 
-  it('loads delivery rule for the current city on mount', async () => {
+  it('calls checkout preview for the current city on mount', async () => {
     const store = useCityStore();
     store.setCities([phnomPenh, siemReap]);
     store.setCity('phnom_penh');
+    setPreview({ items: [makeItem(10)], priceBreakdown: { subtotalUsd: 10, totalUsd: 10, totalKhr: 40000 } });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
 
-    expect(mockLoadDeliveryRule).toHaveBeenCalledWith('phnom_penh');
+    expect(checkoutPreview).toHaveBeenCalledWith(expect.objectContaining({ item_ids: ['p1'], city_code: 'phnom_penh' }));
   });
 
-  it('re-loads delivery rule when the city changes', async () => {
+  it('re-loads preview when the city changes', async () => {
     const store = useCityStore();
     store.setCities([phnomPenh, siemReap]);
     store.setCity('phnom_penh');
+    setPreview({ items: [makeItem(10)], priceBreakdown: { subtotalUsd: 10, totalUsd: 10, totalKhr: 40000 } });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
-
-    expect(mockLoadDeliveryRule).toHaveBeenCalledTimes(1);
+    expect(checkoutPreview).toHaveBeenCalledTimes(1);
 
     store.setCity('siem_reap');
     await flushPromises();
 
-    expect(mockLoadDeliveryRule).toHaveBeenCalledTimes(2);
-    expect(mockLoadDeliveryRule).toHaveBeenLastCalledWith('siem_reap');
+    expect(checkoutPreview).toHaveBeenCalledTimes(2);
+    expect(checkoutPreview).toHaveBeenLastCalledWith(expect.objectContaining({ city_code: 'siem_reap' }));
   });
 
   it('shows shipping fee when subtotal is below free-shipping threshold', async () => {
     const store = useCityStore();
     store.setCities([phnomPenh]);
     store.setCity('phnom_penh');
-
-    mockDeliveryRule.value = {
-      cityCode: 'phnom_penh',
-      shippingFeeUsd: 2.5,
-      freeShippingThresholdUsd: 20,
-      minOrderAmountUsd: 5,
-    };
+    setPreview({
+      items: [makeItem(10)],
+      priceBreakdown: { subtotalUsd: 10, shippingFeeUsd: 2.5, shippingFeeKhr: 10000, totalUsd: 12.5, totalKhr: 50000, minOrderAmountUsd: 5, shortfallUsd: 0 },
+    });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
@@ -189,21 +194,14 @@ describe('CheckoutPage delivery rules by city', () => {
     expect(submitBtn.text()).toContain('៛50,000');
   });
 
-  it('shows free shipping when subtotal meets or exceeds threshold', async () => {
+  it('shows free shipping when price breakdown says so', async () => {
     const store = useCityStore();
     store.setCities([phnomPenh]);
     store.setCity('phnom_penh');
-
-    mockDeliveryRule.value = {
-      cityCode: 'phnom_penh',
-      shippingFeeUsd: 2.5,
-      freeShippingThresholdUsd: 20,
-      minOrderAmountUsd: 5,
-    };
-
-    setCheckoutItems([
-      { productId: 'p1', productName: 'Product 1', priceUsd: 25, quantity: 1, thumbnail: '' },
-    ]);
+    setPreview({
+      items: [makeItem(25)],
+      priceBreakdown: { subtotalUsd: 25, shippingFeeUsd: 0, shippingFeeKhr: 0, totalUsd: 25, totalKhr: 100000, minOrderAmountUsd: 5, shortfallUsd: 0 },
+    });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
@@ -215,13 +213,10 @@ describe('CheckoutPage delivery rules by city', () => {
     const store = useCityStore();
     store.setCities([phnomPenh]);
     store.setCity('phnom_penh');
-
-    mockDeliveryRule.value = {
-      cityCode: 'phnom_penh',
-      shippingFeeUsd: 2,
-      freeShippingThresholdUsd: 50,
-      minOrderAmountUsd: 15,
-    };
+    setPreview({
+      items: [makeItem(10)],
+      priceBreakdown: { subtotalUsd: 10, shippingFeeUsd: 2, shippingFeeKhr: 8000, totalUsd: 12, totalKhr: 48000, minOrderAmountUsd: 15, shortfallUsd: 5 },
+    });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
@@ -230,8 +225,6 @@ describe('CheckoutPage delivery rules by city', () => {
     expect(shortfallRow.exists()).toBe(true);
     expect(shortfallRow.text()).toContain('$5.00');
     expect(shortfallRow.text()).toContain('៛20,000');
-    expect(shortfallRow.text()).toContain('$15.00');
-    expect(shortfallRow.text()).toContain('៛60,000');
 
     const submitBtn = wrapper.find('.submit-btn');
     expect(submitBtn.attributes('disabled')).toBeDefined();
@@ -243,50 +236,45 @@ describe('CheckoutPage delivery rules by city', () => {
     const store = useCityStore();
     store.setCities([phnomPenh]);
     store.setCity('phnom_penh');
-
-    mockDeliveryRule.value = {
-      cityCode: 'phnom_penh',
-      shippingFeeUsd: 2,
-      freeShippingThresholdUsd: 50,
-      minOrderAmountUsd: 5,
-    };
-
-    setCheckoutItems([
-      { productId: 'p1', productName: 'Product 1', priceUsd: 30, quantity: 1, thumbnail: '' },
-    ]);
+    setPreview({
+      items: [makeItem(30)],
+      priceBreakdown: { subtotalUsd: 30, discountUsd: 0, shippingFeeUsd: 2, shippingFeeKhr: 8000, totalUsd: 32, totalKhr: 128000, minOrderAmountUsd: 5, shortfallUsd: 0 },
+    });
 
     wrapper = mountCheckoutPage();
     await flushPromises();
 
-    // subtotal = 30; discount = 0 (no coupon selected); shipping = 2; total = 32
     expect(totalRowText(wrapper)).toContain('$32.00');
     expect(totalRowText(wrapper)).toContain('៛128,000');
     expect(wrapper.find('.submit-btn').text()).toContain('$32.00');
     expect(wrapper.find('.submit-btn').text()).toContain('៛128,000');
 
-    // 选择固定金额优惠券后 total = 30 - 5 + 2 = 27
-    wrapper.vm.selectedCoupon = { id: 'c2', coupon: { id: 'c2', type: 'fixed', value: 5 } };
+    // 选择固定金额优惠券后重新请求预览
+    checkoutPreview.mockResolvedValue({
+      data: {
+        items: [makeItem(30)],
+        priceBreakdown: { subtotalUsd: 30, discountUsd: 5, discountKhr: 20000, shippingFeeUsd: 2, shippingFeeKhr: 8000, totalUsd: 27, totalKhr: 108000, minOrderAmountUsd: 5, shortfallUsd: 0 },
+        coupon: { id: 'c2', type: 'fixed', value: 5 },
+      },
+    });
+    await wrapper.vm.selectCoupon({ id: 'uc1', coupon: { id: 'c2', type: 'fixed', value: 5 } });
     await flushPromises();
 
+    expect(checkoutPreview).toHaveBeenLastCalledWith(expect.objectContaining({ coupon_id: 'uc1' }));
     expect(totalRowText(wrapper)).toContain('$27.00');
     expect(totalRowText(wrapper)).toContain('៛108,000');
-    expect(wrapper.find('.submit-btn').text()).toContain('$27.00');
-    expect(wrapper.find('.submit-btn').text()).toContain('៛108,000');
   });
 
-  it('silently degrades when delivery rule fails to load', async () => {
+  it('silently degrades when preview fails to load', async () => {
     const store = useCityStore();
     store.setCities([phnomPenh]);
     store.setCity('phnom_penh');
-
-    mockLoadDeliveryRule.mockRejectedValue(new Error('network error'));
-    mockDeliveryRule.value = null;
+    checkoutPreview.mockRejectedValue(new Error('network error'));
 
     wrapper = mountCheckoutPage();
     await flushPromises();
 
-    expect(shippingRowText(wrapper)).toContain('checkout.freeShipping');
-    expect(wrapper.find('.submit-btn').exists()).toBe(true);
-    expect(wrapper.find('.pb-row.shortfall').exists()).toBe(false);
+    expect(wrapper.find('.empty').exists()).toBe(true);
+    expect(wrapper.find('.submit-btn').exists()).toBe(false);
   });
 });

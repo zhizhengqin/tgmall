@@ -6,7 +6,9 @@
       <h2>{{ $t('checkout.confirmTitle') }}</h2>
     </div>
 
-    <div v-if="!items.length" class="empty">{{ $t('checkout.emptyCart') }}</div>
+    <div v-if="previewLoading" class="loading">{{ $t('common.loading') }}</div>
+    <div v-else-if="previewError" class="empty">{{ previewError }}</div>
+    <div v-else-if="!items.length" class="empty">{{ $t('checkout.emptyCart') }}</div>
 
     <template v-else>
       <!-- 收货地址 -->
@@ -145,20 +147,28 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getAddresses, createAddress } from '@/api/addresses';
 import { getMyCoupons } from '@/api/coupons';
 import { createOrder } from '@/api/orders';
+import { checkoutPreview } from '@/api/cart';
 import { useCityStore } from '@/stores/cityStore.js';
-import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
+const route = useRoute();
 const { t, locale } = useI18n();
 const cityStore = useCityStore();
-const { deliveryRule, loadDeliveryRule } = useShopConfig();
-const items = ref(JSON.parse(localStorage.getItem('checkout_items') || '[]'));
+
+const itemIds = computed(() => {
+  const raw = route.query.ids;
+  return raw ? String(raw).split(',').filter(Boolean) : [];
+});
+
+const preview = ref(null);
+const previewLoading = ref(false);
+const previewError = ref('');
 const addresses = ref([]);
 const selectedAddress = ref(null);
 const coupons = ref([]);
@@ -178,7 +188,17 @@ const paymentMethods = computed(() => [
   { value: 'cod', label: t('payment.cod') },
 ]);
 
-const subtotal = computed(() => items.value.reduce((s, i) => s + i.priceUsd * i.quantity, 0));
+const items = computed(() => preview.value?.items || []);
+const priceBreakdown = computed(() => preview.value?.priceBreakdown || {});
+const subtotal = computed(() => priceBreakdown.value.subtotalUsd || 0);
+const discount = computed(() => priceBreakdown.value.discountUsd || 0);
+const shippingFee = computed(() => priceBreakdown.value.shippingFeeUsd || 0);
+const shippingFeeKhr = computed(() => priceBreakdown.value.shippingFeeKhr || 0);
+const minOrderAmount = computed(() => priceBreakdown.value.minOrderAmountUsd || 0);
+const shortfall = computed(() => priceBreakdown.value.shortfallUsd || 0);
+const total = computed(() => priceBreakdown.value.totalUsd || 0);
+const totalKhr = computed(() => priceBreakdown.value.totalKhr || 0);
+
 const usableCoupons = computed(() => {
   const now = new Date();
   return coupons.value.filter((uc) => {
@@ -195,42 +215,21 @@ const selectedCouponTitle = computed(() => {
   if (!c) return '';
   return `${couponTitle(c)} ${couponValueText(c)}`;
 });
-const discount = computed(() => {
-  if (!selectedCoupon.value) return 0;
-  const c = selectedCoupon.value.coupon;
-  if (!c) return 0;
-  return c.type === 'fixed' ? Number(c.value) : Math.round(subtotal.value * Number(c.value) / 100 * 100) / 100;
-});
-
-const shippingFee = computed(() => {
-  if (!deliveryRule.value) return 0;
-  const threshold = Number(deliveryRule.value.freeShippingThresholdUsd ?? 0);
-  if (threshold > 0 && subtotal.value >= threshold) return 0;
-  return Number(deliveryRule.value.shippingFeeUsd ?? 0);
-});
-
-const shippingFeeKhr = computed(() => Math.round(shippingFee.value * 4000));
-
-const minOrderAmount = computed(() => Number(deliveryRule.value?.minOrderAmountUsd ?? 0));
-
-const shortfall = computed(() => {
-  if (!minOrderAmount.value) return 0;
-  return Math.max(0, minOrderAmount.value - subtotal.value);
-});
-
-const total = computed(() => Math.max(0, subtotal.value - discount.value + shippingFee.value));
-const totalKhr = computed(() => Math.round(total.value * 4000));
 
 function formatPrice(usd) {
   return `$${usd.toFixed(2)} / ៛${Math.round(usd * 4000).toLocaleString()}`;
 }
 
 const canSubmit = computed(() =>
-  selectedAddress.value && !submitting.value && shortfall.value <= 0
+  selectedAddress.value && !submitting.value && !previewLoading.value && shortfall.value <= 0 && items.value.length > 0
 );
 
 function selectAddress(a) { selectedAddress.value = a; showAddressPicker.value = false; }
-function selectCoupon(uc) { selectedCoupon.value = uc; showCouponPicker.value = false; }
+function selectCoupon(uc) {
+  selectedCoupon.value = uc;
+  showCouponPicker.value = false;
+  loadPreview();
+}
 function specStr(spec) { return Object.values(spec || {}).join(' / '); }
 
 async function saveAddress() {
@@ -270,6 +269,24 @@ function formatDate(d) {
   return date.toLocaleDateString('en-US');
 }
 
+async function loadPreview() {
+  if (!itemIds.value.length) return;
+  previewLoading.value = true;
+  previewError.value = '';
+  try {
+    const res = await checkoutPreview({
+      item_ids: itemIds.value,
+      city_code: cityStore.currentCity.code,
+      coupon_id: selectedCoupon.value?.id,
+    });
+    preview.value = res.data;
+  } catch (e) {
+    previewError.value = e?.response?.data?.error?.message || t('checkout.networkError');
+    preview.value = null;
+  }
+  previewLoading.value = false;
+}
+
 async function submitOrder() {
   if (!selectedAddress.value) return;
   submitting.value = true;
@@ -280,7 +297,6 @@ async function submitOrder() {
       coupon_id: selectedCoupon.value?.coupon?.id,
       payment_method: paymentMethod.value,
     });
-    localStorage.removeItem('checkout_items');
     // 下单成功后跳转到支付页
     const order = res.data;
     router.push({
@@ -300,7 +316,7 @@ async function submitOrder() {
 }
 
 onMounted(async () => {
-  if (!items.value.length) return;
+  if (!itemIds.value.length) return;
   try {
     const res = await getAddresses();
     addresses.value = res.data;
@@ -310,11 +326,11 @@ onMounted(async () => {
     const res = await getMyCoupons('unused');
     coupons.value = res.data;
   } catch {}
-  loadDeliveryRule(cityStore.currentCity.code);
+  await loadPreview();
 });
 
-watch(() => cityStore.currentCity.code, (code) => {
-  loadDeliveryRule(code);
+watch(() => cityStore.currentCity.code, () => {
+  loadPreview();
 });
 </script>
 
