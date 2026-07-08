@@ -72,7 +72,7 @@ const checkedTotalUsd = computed(() => {
   let sum = 0;
   for (const g of groups.value) {
     for (const i of g.items) {
-      if (checkedIds.value.includes(i.productId)) sum += i.subtotalUsd;
+      if (checkedIds.value.includes(i.id)) sum += i.subtotalUsd;
     }
   }
   return Math.round(sum * 100) / 100;
@@ -82,7 +82,7 @@ const checkedTotalKhr = computed(() => {
   let sum = 0;
   for (const g of groups.value) {
     for (const i of g.items) {
-      if (checkedIds.value.includes(i.productId)) sum += i.priceKhr * i.quantity;
+      if (checkedIds.value.includes(i.id)) sum += i.priceKhr * i.quantity;
     }
   }
   return sum;
