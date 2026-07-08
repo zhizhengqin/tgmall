@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import redis from '../config/redis.js';
 import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
+import { createSmsProvider } from '../integrations/sms/index.js';
 
 const VALID_SCENES = ['login', 'reset_password', 'set_password', 'bind_phone', 'admin_login'];
 const PHONE_REGEX = /^\+855[1-9]\d{7,8}$/;
@@ -11,6 +12,14 @@ function cooldownKey(phone) { return `sms:cooldown:${phone}`; }
 function codeKey(scene, phone) { return `sms:${scene}:${phone}`; }
 function errorsKey(scene, phone) { return `sms:errors:${scene}:${phone}`; }
 function blockedKey(scene, phone) { return `sms:blocked:${scene}:${phone}`; }
+
+let providerInstance = null;
+function getProvider() {
+  if (!providerInstance) {
+    providerInstance = createSmsProvider(config.sms);
+  }
+  return providerInstance;
+}
 
 /**
  * 生成 6 位数字验证码
@@ -44,13 +53,9 @@ export async function sendSms(phone, scene) {
     throw new AppError('短信服务未配置', 503, 'SMS_GATEWAY_NOT_CONFIGURED');
   }
 
-  let code;
-  if (provider === 'mock' && mockEnabled) {
-    code = generateCode();
-  } else {
-    // 真实短信网关未实现，拒绝发送
-    throw new AppError('短信服务未配置', 503, 'SMS_GATEWAY_NOT_CONFIGURED');
-  }
+  const code = generateCode();
+  const providerClient = getProvider();
+  await providerClient.send(phone, `Your TG Mall code is ${code}`);
 
   await redis.set(codeKey(scene, phone), code, 'EX', config.sms.codeTtlSeconds);
   await redis.set(cooldownKey(phone), '1', 'EX', config.sms.cooldownSeconds);
