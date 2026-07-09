@@ -79,6 +79,15 @@
       <div class="menu-item" @click="contactCustomerService">
         <span>💬</span><span>{{ $t('profile.customerService') }}</span><span class="arrow">›</span>
       </div>
+      <router-link to="/about" class="menu-item">
+        <span>ℹ️</span><span>{{ $t('legal.about') }}</span><span class="arrow">›</span>
+      </router-link>
+      <router-link to="/privacy" class="menu-item">
+        <span>🔒</span><span>{{ $t('legal.privacy') }}</span><span class="arrow">›</span>
+      </router-link>
+      <router-link to="/terms" class="menu-item">
+        <span>📄</span><span>{{ $t('legal.terms') }}</span><span class="arrow">›</span>
+      </router-link>
     </div>
 
     <div class="lang-section">

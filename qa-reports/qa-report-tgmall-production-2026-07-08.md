@@ -155,14 +155,22 @@
 - **涉及文件：** `tgmall-miniapp/src/views/ProductDetail.vue`
 
 ### P1-04 Telegram BackButton 已注册但从未显示
+- **状态：** ✅ 已修复
 - **需求/问题：** 非根页面应显示原生返回按钮。
-- **涉及文件：** `tgmall-miniapp/src/composables/useTelegram.js`
-- **建议：** 暴露 `showBackButton` 并在详情/结算/支付页调用。
+- **修复：**
+  - `useTelegram.js` 增加 SDK 初始化单例守卫，暴露 `init/showBackButton/hideBackButton`；`BackButton.onClick` 仅注册一次。
+  - `router/index.js` 为非 Tab 页面（ProductDetail/Search/CitySelect/Login/ResetPassword/Wishlist/CouponCenter/Feedback/Checkout/Payment/PaymentResult/OrderDetail/About/Privacy/Terms）添加 `meta: { showBackButton: true }`。
+  - `App.vue` 在检测到 Telegram SDK 后调用 `initTelegram()`，并通过 `router.afterEach` 与 `router.isReady()` 根据当前路由显隐原生返回按钮。
+- **涉及文件：** `tgmall-miniapp/src/composables/useTelegram.js`、`tgmall-miniapp/src/router/index.js`、`tgmall-miniapp/src/App.vue`
 
 ### P1-05 搜索页缺少热门搜索 + debounce 400ms
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求热门搜索标签和 300ms 防抖。
-- **涉及文件：** `tgmall-miniapp/src/views/SearchPage.vue`
-- **建议：** 接入 `/shop-config/hot-search`，防抖改为 300ms。
+- **修复：**
+  - 后端新增 `HotSearch` 模型、迁移、CRUD service/controller/route 与公开 `GET /hot-searches`。
+  - 管理后台新增「热门搜索词」页面 `/settings/hot-searches`、侧边栏与设置首页入口。
+  - 小程序 `SearchPage.vue` 防抖改为 300ms，空关键词时展示热门搜索标签云，点击直接搜索。
+- **涉及文件：** `tgmall-api/prisma/schema.prisma`、`tgmall-api/prisma/migrations/20260709000001_add_hot_searches/migration.sql`、`tgmall-api/src/services/shopConfig.service.js`、`tgmall-api/src/controllers/shopConfig.controller.js`、`tgmall-api/src/routes/shopConfig.routes.js`、`tgmall-api/src/validators/shopConfig.schema.js`、`tgmall-admin/src/api/index.js`、`tgmall-admin/src/router/index.js`、`tgmall-admin/src/components/layout/Sidebar.vue`、`tgmall-admin/src/pages/SettingsPage.vue`、`tgmall-admin/src/pages/HotSearchesPage.vue`、`tgmall-miniapp/src/api/shopConfig.js`、`tgmall-miniapp/src/views/SearchPage.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-06 分类页缺少价格区间筛选
 - **需求/问题：** PRD 要求在分类内按价格筛选。
@@ -170,9 +178,13 @@
 - **建议：** 增加 min/max 价格输入并透传 API。
 
 ### P1-07 Profile 页缺少 About Us / Privacy Policy / Terms
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求法律/平台信息入口。
-- **涉及文件：** `tgmall-miniapp/src/views/ProfilePage.vue`
-- **建议：** 增加静态页面或 CMS 链接。
+- **修复：**
+  - 新增 `AboutPage.vue`、`PrivacyPage.vue`、`TermsPage.vue` 与可复用 `StaticInfoPage.vue`。
+  - 路由注册 `/about`、`/privacy`、`/terms`，无需登录，显示原生返回按钮。
+  - `ProfilePage.vue` 菜单增加「关于我们」「隐私政策」「服务条款」入口；三语文案通过 `legal.*` 段管理。
+- **涉及文件：** `tgmall-miniapp/src/views/AboutPage.vue`、`tgmall-miniapp/src/views/PrivacyPage.vue`、`tgmall-miniapp/src/views/TermsPage.vue`、`tgmall-miniapp/src/components/common/StaticInfoPage.vue`、`tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-miniapp/src/router/index.js`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-08 后台首页缺少今日新增 SKU 数与日期范围导出
 - **需求/问题：** 运营需要监控新品与导出订单。
