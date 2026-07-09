@@ -238,6 +238,17 @@
     "charLimit": "{current}/{max}",
     "imageHint": "Images (optional, up to 3)"
   },
+  "legal": {
+    "about": "About Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "aboutTitle": "About TG Mall",
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Service",
+    "aboutBody": "TG Mall is a Cambodia-based Telegram Mini App e-commerce platform, built to offer a convenient and secure shopping experience.\n\nWe operate a company-run marketplace: products, inventory, orders and customer service are managed directly by TG Mall to ensure quality and service standards.\n\nIf you have any questions, please reach out via Profile → Customer Service.",
+    "privacyBody": "TG Mall values your privacy. Information we collect is used only to fulfill orders, arrange delivery, provide customer support and conduct necessary identity verification.\n\nWe do not sell your personal information to third parties. Telegram account details, phone numbers and addresses are used on a minimal-necessary basis and protected with encryption and other security measures.\n\nYou may contact customer service at any time to review or request deletion of your account information.",
+    "termsBody": "Welcome to TG Mall. By using this service, you agree to the following terms:\n\n1. Users must provide accurate contact information for order fulfillment and after-sales support.\n2. Product prices are confirmed on the checkout page; promotions are subject to campaign rules.\n3. After successful payment, we will arrange shipment according to the agreed schedule.\n4. Fraud, money laundering or any illegal activity is strictly prohibited.\n5. TG Mall reserves the right to update these terms as needed; changes will be announced in the app."
+  },
   "coupons": {
     "title": "Coupons",
     "available": "Available",
@@ -265,6 +276,7 @@
   },
   "search": {
     "historyTitle": "Search History",
+    "hotTitle": "Hot Searches",
     "clear": "Clear",
     "resultCount": "Found {count} items",
     "noResult": "No results found"

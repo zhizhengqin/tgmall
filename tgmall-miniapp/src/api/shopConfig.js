@@ -8,3 +8,4 @@ export const getDefaultCustomerService = () => api.get('/customer-services/defau
 export const getFlashDeals = (city = 'phnom_penh') => api.get('/flash-deals', { params: { city } });
 export const getLoginBanner = () => api.get('/login-banner');
 export const getExchangeRate = () => api.get('/exchange-rate');
+export const getHotSearches = () => api.get('/hot-searches');

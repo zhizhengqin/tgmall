@@ -9,6 +9,7 @@ import {
   citySchema,
   deliveryRuleSchema,
   customerServiceSchema,
+  hotSearchSchema,
 } from '../validators/shopConfig.schema.js';
 
 const adminRouter = Router();
@@ -45,6 +46,12 @@ adminRouter.put('/customer-services/:id', validate(customerServiceSchema), ctrl.
 adminRouter.post('/customer-services/:id/toggle', ctrl.toggleCustomerService);
 adminRouter.post('/customer-services/:id/set-default', ctrl.setDefaultCustomerService);
 
+// Hot Searches
+adminRouter.get('/hot-searches', ctrl.listHotSearches);
+adminRouter.post('/hot-searches', validate(hotSearchSchema), ctrl.createHotSearch);
+adminRouter.put('/hot-searches/:id', validate(hotSearchSchema), ctrl.updateHotSearch);
+adminRouter.post('/hot-searches/:id/toggle', ctrl.toggleHotSearch);
+
 const publicRouter = Router();
 publicRouter.get('/banners', ctrl.publicBanners);
 publicRouter.get('/categories', ctrl.publicCategories);
@@ -53,5 +60,6 @@ publicRouter.get('/delivery-rules/:cityCode', ctrl.publicDeliveryRule);
 publicRouter.get('/customer-services/default', ctrl.publicDefaultCustomerService);
 publicRouter.get('/login-banner', ctrl.publicLoginBanner);
 publicRouter.get('/exchange-rate', ctrl.publicExchangeRate);
+publicRouter.get('/hot-searches', ctrl.publicHotSearches);
 
 export { adminRouter, publicRouter };
