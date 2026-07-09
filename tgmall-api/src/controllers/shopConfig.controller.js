@@ -205,3 +205,11 @@ export async function publicLoginBanner(_req, res, next) {
     res.json({ success: true, data: { image: settings.loginBannerImage || '' } });
   } catch (err) { next(err); }
 }
+
+// GET /exchange-rate — 公开汇率
+export async function publicExchangeRate(_req, res, next) {
+  try {
+    const rate = await systemConfig.getExchangeRate();
+    res.json({ success: true, data: { rate } });
+  } catch (err) { next(err); }
+}

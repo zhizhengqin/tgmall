@@ -11,6 +11,9 @@ const prismaMock = {
     findFirst: jest.fn(() => null),
     findMany: jest.fn(() => []),
   },
+  systemSetting: {
+    findMany: jest.fn(() => [{ key: 'exchange_rate', value: '4000' }]),
+  },
   userCoupon: {
     findFirst: jest.fn(),
   },

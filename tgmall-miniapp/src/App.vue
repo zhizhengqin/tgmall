@@ -25,10 +25,12 @@
 import { onMounted, ref, reactive } from 'vue';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import { telegramLogin } from '@/api/auth';
 
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
+const { loadExchangeRate } = useShopConfig();
 const showDebug = ref(false);
 const debugInfo = reactive({
   hasTg: false,
@@ -42,6 +44,9 @@ const debugInfo = reactive({
 });
 
 onMounted(() => {
+  // 预加载全局汇率
+  loadExchangeRate();
+
   // 轮询等待 Telegram WebApp SDK 就绪（最大 5 秒）
   let attempts = 0;
   const maxAttempts = 50; // 50 × 100ms = 5s

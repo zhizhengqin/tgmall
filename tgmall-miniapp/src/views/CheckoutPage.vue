@@ -154,12 +154,14 @@ import { getMyCoupons } from '@/api/coupons';
 import { createOrder } from '@/api/orders';
 import { checkoutPreview } from '@/api/cart';
 import { useCityStore } from '@/stores/cityStore.js';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { t, locale } = useI18n();
 const cityStore = useCityStore();
+const { exchangeRate } = useShopConfig();
 
 const itemIds = computed(() => {
   const raw = route.query.ids;
@@ -218,7 +220,7 @@ const selectedCouponTitle = computed(() => {
 });
 
 function formatPrice(usd) {
-  return `$${usd.toFixed(2)} / ៛${Math.round(usd * 4000).toLocaleString()}`;
+  return `$${usd.toFixed(2)} / ៛${Math.round(usd * exchangeRate.value).toLocaleString()}`;
 }
 
 const canSubmit = computed(() =>

@@ -150,10 +150,7 @@ const displayName = computed(() => {
   return product.value[map[locale.value]] || product.value.nameKm;
 });
 
-const displayMerchant = computed(() => {
-  if (!product.value?.merchant) return '';
-  return locale.value === 'en' ? product.value.merchant.nameEn || product.value.merchant.name : product.value.merchant.name;
-});
+const displayMerchant = computed(() => 'TG Mall');
 
 const displayDescription = computed(() => {
   if (!product.value) return '';

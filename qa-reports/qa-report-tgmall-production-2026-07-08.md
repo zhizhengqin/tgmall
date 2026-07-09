@@ -133,19 +133,26 @@
 ## P1 — 高风险缺口（显著影响转化/运营）
 
 ### P1-01 Mini App 多处硬编码汇率 4000
+- **状态：** ✅ 已修复
 - **需求/问题：** 双币种应使用后端配置的汇率。
-- **涉及文件：** `CheckoutPage.vue`、`PaymentPage.vue`、`PaymentResult.vue`、`OrderList.vue`
-- **建议：** 从 `/shop-config/exchange-rate` 读取并统一换算。
+- **修复：**
+  - 后端公开 `GET /exchange-rate`，复用 `systemConfig.getExchangeRate()`。
+  - `cart.service.js` 运费/优惠券 KHR 换算改用实时汇率。
+  - 小程序 `useShopConfig` 新增 `exchangeRate`，`App.vue` 启动时加载。
+  - 替换 `CheckoutPage.vue`、`PaymentPage.vue`、`PaymentResult.vue`、`OrderList.vue` 中所有硬编码 `* 4000`。
+- **涉及文件：** `tgmall-api/src/routes/shopConfig.routes.js`、`tgmall-api/src/controllers/shopConfig.controller.js`、`tgmall-api/src/services/cart.service.js`、`tgmall-miniapp/src/api/shopConfig.js`、`tgmall-miniapp/src/composables/useShopConfig.js`、`tgmall-miniapp/src/App.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-miniapp/src/views/PaymentPage.vue`、`tgmall-miniapp/src/views/PaymentResult.vue`、`tgmall-miniapp/src/views/OrderList.vue`
 
 ### P1-02 空购物车时 MiniCartBar 隐藏
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求浮层购物车始终可见。
+- **修复：** 移除根节点 `v-if`，购物车为空时展示空态图标 + “购物车是空的”提示 + “继续购物”入口，并补充灰显样式。
 - **涉及文件：** `tgmall-miniapp/src/components/common/MiniCartBar.vue`
-- **建议：** 移除 `v-if="summary.totalItems > 0"`，设计空状态。
 
 ### P1-03 ProductDetail 引用已不存在的 merchant 对象
+- **状态：** ✅ 已修复
 - **需求/问题：** 商品详情应显示商家/品牌名。
+- **修复：** `displayMerchant` 固定返回 `"TG Mall"`，与平台自营模式一致。
 - **涉及文件：** `tgmall-miniapp/src/views/ProductDetail.vue`
-- **建议：** 移除 V1 商家显示或从 API 返回平台名。
 
 ### P1-04 Telegram BackButton 已注册但从未显示
 - **需求/问题：** 非根页面应显示原生返回按钮。

@@ -23,7 +23,7 @@
       <!-- 订单摘要 -->
       <div class="order-summary">
         <div class="order-id">{{ orderNumber || `#${orderId}` }}</div>
-        <PriceDisplay v-if="amountUsd > 0" :priceUsd="amountUsd" :priceKhr="amountKhr || amountUsd * 4000" />
+        <PriceDisplay v-if="amountUsd > 0" :priceUsd="amountUsd" :priceKhr="amountKhr || amountUsd * exchangeRate" />
       </div>
 
       <!-- 倒计时 -->
@@ -153,12 +153,14 @@ import { useI18n } from 'vue-i18n';
 import { createKHQRPayment, createABAPayPayment, createWingPayPayment, createTelegramInvoicePayment, getPaymentStatus } from '@/api/payments';
 import { cancelOrder } from '@/api/orders';
 import { useLanguageStore } from '@/stores/languageStore';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
 const route = useRoute();
 const { t, locale } = useI18n();
 const langStore = useLanguageStore();
+const { exchangeRate } = useShopConfig();
 
 // ── 路由参数 ──
 const orderId = ref(route.query.orderId || '');

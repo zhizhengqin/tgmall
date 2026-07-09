@@ -3,6 +3,7 @@ import redis from '../config/redis.js';
 import prisma from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
 import { calculateShippingFee, getActiveDeliveryRule } from './shopConfig.service.js';
+import { getExchangeRate } from './systemConfig.service.js';
 
 function cartKey(userId) { return `cart:${userId}`; }
 
@@ -125,10 +126,13 @@ export async function checkoutPreview(userId, { itemIds, cityCode, couponId }) {
   const subtotalUsd = valid.reduce((s, i) => s + i.subtotalUsd, 0);
   const subtotalKhr = valid.reduce((s, i) => s + i.priceKhr * i.quantity, 0);
 
+  // 获取当前汇率
+  const exchangeRate = await getExchangeRate();
+
   // 运费
   const deliveryRule = cityCode ? await getActiveDeliveryRule(prisma, cityCode) : null;
   const shippingFeeUsd = calculateShippingFee(subtotalUsd, deliveryRule);
-  const shippingFeeKhr = Math.round(shippingFeeUsd * 4000);
+  const shippingFeeKhr = Math.round(shippingFeeUsd * exchangeRate);
 
   // 优惠券
   let coupon = null;
@@ -160,7 +164,7 @@ export async function checkoutPreview(userId, { itemIds, cityCode, couponId }) {
             discountUsd = Math.round(subtotalUsd * Number(c.value) / 100 * 100) / 100;
           }
           discountUsd = Math.min(discountUsd, subtotalUsd);
-          discountKhr = Math.round(discountUsd * 4000);
+          discountKhr = Math.round(discountUsd * exchangeRate);
         }
       }
     }

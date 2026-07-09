@@ -1,24 +1,36 @@
 <!-- 底部购物车条 — 件数 + 合计 + 起送差额 + 结算 -->
 <template>
-  <div v-if="summary.totalItems > 0" class="mini-cart-bar" :class="{ 'min-met': minMet }">
-    <router-link to="/cart" class="cart-info">
-      <span class="cart-icon-wrap">
-        <span class="cart-icon">🛒</span>
-        <span class="cart-badge">{{ summary.totalItems }}</span>
-      </span>
-      <div class="cart-detail">
-        <div class="cart-price">
-          <span class="price-usd">${{ summary.totalUsd.toFixed(2) }}</span>
-          <span class="price-khr">{{ formatKhr(summary.totalKhr) }}</span>
+  <div class="mini-cart-bar" :class="{ 'min-met': minMet, empty: summary.totalItems === 0 }">
+    <template v-if="summary.totalItems > 0">
+      <router-link to="/cart" class="cart-info">
+        <span class="cart-icon-wrap">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-badge">{{ summary.totalItems }}</span>
+        </span>
+        <div class="cart-detail">
+          <div class="cart-price">
+            <span class="price-usd">${{ summary.totalUsd.toFixed(2) }}</span>
+            <span class="price-khr">{{ formatKhr(summary.totalKhr) }}</span>
+          </div>
+          <p v-if="deliveryGap > 0" class="delivery-gap">
+            {{ $t('cart.minOrderHint', { amount: deliveryGap.toFixed(2) }) }}
+          </p>
         </div>
-        <p v-if="deliveryGap > 0" class="delivery-gap">
-          {{ $t('cart.minOrderHint', { amount: deliveryGap.toFixed(2) }) }}
-        </p>
-      </div>
-    </router-link>
-    <router-link to="/cart" class="cart-action">
-      {{ minMet ? $t('cart.checkout') : $t('cart.continueShopping') }}
-    </router-link>
+      </router-link>
+      <router-link to="/cart" class="cart-action">
+        {{ minMet ? $t('cart.checkout') : $t('cart.continueShopping') }}
+      </router-link>
+    </template>
+
+    <template v-else>
+      <router-link to="/cart" class="cart-info empty">
+        <span class="cart-icon">🛒</span>
+        <span class="empty-hint">{{ $t('cart.empty') }}</span>
+      </router-link>
+      <router-link to="/" class="cart-action">
+        {{ $t('cart.continueShopping') }}
+      </router-link>
+    </template>
   </div>
 </template>
 
@@ -175,4 +187,22 @@ onUnmounted(() => {
   background: var(--accent-red);
 }
 .cart-action:active { opacity: 0.85; }
+
+.mini-cart-bar.empty {
+  opacity: 0.85;
+}
+.mini-cart-bar.empty .cart-info {
+  color: var(--muted);
+}
+.mini-cart-bar.empty .cart-icon {
+  opacity: 0.5;
+}
+.mini-cart-bar.empty .empty-hint {
+  font-size: 13px;
+  margin-left: 8px;
+}
+.mini-cart-bar.empty .cart-action {
+  background: var(--border);
+  color: var(--fg);
+}
 </style>

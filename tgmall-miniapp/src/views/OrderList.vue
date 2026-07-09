@@ -48,12 +48,14 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getOrders } from '@/api/orders';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const router = useRouter();
 const { t, locale } = useI18n();
 const languageStore = useLanguageStore();
+const { exchangeRate } = useShopConfig();
 
 const tabs = [
   { value: '', labelKey: 'all' },
@@ -96,7 +98,7 @@ function goPay(order) {
       orderNumber: order.orderNumber,
       paymentMethod: order.paymentMethod,
       amountUsd: order.totalUsd,
-      amountKhr: order.totalKhr || Math.round(order.totalUsd * 4000),
+      amountKhr: order.totalKhr || Math.round(order.totalUsd * exchangeRate.value),
     },
   });
 }
