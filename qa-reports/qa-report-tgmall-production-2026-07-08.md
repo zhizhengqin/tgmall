@@ -173,9 +173,14 @@
 - **涉及文件：** `tgmall-api/prisma/schema.prisma`、`tgmall-api/prisma/migrations/20260709000001_add_hot_searches/migration.sql`、`tgmall-api/src/services/shopConfig.service.js`、`tgmall-api/src/controllers/shopConfig.controller.js`、`tgmall-api/src/routes/shopConfig.routes.js`、`tgmall-api/src/validators/shopConfig.schema.js`、`tgmall-admin/src/api/index.js`、`tgmall-admin/src/router/index.js`、`tgmall-admin/src/components/layout/Sidebar.vue`、`tgmall-admin/src/pages/SettingsPage.vue`、`tgmall-admin/src/pages/HotSearchesPage.vue`、`tgmall-miniapp/src/api/shopConfig.js`、`tgmall-miniapp/src/views/SearchPage.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-06 分类页缺少价格区间筛选
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求在分类内按价格筛选。
-- **涉及文件：** `tgmall-miniapp/src/views/CategoryPage.vue`、`tgmall-api/src/services/product.service.js`
-- **建议：** 增加 min/max 价格输入并透传 API。
+- **修复：**
+  - 后端 `GET /products` 新增 `min_price`/`max_price` 参数，并在 `product.service.js` 中追加 `priceUsd { gte/lte }` 过滤。
+  - 新增 `product.schema.js` 与 route 层 query 校验。
+  - 小程序 `CategoryPage.vue` 在排序栏上方增加 Min/Max USD 输入框，400ms debounce，支持清除。
+  - 补充三语 `filter.*` i18n 文案。
+- **涉及文件：** `tgmall-miniapp/src/views/CategoryPage.vue`、`tgmall-api/src/controllers/product.controller.js`、`tgmall-api/src/services/product.service.js`、`tgmall-api/src/validators/product.schema.js`、`tgmall-api/src/routes/product.routes.js`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-07 Profile 页缺少 About Us / Privacy Policy / Terms
 - **状态：** ✅ 已修复
@@ -197,19 +202,33 @@
 - **建议：** 统一通过 notification service 发送订单/支付事件通知。
 
 ### P1-10 ProductCard 未显示销量/收藏、快捷加购未处理多规格
+- **状态：** ✅ 已修复
 - **需求/问题：** 卡片应展示销量/收藏，多规格商品快捷加购应弹出规格选择。
-- **涉及文件：** `tgmall-miniapp/src/components/common/ProductCard.vue`
-- **建议：** 展示 sales/likes，多规格时跳转详情或弹出 SKU 选择器。
+- **修复：**
+  - 后端 `listProducts` 返回字段补回 `stock`，新增 `skuCount`（active SKU 聚合）与 `likesCount`（收藏聚合）。
+  - `ProductCard.vue` 新增 `salesCount`/`likesCount`/`skuCount` props，展示销量与收藏数。
+  - 快捷加购逻辑改为：单 SKU 直接加购，多 SKU 跳转商品详情页选择规格。
+  - `HomePage.vue`、`CategoryPage.vue` 显式透传新字段；`SearchPage.vue` 通过 `v-bind` 自动透传。
+  - 补充 `product.likes` 三语文案。
+- **涉及文件：** `tgmall-miniapp/src/components/common/ProductCard.vue`、`tgmall-miniapp/src/views/HomePage.vue`、`tgmall-miniapp/src/views/CategoryPage.vue`、`tgmall-miniapp/src/views/SearchPage.vue`、`tgmall-api/src/services/product.service.js`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-11 限时秒杀倒计时缺少秒
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求显示天/时/分/秒。
-- **涉及文件：** `tgmall-miniapp/src/components/common/FlashDealCard.vue`
-- **建议：** 增加秒级显示。
+- **修复：**
+  - `FlashDealCard.vue` 增加 `now` ref 与 1 秒 `setInterval`，倒计时每秒刷新。
+  - `timeLeft` 计算包含秒，并按天/时/分动态省略空单位。
+  - 补充三语 `time.*` 单位文案。
+- **涉及文件：** `tgmall-miniapp/src/components/common/FlashDealCard.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-12 地址/绑定手机号缺少 +855 客户端校验
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求柬埔寨手机号格式校验。
-- **涉及文件：** `tgmall-miniapp/src/views/ProfilePage.vue`
-- **建议：** 增加共享 +855 校验函数。
+- **修复：**
+  - 新建 `tgmall-miniapp/src/utils/phone.js`，共享 `PHONE_REGEX = /^\+855[1-9]\d{7,8}$/` 与 `isValidPhone`/`formatPhoneInput`。
+  - 在 `LoginPage.vue`、`ResetPasswordPage.vue`、`ProfilePage.vue`（绑定手机与地址）、`CheckoutPage.vue` 的地址表单中应用该校验。
+  - 统一后端 `address.schema.js` 的 regex 与 auth 一致。
+- **涉及文件：** `tgmall-miniapp/src/utils/phone.js`、`tgmall-miniapp/src/views/LoginPage.vue`、`tgmall-miniapp/src/views/ResetPasswordPage.vue`、`tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-api/src/validators/address.schema.js`
 
 ### P1-13 首页未实现下拉刷新
 - **需求/问题：** Backlog S1-08 要求支持下拉刷新。
