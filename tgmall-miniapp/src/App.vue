@@ -26,11 +26,14 @@ import { onMounted, ref, reactive } from 'vue';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { useShopConfig } from '@/composables/useShopConfig.js';
+import { useTelegram } from '@/composables/useTelegram.js';
 import { telegramLogin } from '@/api/auth';
+import router from '@/router';
 
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 const { loadExchangeRate } = useShopConfig();
+const { init: initTelegram, showBackButton, hideBackButton } = useTelegram();
 const showDebug = ref(false);
 const debugInfo = reactive({
   hasTg: false,
@@ -47,6 +50,20 @@ onMounted(() => {
   // 预加载全局汇率
   loadExchangeRate();
 
+  // Telegram SDK 初始化（可能已就绪，也可能尚未注入）
+  initTelegram();
+
+  // 根据路由 meta 控制原生返回按钮显隐
+  const updateBackButton = (to) => {
+    if (to.meta.showBackButton) {
+      showBackButton();
+    } else {
+      hideBackButton();
+    }
+  };
+  router.afterEach(updateBackButton);
+  router.isReady().then(() => updateBackButton(router.currentRoute.value));
+
   // 轮询等待 Telegram WebApp SDK 就绪（最大 5 秒）
   let attempts = 0;
   const maxAttempts = 50; // 50 × 100ms = 5s
@@ -61,6 +78,7 @@ onMounted(() => {
 
       tg.ready();
       tg.expand();
+      initTelegram();
 
       debugInfo.hasTg = true;
       debugInfo.initDataLen = (tg.initData || '').length;

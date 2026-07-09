@@ -1,9 +1,14 @@
 // Telegram Mini App SDK 封装
-import { onMounted, reactive } from 'vue';
+import { reactive } from 'vue';
+
+let initialized = false;
+let backButtonHandler = null;
+
+function getTg() {
+  return window.Telegram?.WebApp;
+}
 
 export function useTelegram() {
-  const tg = window.Telegram?.WebApp;
-
   const state = reactive({
     isReady: false,
     user: null,
@@ -12,10 +17,12 @@ export function useTelegram() {
   });
 
   function init() {
+    if (initialized) return;
+
+    const tg = getTg();
     if (!tg) {
-      console.warn('非 Telegram Mini App 环境，使用浏览器开发模式');
+      console.warn('非 Telegram Mini App 环境或 SDK 尚未注入，使用浏览器开发模式');
       state.isReady = true;
-      state.initData = '';
       return;
     }
 
@@ -39,25 +46,28 @@ export function useTelegram() {
       document.body.classList.toggle('tg-dark', state.isDark);
     });
 
-    // 返回按钮处理
-    tg.BackButton.onClick(() => {
-      window.history.back();
-    });
+    // 返回按钮处理（仅注册一次）
+    if (!backButtonHandler) {
+      backButtonHandler = () => {
+        window.history.back();
+      };
+      tg.BackButton.onClick(backButtonHandler);
+    }
+
+    initialized = true;
   }
 
   function showBackButton() {
-    tg?.BackButton.show();
+    getTg()?.BackButton?.show();
   }
 
   function hideBackButton() {
-    tg?.BackButton.hide();
+    getTg()?.BackButton?.hide();
   }
 
   function enableCloseConfirmation() {
-    tg?.enableClosingConfirmation();
+    getTg()?.enableClosingConfirmation?.();
   }
 
-  onMounted(() => init());
-
-  return { tg, state, showBackButton, hideBackButton, enableCloseConfirmation };
+  return { tg: getTg(), state, init, showBackButton, hideBackButton, enableCloseConfirmation };
 }
