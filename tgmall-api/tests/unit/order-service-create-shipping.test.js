@@ -46,6 +46,7 @@ jest.unstable_mockModule('../../src/config/database.js', () => ({
           images: p.images || null,
         }];
       }),
+      productSku: { findFirst: jest.fn(() => null), findMany: jest.fn(() => []), update: jest.fn() },
       userCoupon: { findFirst: jest.fn(() => null), findMany: jest.fn(() => []) },
       order: {
         create: jest.fn(({ data }) => ({ id: 'order-1', ...data })),

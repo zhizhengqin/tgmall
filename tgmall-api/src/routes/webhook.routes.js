@@ -2,7 +2,7 @@
 // 支付服务商回调通知入口，无需 JWT 认证，使用签名校验
 import { Router } from 'express';
 import { validate } from '../middleware/validate.js';
-import { paymentWebhookSchema } from '../validators/payment.schema.js';
+import { paymentWebhookSchema, telegramUpdateSchema } from '../validators/payment.schema.js';
 import * as paymentService from '../services/payment.service.js';
 
 const router = Router();
@@ -18,6 +18,19 @@ const router = Router();
 router.post('/payment', validate(paymentWebhookSchema), async (req, res, next) => {
   try {
     const result = await paymentService.handlePaymentCallback(req.validatedBody);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /webhooks/telegram
+ * Telegram Bot 更新入口（含 Telegram Payments 的 pre_checkout_query / successful_payment）
+ */
+router.post('/telegram', validate(telegramUpdateSchema), async (req, res, next) => {
+  try {
+    const result = await paymentService.handleTelegramPaymentUpdate(req.validatedBody);
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

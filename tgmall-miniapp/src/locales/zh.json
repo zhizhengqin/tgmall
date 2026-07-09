@@ -187,6 +187,7 @@
     "khqrTitle": "KHQR 支付",
     "abaPayTitle": "ABA Pay 支付",
     "wingPayTitle": "Wing Pay 支付",
+    "telegramInvoiceTitle": "Telegram 支付",
     "codTitle": "货到付款",
     "orderId": "订单编号",
     "timeLeft": "剩余",
@@ -218,6 +219,9 @@
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",
+    "telegramInvoice": "Telegram 支付",
+    "openInvoice": "立即支付",
+    "telegramInvoiceHint": "将调起 Telegram 原生收银台完成支付",
     "cod": "货到付款"
   },
   "wishlist": {

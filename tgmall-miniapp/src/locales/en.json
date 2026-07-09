@@ -187,6 +187,7 @@
     "khqrTitle": "KHQR Payment",
     "abaPayTitle": "ABA Pay",
     "wingPayTitle": "Wing Pay",
+    "telegramInvoiceTitle": "Telegram Pay",
     "codTitle": "Cash on Delivery",
     "orderId": "Order ID",
     "timeLeft": "Remaining",
@@ -218,6 +219,9 @@
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",
+    "telegramInvoice": "Telegram Pay",
+    "openInvoice": "Pay Now",
+    "telegramInvoiceHint": "Telegram's native checkout will open to complete payment",
     "cod": "Cash on Delivery"
   },
   "wishlist": {

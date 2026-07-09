@@ -185,6 +185,7 @@ const paymentMethods = computed(() => [
   { value: 'khqr', label: t('payment.khqr') },
   { value: 'aba_pay', label: t('payment.abaPay') },
   { value: 'wing_pay', label: t('payment.wingPay') },
+  { value: 'telegram_invoice', label: t('payment.telegramInvoice') },
   { value: 'cod', label: t('payment.cod') },
 ]);
 
@@ -292,7 +293,7 @@ async function submitOrder() {
   submitting.value = true;
   try {
     const res = await createOrder({
-      items: items.value.map(i => ({ product_id: i.productId, quantity: i.quantity, spec: i.spec })),
+      items: items.value.map(i => ({ product_id: i.productId, quantity: i.quantity, spec: i.spec, sku_id: i.skuId })),
       shipping_address_id: selectedAddress.value.id,
       coupon_id: selectedCoupon.value?.coupon?.id,
       payment_method: paymentMethod.value,

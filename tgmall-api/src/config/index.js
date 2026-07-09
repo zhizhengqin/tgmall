@@ -39,6 +39,8 @@ export const config = {
   paymentMockMode: process.env.PAYMENT_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test',
   abaPaySecret: process.env.ABA_PAY_SECRET || '',
   wingPaySecret: process.env.WING_PAY_SECRET || '',
+  telegramPaymentsProviderToken: process.env.TELEGRAM_PAYMENTS_PROVIDER_TOKEN || '',
+  telegramPaymentsMockMode: process.env.TELEGRAM_PAYMENTS_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test',
   adminTelegramIds: process.env.ADMIN_TELEGRAM_IDS || '',
   cdnBaseUrl: process.env.CDN_BASE_URL || 'http://localhost:3000/static',
   // Mini App

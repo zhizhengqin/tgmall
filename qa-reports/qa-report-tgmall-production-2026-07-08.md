@@ -23,8 +23,8 @@
 | P0-09 COD 确认收货 | ✅ 已修复 | `2db22c1` | confirmOrder 允许 COD paid 状态确认 |
 | P0-10 结算后端快照 | ✅ 已修复 | `ef46848` | 新增 `/cart/checkout-preview`，移除 localStorage 依赖 |
 | P0-02 ABA/Wing 验签 | ⚠️ 部分修复 | `28fe16f` | 真实模式使用 HMAC-SHA256；需按 provider 文档最终校准 |
-| P0-01 Telegram openInvoice | ⏸️ 待决策 | - | 需 Telegram Payments provider token + 业务确认柬埔寨本地支付方式 |
-| P0-03 SKU 模型 | ⏸️ 待规划 | - | 需新增 ProductSku 表并迁移 cart/order/admin 逻辑 |
+| P0-01 Telegram openInvoice | ✅ 已修复 | 待提交 | 后端 invoice 创建 + webhook，前端 openInvoice 调用 |
+| P0-03 SKU 模型 | ✅ 已修复 | 待提交 | 新增 ProductSku 表；cart/order/admin 全流程按 SKU 计算价格库存 |
 
 ### 健康基线
 
@@ -51,12 +51,15 @@
 ## P0 — 阻塞级缺口（必须在上线前解决）
 
 ### P0-01 支付未使用 Telegram 原生支付接口
-- **状态：** ⏸️ 待决策 / 待外部依赖
+- **状态：** ✅ 已修复
 - **需求/问题：** PRD 要求通过 `Telegram.WebApp.openInvoice` 调起原生支付；当前为自定义支付页。
 - **预期：** Checkout 调用 `openInvoice`，通过 `invoiceClosed` 获取结果。
-- **实际：** `PaymentPage.vue` 自行渲染 KHQR / ABA Pay / Wing Pay  deep-link 流程。
-- **涉及文件：** `tgmall-miniapp/src/views/PaymentPage.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`
-- **建议：** 后端新增 invoice 创建接口，前端改用 `openInvoice`。**需 Telegram Payments provider token，并确认柬埔寨本地支付方式（KHQR/ABA/Wing）能否通过 Telegram Payments 接入。**
+- **修复：**
+  - 后端新增 `POST /payments/telegram_invoice`：调用 Bot API `createInvoiceLink` 生成 invoice URL；新增 `POST /webhooks/telegram` 处理 `pre_checkout_query` 与 `successful_payment`。
+  - 前端 `PaymentPage.vue` 增加 Telegram Invoice 模板与 `openTelegramInvoice` / `fetchTelegramInvoice`；`CheckoutPage.vue` 与 `PaymentPage.vue` 均支持 `telegram_invoice` 支付方式。
+  - 新增 `tgmall-api/src/integrations/telegram_payments.js`、单元测试 `telegram-payments.test.js`。
+- **涉及文件：** `tgmall-miniapp/src/views/PaymentPage.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-miniapp/src/api/payments.js`、`tgmall-miniapp/src/locales/{km,en,zh}.json`、`tgmall-api/src/integrations/telegram_payments.js`、`tgmall-api/src/services/payment.service.js`、`tgmall-api/src/controllers/payment.controller.js`、`tgmall-api/src/routes/payment.routes.js`、`tgmall-api/src/routes/webhook.routes.js`、`tgmall-api/src/validators/payment.schema.js`、`tgmall-api/src/validators/order.schema.js`、`tgmall-api/tests/unit/telegram-payments.test.js`
+- **注意：** 生产环境需配置 `TELEGRAM_PAYMENTS_PROVIDER_TOKEN`；柬埔寨本地支付方式（KHQR/ABA/Wing）能否通过 Telegram Payments 接入仍需业务确认。
 
 ### P0-02 ABA Pay / Wing Pay 真实回调未验签
 - **状态：** ⚠️ 已接入 HMAC-SHA256 占位，需按 provider 文档校准
@@ -68,12 +71,19 @@
 - **建议：** 拿到 ABA / Wing 官方回调文档后，替换签名字符串拼接逻辑为精确格式。
 
 ### P0-03 购物车/订单未按 SKU 组合计算价格与库存
-- **状态：** ⏸️ 待规划 / 大改造
+- **状态：** ✅ 已修复
 - **需求/问题：** 多规格商品必须按选中规格组合匹配 `ProductSku` 的价格与库存。
 - **预期：** 加购/结算时解析 `skuId`，校验并扣减 SKU 库存。
-- **实际：** `cart.service.js` / `order.service.js` 使用商品级 `priceUsd`/`priceKhr`/`stock`；订单只存 JSON 规格，未关联 SKU。
-- **涉及文件：** `tgmall-api/src/services/cart.service.js`、`tgmall-api/src/services/order.service.js`、`prisma/schema.prisma`
-- **建议：** 新增 `ProductSku` 表；加购/结算解析 SKU；订单项记录 SKU 价格；admin 支持 SKU 维护。**建议单独 Sprint 处理。**
+- **修复：**
+  - 新增 `ProductSku` 模型与迁移 `20260709000000_add_product_skus`，为历史商品创建默认/单规格 SKU 并回刷 `order_items.sku_id`。
+  - `cart.service.js`：`addCartItem`/`enrichCartItem` 解析 SKU，购物车存储 `skuId`；结算预览按 SKU 价格/库存计算。
+  - `order.service.js`：`createOrder` 按 SKU 价格计算小计，事务内扣减 SKU 库存，`OrderItem` 记录 `skuId`。
+  - `product.service.js`：`getProductById` 返回 `skus` 列表。
+  - `merchant.service.js`：创建/编辑商品时同步生成/更新 SKU（支持无规格 DEFAULT SKU 与单规格 SKU）。
+  - 小程序 `ProductDetail.vue`：按 SKU 解析价格/库存，加购携带 `sku_id`；`CheckoutPage.vue` 下单携带 `sku_id`。
+  - 管理后台 `ProductFormPage.vue`：保存时转换 snake_case 字段，修复此前表单字段与后端 schema 不一致的问题。
+  - 更新 `cart.schema.js` 与 `order.schema.js` 允许 `sku_id`。
+- **涉及文件：** `tgmall-api/prisma/schema.prisma`、`tgmall-api/prisma/migrations/20260709000000_add_product_skus/migration.sql`、`tgmall-api/src/services/cart.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-api/src/services/product.service.js`、`tgmall-api/src/services/merchant.service.js`、`tgmall-api/src/validators/cart.schema.js`、`tgmall-api/src/validators/order.schema.js`、`tgmall-miniapp/src/views/ProductDetail.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-admin/src/pages/ProductFormPage.vue`
 
 ### P0-04 COD 订单缺少“confirmed”确认状态
 - **状态：** ✅ 已修复

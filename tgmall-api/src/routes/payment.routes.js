@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { khqrPaymentSchema, abaPayPaymentSchema, wingPayPaymentSchema } from '../validators/payment.schema.js';
+import { khqrPaymentSchema, abaPayPaymentSchema, wingPayPaymentSchema, telegramInvoicePaymentSchema } from '../validators/payment.schema.js';
 import * as ctrl from '../controllers/payment.controller.js';
 
 const router = Router();
@@ -18,5 +18,6 @@ router.get('/status/:orderId', ctrl.status);
 
 router.post('/aba_pay', validate(abaPayPaymentSchema), ctrl.abaPay);
 router.post('/wing_pay', validate(wingPayPaymentSchema), ctrl.wingPay);
+router.post('/telegram_invoice', validate(telegramInvoicePaymentSchema), ctrl.telegramInvoice);
 
 export default router;

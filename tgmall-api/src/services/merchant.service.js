@@ -3,6 +3,92 @@ import prisma from '../config/database.js';
 import { sendShippedNotification } from '../integrations/telegram.js';
 import { AppError } from '../utils/AppError.js';
 
+async function syncProductSkus(tx, productId, specs, basePriceUsd, basePriceKhr, baseStock) {
+  const flatSpecs = (specs || []).filter((s) => s.values?.length > 0);
+
+  // 无规格：仅保留/创建 DEFAULT SKU
+  if (flatSpecs.length === 0) {
+    await tx.productSku.deleteMany({ where: { productId, skuCode: { not: 'DEFAULT' } } });
+    await tx.productSku.upsert({
+      where: { productId_skuCode: { productId, skuCode: 'DEFAULT' } },
+      update: {
+        priceUsd: basePriceUsd,
+        priceKhr: basePriceKhr,
+        stock: baseStock,
+        status: baseStock > 0 ? 'active' : 'inactive',
+      },
+      create: {
+        productId,
+        skuCode: 'DEFAULT',
+        spec: {},
+        priceUsd: basePriceUsd,
+        priceKhr: basePriceKhr,
+        stock: baseStock,
+        status: baseStock > 0 ? 'active' : 'inactive',
+      },
+    });
+    return;
+  }
+
+  // 单规格：为每个 value 创建/更新 SKU
+  if (flatSpecs.length === 1) {
+    const spec = flatSpecs[0];
+    const skuCodes = new Set();
+    for (const val of spec.values) {
+      const skuCode = val.valueEn || 'DEFAULT';
+      skuCodes.add(skuCode);
+      const specJson = spec.nameEn ? { [spec.nameEn]: val.valueEn } : {};
+      const priceUsd = val.priceUsd ?? basePriceUsd;
+      const priceKhr = val.priceKhr ?? basePriceKhr;
+      const stock = val.stock ?? baseStock;
+      await tx.productSku.upsert({
+        where: { productId_skuCode: { productId, skuCode } },
+        update: {
+          spec: specJson,
+          priceUsd,
+          priceKhr,
+          stock,
+          status: stock > 0 ? 'active' : 'inactive',
+        },
+        create: {
+          productId,
+          skuCode,
+          spec: specJson,
+          priceUsd,
+          priceKhr,
+          stock,
+          status: stock > 0 ? 'active' : 'inactive',
+        },
+      });
+    }
+    // 删除不在当前 specs 中的非 DEFAULT SKU
+    await tx.productSku.deleteMany({
+      where: { productId, skuCode: { not: 'DEFAULT', notIn: Array.from(skuCodes) } },
+    });
+    return;
+  }
+
+  // 多规格：当前 UI 未支持，兜底为 DEFAULT SKU
+  await tx.productSku.deleteMany({ where: { productId, skuCode: { not: 'DEFAULT' } } });
+  await tx.productSku.upsert({
+    where: { productId_skuCode: { productId, skuCode: 'DEFAULT' } },
+    update: {
+      priceUsd: basePriceUsd,
+      priceKhr: basePriceKhr,
+      stock: baseStock,
+      status: baseStock > 0 ? 'active' : 'inactive',
+    },
+    create: {
+      productId,
+      skuCode: 'DEFAULT',
+      spec: {},
+      priceUsd: basePriceUsd,
+      priceKhr: basePriceKhr,
+      stock: baseStock,
+      status: baseStock > 0 ? 'active' : 'inactive',
+    },
+  });
+}
 
 // ============================================================
 // 商家商品列表（含搜索 + 分页 + 状态筛选）
@@ -73,32 +159,37 @@ export async function getProductById(productId) {
 // 上架商品
 // ============================================================
 export async function createProduct(body) {
-  const product = await prisma.product.create({
-    data: {
-      nameKm: body.name_km,
-      nameEn: body.name_en || null,
-      nameZh: body.name_zh || null,
-      descriptionKm: body.description_km || null,
-      descriptionEn: body.description_en || null,
-      descriptionZh: body.description_zh || null,
-      priceUsd: body.price_usd,
-      priceKhr: body.price_khr,
-      stock: body.stock,
-      alertThreshold: body.alert_threshold ?? null,
-      images: body.images || [],
-      specs: body.specs || [],
-      tags: body.tags || [],
-      category: body.category,
-      status: body.status || 'active',
-    },
-    select: {
-      id: true,
-      nameKm: true,
-      priceUsd: true,
-      stock: true,
-      status: true,
-      createdAt: true,
-    },
+  const product = await prisma.$transaction(async (tx) => {
+    const created = await tx.product.create({
+      data: {
+        nameKm: body.name_km,
+        nameEn: body.name_en || null,
+        nameZh: body.name_zh || null,
+        descriptionKm: body.description_km || null,
+        descriptionEn: body.description_en || null,
+        descriptionZh: body.description_zh || null,
+        priceUsd: body.price_usd,
+        priceKhr: body.price_khr,
+        stock: body.stock,
+        alertThreshold: body.alert_threshold ?? null,
+        images: body.images || [],
+        specs: body.specs || [],
+        tags: body.tags || [],
+        category: body.category,
+        status: body.status || 'active',
+      },
+      select: {
+        id: true,
+        nameKm: true,
+        priceUsd: true,
+        stock: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    await syncProductSkus(tx, created.id, body.specs || [], body.price_usd, body.price_khr, body.stock);
+    return created;
   });
 
   return {
@@ -118,33 +209,45 @@ export async function updateProduct(productId, body) {
   if (!existing) throw new AppError('商品不存在或不属于您的店铺', 404, 'NOT_FOUND');
 
   // 2. 更新
-  const updated = await prisma.product.update({
-    where: { id: productId },
-    data: {
-      nameKm: body.name_km,
-      nameEn: body.name_en ?? existing.nameEn,
-      nameZh: body.name_zh ?? existing.nameZh,
-      descriptionKm: body.description_km ?? existing.descriptionKm,
-      descriptionEn: body.description_en ?? existing.descriptionEn,
-      descriptionZh: body.description_zh ?? existing.descriptionZh,
-      priceUsd: body.price_usd,
-      priceKhr: body.price_khr,
-      stock: body.stock,
-      alertThreshold: body.alert_threshold ?? existing.alertThreshold,
-      images: body.images ?? existing.images,
-      specs: body.specs ?? existing.specs,
-      tags: body.tags ?? existing.tags,
-      category: body.category,
-      status: body.status ?? existing.status,
-    },
-    select: {
-      id: true,
-      nameKm: true,
-      priceUsd: true,
-      stock: true,
-      status: true,
-      updatedAt: true,
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const product = await tx.product.update({
+      where: { id: productId },
+      data: {
+        nameKm: body.name_km,
+        nameEn: body.name_en ?? existing.nameEn,
+        nameZh: body.name_zh ?? existing.nameZh,
+        descriptionKm: body.description_km ?? existing.descriptionKm,
+        descriptionEn: body.description_en ?? existing.descriptionEn,
+        descriptionZh: body.description_zh ?? existing.descriptionZh,
+        priceUsd: body.price_usd,
+        priceKhr: body.price_khr,
+        stock: body.stock,
+        alertThreshold: body.alert_threshold ?? existing.alertThreshold,
+        images: body.images ?? existing.images,
+        specs: body.specs ?? existing.specs,
+        tags: body.tags ?? existing.tags,
+        category: body.category,
+        status: body.status ?? existing.status,
+      },
+      select: {
+        id: true,
+        nameKm: true,
+        priceUsd: true,
+        stock: true,
+        status: true,
+        updatedAt: true,
+      },
+    });
+
+    await syncProductSkus(
+      tx,
+      productId,
+      body.specs ?? existing.specs ?? [],
+      body.price_usd ?? existing.priceUsd,
+      body.price_khr ?? existing.priceKhr,
+      body.stock ?? existing.stock,
+    );
+    return product;
   });
 
   return {

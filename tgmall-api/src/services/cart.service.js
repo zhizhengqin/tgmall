@@ -14,9 +14,26 @@ function specKey(spec) {
     .join('|');
 }
 
-function makeItemId(productId, spec) {
+function makeItemId(productId, skuId, spec) {
   const key = specKey(spec);
+  if (skuId) return `${productId}::${skuId}`;
   return key ? `${productId}::${key}` : productId;
+}
+
+/**
+ * 根据商品和规格匹配 SKU
+ * 优先使用传入的 skuId，否则按 spec 组合匹配
+ */
+async function resolveSku(productId, spec = {}, skuId = null) {
+  if (skuId) {
+    return prisma.productSku.findFirst({ where: { id: skuId, productId, status: 'active' } });
+  }
+  const sortedSpec = specKey(spec);
+  if (!sortedSpec) {
+    return prisma.productSku.findFirst({ where: { productId, skuCode: 'DEFAULT', status: 'active' } });
+  }
+  const skus = await prisma.productSku.findMany({ where: { productId, status: 'active' } });
+  return skus.find((s) => specKey(s.spec) === sortedSpec) || null;
 }
 
 export async function getCart(userId) {
@@ -29,25 +46,27 @@ export async function getCart(userId) {
   return groupCartItems(enriched);
 }
 
-export async function addCartItem(userId, { product_id, quantity, spec = {} }) {
+export async function addCartItem(userId, { product_id, quantity, spec = {}, sku_id }) {
   const productId = product_id;
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) throw new AppError('商品不存在', 404, 'NOT_FOUND');
   if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
 
+  const sku = await resolveSku(productId, spec, sku_id);
+
   // 获取现有购物车
   const raw = await redis.get(cartKey(userId));
   const items = raw ? JSON.parse(raw) : [];
 
-  // 查重：同商品+同规格 → 累加数量
-  const itemId = makeItemId(productId, spec);
+  // 查重：同商品+同 SKU → 累加数量
+  const itemId = makeItemId(productId, sku?.id, spec);
   const index = items.findIndex(
     (i) => i.id === itemId,
   );
   if (index >= 0) {
     items[index].quantity += quantity;
   } else {
-    items.push({ id: itemId, productId, quantity, spec });
+    items.push({ id: itemId, productId, skuId: sku?.id, quantity, spec });
   }
 
   await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
@@ -183,34 +202,47 @@ export async function checkoutPreview(userId, { itemIds, cityCode, couponId }) {
 // --- 内部工具 ---
 
 async function enrichCartItem(item) {
-  const product = await prisma.product.findUnique({
-    where: { id: item.productId },
-    select: {
-      id: true, nameKm: true, nameEn: true, priceUsd: true, priceKhr: true,
-      stock: true, images: true, status: true,
-    },
-  });
+  const [product, sku] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id: item.productId },
+      select: {
+        id: true, nameKm: true, nameEn: true, status: true, images: true,
+        priceUsd: true, priceKhr: true, stock: true,
+      },
+    }),
+    item.skuId
+      ? prisma.productSku.findUnique({
+          where: { id: item.skuId },
+          select: { id: true, priceUsd: true, priceKhr: true, stock: true, status: true, spec: true },
+        })
+      : resolveSku(item.productId, item.spec),
+  ]);
+
+  const effectiveStock = sku?.stock ?? product?.stock ?? 0;
+  const effectivePriceUsd = sku?.priceUsd ?? product?.priceUsd ?? 0;
+  const effectivePriceKhr = sku?.priceKhr ?? product?.priceKhr ?? 0;
 
   const stockStatus = product
     ? product.status !== 'active' ? 'inactive'
-      : product.stock === 0 ? 'out_of_stock'
-      : product.stock < item.quantity ? 'insufficient'
-      : product.stock <= 5 ? 'low_stock'
+      : effectiveStock === 0 ? 'out_of_stock'
+      : effectiveStock < item.quantity ? 'insufficient'
+      : effectiveStock <= 5 ? 'low_stock'
       : 'ok'
     : 'not_found';
 
   return {
     id: item.id,
     productId: item.productId,
+    skuId: sku?.id || null,
     productName: product?.nameKm || '',
     thumbnail: product?.images?.[0]?.thumb_url || '',
     spec: item.spec,
-    priceUsd: Number(product?.priceUsd || 0),
-    priceKhr: product?.priceKhr || 0,
-    quantity: Math.min(item.quantity, product?.stock || 0),
-    maxQuantity: product?.stock || 0,
+    priceUsd: Number(effectivePriceUsd),
+    priceKhr: effectivePriceKhr,
+    quantity: Math.min(item.quantity, effectiveStock),
+    maxQuantity: effectiveStock,
     stockStatus,
-    subtotalUsd: Number(product?.priceUsd || 0) * Math.min(item.quantity, product?.stock || 0),
+    subtotalUsd: Number(effectivePriceUsd) * Math.min(item.quantity, effectiveStock),
   };
 }
 

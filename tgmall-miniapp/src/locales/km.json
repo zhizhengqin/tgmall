@@ -187,6 +187,7 @@
     "khqrTitle": "ការទូទាត់ KHQR",
     "abaPayTitle": "ការទូទាត់ ABA Pay",
     "wingPayTitle": "ការទូទាត់ Wing Pay",
+    "telegramInvoiceTitle": "ការទូទាត់ Telegram",
     "codTitle": "ទូទាត់ពេលទទួល",
     "orderId": "លេខបញ្ជាទិញ",
     "timeLeft": "នៅសល់",
@@ -218,6 +219,9 @@
     "khqr": "KHQR",
     "abaPay": "ABA Pay",
     "wingPay": "Wing Pay",
+    "telegramInvoice": "Telegram ទូទាត់",
+    "openInvoice": "ទូទាត់ឥឡូវនេះ",
+    "telegramInvoiceHint": "នឹងបើកការគិតប្រាក់ Telegram ដើម្បីបញ្ចប់ការទូទាត់",
     "cod": "ទូទាត់ពេលទទួល"
   },
   "wishlist": {

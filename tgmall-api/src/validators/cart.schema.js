@@ -5,6 +5,7 @@ export const addCartItemSchema = z.object({
   product_id: z.string().uuid('商品 ID 格式无效'),
   quantity: z.number().int().min(1).max(99),
   spec: z.record(z.string()).optional().default({}),
+  sku_id: z.string().uuid('SKU ID 格式无效').optional(),
 });
 
 export const updateCartItemSchema = z.object({

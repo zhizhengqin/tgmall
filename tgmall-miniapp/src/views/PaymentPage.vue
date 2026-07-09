@@ -128,6 +128,21 @@
         </button>
       </div>
     </template>
+
+    <!-- Telegram Invoice 支付页 -->
+    <template v-else-if="paymentMethod === 'telegram_invoice'">
+      <div class="redirect-section">
+        <div class="redirect-icon">💳</div>
+        <h2 class="redirect-title">{{ $t('payment.telegramInvoiceTitle') }}</h2>
+        <p class="redirect-hint">{{ $t('payment.telegramInvoiceHint') }}</p>
+        <button class="btn btn-primary redirect-btn" @click="openTelegramInvoice">
+          {{ $t('payment.openInvoice') }}
+        </button>
+        <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
+          {{ $t('payment.changeMethod') }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -135,7 +150,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { createKHQRPayment, createABAPayPayment, createWingPayPayment, getPaymentStatus } from '@/api/payments';
+import { createKHQRPayment, createABAPayPayment, createWingPayPayment, createTelegramInvoicePayment, getPaymentStatus } from '@/api/payments';
 import { cancelOrder } from '@/api/orders';
 import { useLanguageStore } from '@/stores/languageStore';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
@@ -163,6 +178,7 @@ const titleKeys = {
   khqr: 'payment.khqrTitle',
   aba_pay: 'payment.abaPayTitle',
   wing_pay: 'payment.wingPayTitle',
+  telegram_invoice: 'payment.telegramInvoiceTitle',
   cod: 'payment.codTitle',
 };
 const pageTitle = computed(() => t(titleKeys[paymentMethod.value] || 'payment.khqrTitle'));
@@ -174,6 +190,7 @@ const qrData = ref('');
 const supportedBanks = ref([]);
 const expiresAt = ref(null);
 const deepLinkUrl = ref('');
+const invoiceUrl = ref('');
 
 // ── 倒计时 ──
 const timeLeft = ref(15 * 60);
@@ -210,6 +227,11 @@ onMounted(async () => {
   if (paymentMethod.value === 'aba_pay' || paymentMethod.value === 'wing_pay') {
     await fetchDeepLink();
     startTimer();
+    return;
+  }
+
+  if (paymentMethod.value === 'telegram_invoice') {
+    await fetchTelegramInvoice();
     return;
   }
 
@@ -358,6 +380,55 @@ function openPaymentApp(url) {
   } else {
     window.open(url, '_blank');
   }
+}
+
+// ── 获取 Telegram Invoice 链接 ──
+async function fetchTelegramInvoice() {
+  pageState.value = 'loading';
+  try {
+    const res = await createTelegramInvoicePayment(orderId.value);
+    invoiceUrl.value = res.data.invoiceUrl || '';
+    pageState.value = 'invoice-ready';
+    // 在 Telegram 环境中自动打开
+    if (window.Telegram?.WebApp?.openInvoice && invoiceUrl.value) {
+      openTelegramInvoice();
+    }
+  } catch (err) {
+    console.error('获取 Telegram Invoice 失败:', err);
+    pageState.value = 'deep-link-error';
+  }
+}
+
+// ── 调起 Telegram 原生支付 ──
+function openTelegramInvoice() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg?.openInvoice) {
+    openPaymentApp(invoiceUrl.value);
+    return;
+  }
+  if (!invoiceUrl.value) return;
+
+  tg.openInvoice(invoiceUrl.value, (result) => {
+    const status = typeof result === 'string' ? result : result?.status;
+    if (status === 'paid') {
+      router.replace({
+        name: 'PaymentResult',
+        query: {
+          status: 'success',
+          orderId: orderId.value,
+          orderNumber: orderNumber.value,
+          amountUsd: amountUsd.value,
+          amountKhr: amountKhr.value,
+        },
+      });
+    } else if (status === 'cancelled' || status === 'failed') {
+      // 用户取消或支付失败，保持当前页并继续轮询兜底
+      startPolling();
+    } else {
+      // pending / unknown：启动轮询
+      startPolling();
+    }
+  });
 }
 
 // ── 切换支付方式 ──

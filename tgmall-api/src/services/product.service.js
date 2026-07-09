@@ -89,6 +89,21 @@ export async function listProducts({ page, limit, category, q, sort, language = 
 export async function getProductById(id, userId) {
   const product = await prisma.product.findUnique({
     where: { id },
+    include: {
+      skus: {
+        where: { status: 'active' },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          skuCode: true,
+          spec: true,
+          priceUsd: true,
+          priceKhr: true,
+          stock: true,
+          status: true,
+        },
+      },
+    },
   });
 
   if (!product) return null;
@@ -116,6 +131,15 @@ export async function getProductById(id, userId) {
     stock: product.stock,
     images: product.images,
     specs: product.specs,
+    skus: product.skus.map((s) => ({
+      id: s.id,
+      skuCode: s.skuCode,
+      spec: s.spec,
+      priceUsd: Number(s.priceUsd),
+      priceKhr: s.priceKhr,
+      stock: s.stock,
+      status: s.status,
+    })),
     category: product.category,
     salesCount: product.salesCount,
     tags: product.tags || [],

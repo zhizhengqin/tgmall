@@ -6,6 +6,11 @@ const prismaMock = {
   product: {
     findUnique: jest.fn(),
   },
+  productSku: {
+    findUnique: jest.fn(() => null),
+    findFirst: jest.fn(() => null),
+    findMany: jest.fn(() => []),
+  },
   userCoupon: {
     findFirst: jest.fn(),
   },

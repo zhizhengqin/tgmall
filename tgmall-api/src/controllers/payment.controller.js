@@ -40,6 +40,19 @@ export async function wingPay(req, res, next) {
   }
 }
 
+/** POST /payments/telegram_invoice — 发起 Telegram Invoice 支付 */
+export async function telegramInvoice(req, res, next) {
+  try {
+    const result = await paymentService.createTelegramInvoicePayment(
+      req.user.userId,
+      req.validatedBody.order_id,
+    );
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 /** GET /payments/status/:orderId — 查询支付状态（前端轮询） */
 export async function status(req, res, next) {
   try {

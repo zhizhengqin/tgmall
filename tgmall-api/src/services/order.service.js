@@ -8,13 +8,33 @@ import { sendOrderNotification } from '../integrations/telegram.js';
 import { calculateShippingFee } from './shopConfig.service.js';
 import { getExchangeRate } from './systemConfig.service.js';
 
+function specKey(spec) {
+  if (!spec || Object.keys(spec).length === 0) return '';
+  return Object.keys(spec)
+    .sort()
+    .map((k) => `${k}:${spec[k]}`)
+    .join('|');
+}
+
+async function resolveOrderSku(tx, item) {
+  if (item.skuId) {
+    return tx.productSku.findFirst({ where: { id: item.skuId, productId: item.productId, status: 'active' } });
+  }
+  const sortedSpec = specKey(item.spec || {});
+  if (!sortedSpec) {
+    return tx.productSku.findFirst({ where: { productId: item.productId, skuCode: 'DEFAULT', status: 'active' } });
+  }
+  const skus = await tx.productSku.findMany({ where: { productId: item.productId, status: 'active' } });
+  return skus.find((s) => specKey(s.spec) === sortedSpec) || null;
+}
+
 export async function createOrder(userId, body) {
   const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
   const shippingAddressId = shipping_address_id;
   const couponId = coupon_id;
   const paymentMethod = payment_method;
   // 将 snake_case 的 items 转为 camelCase
-  const items = rawItems.map(i => ({ ...i, productId: i.product_id, quantity: i.quantity, spec: i.spec }));
+  const items = rawItems.map(i => ({ ...i, productId: i.product_id, quantity: i.quantity, spec: i.spec, skuId: i.sku_id }));
 
   // 1. 验证收货地址
   const address = await prisma.address.findFirst({ where: { id: shippingAddressId, userId } });
@@ -34,6 +54,7 @@ export async function createOrder(userId, body) {
       let totalKhr = 0;
       const itemDetails = []; // 记录每个商品的单价快照
       const productMap = new Map(); // 锁定后的商品快照，供后续扣减库存使用
+      const skuMap = new Map(); // 锁定后的 SKU 快照
 
       for (const item of items) {
         const [product] = await tx.$queryRaw`
@@ -44,16 +65,22 @@ export async function createOrder(userId, body) {
         `;
         if (!product) throw new AppError(`商品不存在: ${item.productId}`, 404, 'NOT_FOUND');
         if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
-        if (product.stock < item.quantity) {
-          throw new AppError(`"${product.name_km}"库存不足，仅剩${product.stock}件`, 400, 'INSUFFICIENT_STOCK');
+
+        // 解析 SKU：优先使用传入 skuId，否则按 spec 匹配
+        const sku = await resolveOrderSku(tx, item);
+        const skuStock = sku ? sku.stock : product.stock;
+        const skuPriceUsd = sku ? Number(sku.priceUsd) : Number(product.price_usd);
+        const skuPriceKhr = sku ? sku.priceKhr : product.price_khr;
+
+        if (skuStock < item.quantity) {
+          throw new AppError(`"${product.name_km}"库存不足，仅剩${skuStock}件`, 400, 'INSUFFICIENT_STOCK');
         }
 
-        const unitPriceUsd = Number(product.price_usd);
-        const unitPriceKhr = product.price_khr;
-        totalUsd += unitPriceUsd * item.quantity;
-        totalKhr += unitPriceKhr * item.quantity;
-        itemDetails.push({ ...item, unitPriceUsd, unitPriceKhr });
+        totalUsd += skuPriceUsd * item.quantity;
+        totalKhr += skuPriceKhr * item.quantity;
+        itemDetails.push({ ...item, unitPriceUsd: skuPriceUsd, unitPriceKhr: skuPriceKhr, skuId: sku?.id });
         productMap.set(item.productId, product);
+        if (sku) skuMap.set(sku.id, sku);
       }
 
       // 1.1 校验地址城市与配送规则
@@ -99,25 +126,25 @@ export async function createOrder(userId, body) {
       // 3c. 预扣库存 + 写 StockLog
       for (const item of items) {
         const productBefore = productMap.get(item.productId);
-        const newStock = productBefore.stock - item.quantity;
+        const newProductStock = productBefore.stock - item.quantity;
 
         await tx.product.update({
           where: { id: item.productId },
-          data: { stock: newStock, ...(newStock === 0 ? { status: 'inactive' } : {}) },
+          data: { stock: newProductStock, ...(newProductStock === 0 ? { status: 'inactive' } : {}) },
         });
 
         await tx.stockLog.create({
           data: {
             productId: item.productId,
             beforeQty: productBefore.stock,
-            afterQty: newStock,
+            afterQty: newProductStock,
             changeQty: -item.quantity,
             reason: 'order_create',
           },
         });
 
         // 库存归零自动下架
-        if (newStock === 0) {
+        if (newProductStock === 0) {
           await tx.stockLog.create({
             data: {
               productId: item.productId,
@@ -125,6 +152,16 @@ export async function createOrder(userId, body) {
               reason: 'auto_delist',
               note: '库存归零自动下架',
             },
+          });
+        }
+
+        // 扣减 SKU 库存
+        const skuId = itemDetails.find((d) => d.productId === item.productId && JSON.stringify(d.spec) === JSON.stringify(item.spec))?.skuId;
+        if (skuId) {
+          const skuBefore = skuMap.get(skuId);
+          await tx.productSku.update({
+            where: { id: skuId },
+            data: { stock: skuBefore.stock - item.quantity },
           });
         }
       }
@@ -209,6 +246,7 @@ export async function createOrder(userId, body) {
           items: {
             create: itemDetails.map((item, idx) => ({
               productId: item.productId,
+              skuId: item.skuId || null,
               quantity: item.quantity,
               priceUsd: distributedUsd[idx],
               priceKhr: distributedKhr[idx],

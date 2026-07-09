@@ -67,11 +67,32 @@ model Product {
   inventoryChecks InventoryCheck[]
   wishlists       Wishlist[]
   flashDeals      FlashDeal[]
+  skus            ProductSku[]
 
   @@index([category, status, createdAt(sort: Desc)])
   @@index([priceUsd])
   @@index([salesCount(sort: Desc)])
   @@map("products")
+}
+
+model ProductSku {
+  id         String   @id @default(uuid()) @db.Uuid
+  productId  String   @map("product_id") @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  skuCode    String   @map("sku_code") @db.VarChar(100)
+  spec       Json     @default("{}") @db.JsonB
+  priceUsd   Decimal  @map("price_usd") @db.Decimal(10,2)
+  priceKhr   Int      @map("price_khr")
+  stock      Int      @default(0)
+  status     String   @default("active") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  orderItems OrderItem[]
+
+  @@unique([productId, skuCode])
+  @@index([productId, status])
+  @@map("product_skus")
 }
 
 model Order {
@@ -115,6 +136,8 @@ model OrderItem {
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId  String   @map("product_id") @db.Uuid
   product    Product  @relation(fields: [productId], references: [id])
+  skuId      String?  @map("sku_id") @db.Uuid
+  sku        ProductSku? @relation(fields: [skuId], references: [id])
   quantity   Int
   priceUsd   Decimal  @map("price_usd") @db.Decimal(10,2)
   priceKhr   Int      @map("price_khr")
@@ -123,6 +146,7 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@index([skuId])
   @@map("order_items")
 }
 
