@@ -83,6 +83,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useUserStore } from '@/stores/userStore';
 import { sendSms, loginByPhone } from '@/api/auth';
+import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -97,17 +98,17 @@ const loading = ref(false);
 const errorMsg = ref('');
 
 function onPhoneInput() {
-  // 自动格式化 +855 前缀
-  if (phone.value && !phone.value.startsWith('+')) {
-    phone.value = '+' + phone.value.replace(/[^0-9]/g, '');
-  }
-  phone.value = phone.value.replace(/[^0-9+]/g, '');
+  phone.value = formatPhoneInput(phone.value);
 }
 
 let cooldownTimer = null;
 async function handleSendSms() {
   errorMsg.value = '';
-  if (!phone.value || phone.value.length < 10) {
+  if (!phone.value) {
+    errorMsg.value = t('error.enterPhone');
+    return;
+  }
+  if (!isValidPhone(phone.value)) {
     errorMsg.value = t('error.invalidPhone');
     return;
   }
@@ -129,6 +130,7 @@ async function handleSendSms() {
 async function handleLogin(mode) {
   errorMsg.value = '';
   if (!phone.value) { errorMsg.value = t('error.enterPhone'); return; }
+  if (!isValidPhone(phone.value)) { errorMsg.value = t('error.invalidPhone'); return; }
   loading.value = true;
   try {
     const payload = { phone: phone.value };

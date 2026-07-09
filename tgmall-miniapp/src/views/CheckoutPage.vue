@@ -98,7 +98,7 @@
             </label>
             <label class="form-field">
               <span>{{ $t('profile.form.phone') }}</span>
-              <input v-model="addressForm.phone" type="tel" placeholder="+855..." />
+              <input v-model="addressForm.phone" type="tel" placeholder="+855..." @input="addressForm.phone = formatPhoneInput(addressForm.phone)" />
             </label>
             <label class="form-field">
               <span>{{ $t('profile.form.province') }}</span>
@@ -155,6 +155,7 @@ import { createOrder } from '@/api/orders';
 import { checkoutPreview } from '@/api/cart';
 import { useCityStore } from '@/stores/cityStore.js';
 import { useShopConfig } from '@/composables/useShopConfig.js';
+import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const router = useRouter();
@@ -238,6 +239,10 @@ function specStr(spec) { return Object.values(spec || {}).join(' / '); }
 async function saveAddress() {
   if (!addressForm.value.recipient_name || !addressForm.value.phone || !addressForm.value.province || !addressForm.value.district || !addressForm.value.detail) {
     alert(t('checkout.formIncomplete'));
+    return;
+  }
+  if (!isValidPhone(addressForm.value.phone)) {
+    alert(t('error.invalidPhone'));
     return;
   }
   savingAddress.value = true;

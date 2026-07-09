@@ -39,7 +39,7 @@
 
         <div v-if="showAddrForm" class="addr-form">
           <input v-model="addrForm.recipient_name" :placeholder="$t('profile.form.name')" />
-          <input v-model="addrForm.phone" :placeholder="$t('profile.form.phone')" />
+          <input v-model="addrForm.phone" :placeholder="$t('profile.form.phone')" @input="addrForm.phone = formatPhoneInput(addrForm.phone)" />
           <input v-model="addrForm.province" :placeholder="$t('profile.form.province')" />
           <input v-model="addrForm.district" :placeholder="$t('profile.form.district')" />
           <input v-model="addrForm.detail" :placeholder="$t('profile.form.detail')" />
@@ -67,7 +67,7 @@
       <div v-if="showBindPhone" class="bind-phone-section">
         <p class="bind-hint">{{ $t('auth.bindPhoneHint') }}</p>
         <div class="bind-row">
-          <input v-model="bindForm.phone" type="tel" :placeholder="$t('auth.phonePlaceholder')" class="input" maxlength="15" />
+          <input v-model="bindForm.phone" type="tel" :placeholder="$t('auth.phonePlaceholder')" class="input" maxlength="15" @input="bindForm.phone = formatPhoneInput(bindForm.phone)" />
         </div>
         <div class="bind-row">
           <input v-model="bindForm.code" type="tel" :placeholder="$t('auth.verifyCode')" class="input code-input" maxlength="6" />
@@ -110,6 +110,7 @@ import { getAddresses, createAddress, deleteAddress } from '@/api/addresses';
 import { sendSms, bindPhone as bindPhoneApi } from '@/api/auth';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { proxifyImageUrl } from '@/utils/imageProxy.js';
+import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const { locale, t } = useI18n();
@@ -156,6 +157,10 @@ async function loadAddresses() {
 }
 
 async function handleSaveAddr() {
+  if (!isValidPhone(addrForm.phone)) {
+    alert(t('error.invalidPhone'));
+    return;
+  }
   try {
     await createAddress({ ...addrForm });
     Object.assign(addrForm, { recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
@@ -179,6 +184,8 @@ let bindTimer = null;
 
 async function handleBindSendSms() {
   bindError.value = '';
+  if (!bindForm.phone) { bindError.value = t('error.enterPhone'); return; }
+  if (!isValidPhone(bindForm.phone)) { bindError.value = t('error.invalidPhone'); return; }
   try {
     await sendSms(bindForm.phone, 'bind_phone');
     bindCooldown.value = 60;
@@ -188,6 +195,8 @@ async function handleBindSendSms() {
 
 async function handleBindPhone() {
   bindError.value = '';
+  if (!bindForm.phone) { bindError.value = t('error.enterPhone'); return; }
+  if (!isValidPhone(bindForm.phone)) { bindError.value = t('error.invalidPhone'); return; }
   if (!bindForm.code) { bindError.value = t('error.enterCode'); return; }
   bindLoading.value = true;
   try {

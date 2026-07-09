@@ -2,11 +2,25 @@
 import * as productService from '../services/product.service.js';
 import { getPagination } from '../utils/pagination.js';
 import { AppError } from '../utils/AppError.js';
+import { productListQuerySchema } from '../validators/product.schema.js';
+
+function parsePrice(value) {
+  if (value === undefined || value === null || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : undefined;
+}
 
 export async function list(req, res, next) {
   try {
     const { page, limit } = getPagination(req.query);
-    const { category, q, sort = 'newest' } = req.query;
+    const parsed = req.validatedQuery || productListQuerySchema.parse(req.query);
+    const { category, q, sort = 'newest' } = parsed;
+    const minPrice = parsePrice(parsed.min_price);
+    const maxPrice = parsePrice(parsed.max_price);
+
+    if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+      return next(new AppError('最低价格不能高于最高价格', 400, 'INVALID_PRICE_RANGE'));
+    }
 
     const result = await productService.listProducts({
       page,
@@ -14,6 +28,8 @@ export async function list(req, res, next) {
       category,
       q,
       sort,
+      minPrice,
+      maxPrice,
       language: req.headers['accept-language'] || 'km',
       userId: req.user?.userId,
     });

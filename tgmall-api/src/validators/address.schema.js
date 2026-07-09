@@ -1,7 +1,7 @@
 // 收货地址 Zod Schema
 import { z } from 'zod';
 
-const phoneRegex = /^\+855\d{8,9}$/;
+const phoneRegex = /^\+855[1-9]\d{7,8}$/;
 
 export const createAddressSchema = z.object({
   recipient_name: z.string().min(1, '收件人姓名不能为空').max(100, '姓名最长100字符'),

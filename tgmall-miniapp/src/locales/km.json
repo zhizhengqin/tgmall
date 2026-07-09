@@ -32,8 +32,21 @@
     "stockLeft": "សល់ {count} ប៉ុណ្ណោះ",
     "description": "ការពិពណ៌នា",
     "sales": "បានលក់",
+    "likes": "ចូលចិត្ត",
     "stockHint": "សល់ {count} ប៉ុណ្ណោះ",
     "notFound": "ទំនិញមិនមាន ឬបានដកចេញ"
+  },
+  "filter": {
+    "priceRange": "ជួរតម្លៃ",
+    "min": "អប្បបរមា",
+    "max": "អតិបរមា",
+    "clear": "សម្អាត"
+  },
+  "time": {
+    "day": "ថ្ងៃ",
+    "hour": "ម៉ោង",
+    "minute": "នាទី",
+    "second": "វិនាទី"
   },
   "cart": {
     "title": "កន្ត្រកទំនិញ",

@@ -1,7 +1,17 @@
 // 商品服务 — 列表查询 + 详情
 import prisma from '../config/database.js';
 
-export async function listProducts({ page, limit, category, q, sort, language = 'km', userId }) {
+export async function listProducts({
+  page,
+  limit,
+  category,
+  q,
+  sort,
+  minPrice,
+  maxPrice,
+  language = 'km',
+  userId,
+}) {
   const skip = (page - 1) * limit;
 
   // 构建查询条件
@@ -16,6 +26,11 @@ export async function listProducts({ page, limit, category, q, sort, language = 
       { nameEn: { contains: q, mode: 'insensitive' } },
       { nameZh: { contains: q, mode: 'insensitive' } },
     ];
+  }
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.priceUsd = {};
+    if (minPrice !== undefined) where.priceUsd.gte = minPrice;
+    if (maxPrice !== undefined) where.priceUsd.lte = maxPrice;
   }
 
   // 排序映射
@@ -39,6 +54,7 @@ export async function listProducts({ page, limit, category, q, sort, language = 
         nameZh: true,
         priceUsd: true,
         priceKhr: true,
+        stock: true,
         images: true,
         category: true,
         salesCount: true,
@@ -49,15 +65,42 @@ export async function listProducts({ page, limit, category, q, sort, language = 
     prisma.product.count({ where }),
   ]);
 
+  const productIds = items.map((i) => i.id);
+
   // 查询当前用户的收藏状态
   let favoritedIds = new Set();
-  if (userId) {
-    const productIds = items.map((i) => i.id);
+  if (userId && productIds.length > 0) {
     const wishlist = await prisma.wishlist.findMany({
       where: { userId, productId: { in: productIds } },
       select: { productId: true },
     });
     favoritedIds = new Set(wishlist.map((w) => w.productId));
+  }
+
+  // 聚合收藏数（所有用户）
+  const likesMap = {};
+  if (productIds.length > 0) {
+    const likesRows = await prisma.wishlist.groupBy({
+      by: ['productId'],
+      where: { productId: { in: productIds } },
+      _count: { productId: true },
+    });
+    for (const row of likesRows) {
+      likesMap[row.productId] = row._count.productId;
+    }
+  }
+
+  // 聚合 active SKU 数
+  const skuCountMap = {};
+  if (productIds.length > 0) {
+    const skuRows = await prisma.productSku.groupBy({
+      by: ['productId'],
+      where: { productId: { in: productIds }, status: 'active' },
+      _count: { productId: true },
+    });
+    for (const row of skuRows) {
+      skuCountMap[row.productId] = row._count.productId;
+    }
   }
 
   // 根据用户语言返回对应的名称字段
@@ -68,9 +111,12 @@ export async function listProducts({ page, limit, category, q, sort, language = 
           : item.nameKm,
     priceUsd: Number(item.priceUsd),
     priceKhr: item.priceKhr,
+    stock: item.stock,
     thumbnail: item.images?.[0]?.thumb_url || item.images?.[0]?.url || null,
     category: item.category,
     salesCount: item.salesCount,
+    likesCount: likesMap[item.id] || 0,
+    skuCount: skuCountMap[item.id] || 0,
     tags: item.tags || [],
     isFavorited: favoritedIds.has(item.id),
     createdAt: item.createdAt,

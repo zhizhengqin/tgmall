@@ -24,6 +24,33 @@
 
       <!-- 右侧内容区 -->
       <div class="main-content">
+        <!-- 价格筛选 -->
+        <div class="filter-bar">
+          <span class="filter-label">{{ $t('filter.priceRange') }}</span>
+          <input
+            v-model.number="minPrice"
+            type="number"
+            min="0"
+            step="0.01"
+            class="price-input"
+            :placeholder="$t('filter.min')"
+            @input="onPriceInput"
+          />
+          <span class="filter-sep">-</span>
+          <input
+            v-model.number="maxPrice"
+            type="number"
+            min="0"
+            step="0.01"
+            class="price-input"
+            :placeholder="$t('filter.max')"
+            @input="onPriceInput"
+          />
+          <button v-if="hasPriceFilter" class="filter-clear" @click="clearPriceFilter">
+            {{ $t('filter.clear') }}
+          </button>
+        </div>
+
         <!-- 排序栏 + 视图切换 -->
         <div class="sort-bar">
           <button
@@ -68,6 +95,10 @@
               :thumbnail="product.thumbnail"
               :merchant-name="product.merchantName"
               :stock="product.stock"
+              :sales-count="product.salesCount"
+              :likes-count="product.likesCount"
+              :sku-count="product.skuCount"
+              :is-favorited="product.isFavorited"
               :tags="product.tags"
               :layout="viewMode"
               :show-quick-add="true"
@@ -157,6 +188,22 @@ const page = ref(1);
 const hasMore = ref(true);
 const isLoading = ref(false);
 const loadError = ref('');
+const minPrice = ref('');
+const maxPrice = ref('');
+let priceTimer = null;
+
+const hasPriceFilter = computed(() => minPrice.value !== '' || maxPrice.value !== '');
+
+function onPriceInput() {
+  clearTimeout(priceTimer);
+  priceTimer = setTimeout(() => fetchProducts(true), 400);
+}
+
+function clearPriceFilter() {
+  minPrice.value = '';
+  maxPrice.value = '';
+  fetchProducts(true);
+}
 
 async function fetchProducts(reset = false) {
   if (isLoading.value || (!hasMore.value && !reset)) return;
@@ -172,6 +219,8 @@ async function fetchProducts(reset = false) {
   try {
     const params = { page: page.value, limit: 20, sort: activeSort.value };
     if (activeCategory.value !== 'all') params.category = activeCategory.value;
+    if (minPrice.value !== '' && minPrice.value >= 0) params.min_price = Number(minPrice.value);
+    if (maxPrice.value !== '' && maxPrice.value >= 0) params.max_price = Number(maxPrice.value);
 
     const res = await getProducts(params);
 
@@ -322,6 +371,42 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/* 价格筛选栏 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.filter-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.price-input {
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  background: var(--bg);
+}
+.filter-sep {
+  color: var(--muted);
+  font-size: 12px;
+}
+.filter-clear {
+  font-size: 12px;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  margin-left: auto;
+  cursor: pointer;
 }
 .sort-bar::-webkit-scrollbar { display: none; }
 .sort-btn {

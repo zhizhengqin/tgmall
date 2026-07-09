@@ -32,8 +32,21 @@
     "stockLeft": "Only {count} left",
     "description": "Description",
     "sales": "Sold",
+    "likes": "Likes",
     "stockHint": "Only {count} left",
     "notFound": "Product not found or removed"
+  },
+  "filter": {
+    "priceRange": "Price range",
+    "min": "Min",
+    "max": "Max",
+    "clear": "Clear"
+  },
+  "time": {
+    "day": "d",
+    "hour": "h",
+    "minute": "m",
+    "second": "s"
   },
   "cart": {
     "title": "Shopping Cart",

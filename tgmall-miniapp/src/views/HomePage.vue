@@ -118,6 +118,10 @@
           :thumbnail="product.thumbnail"
           :merchant-name="product.merchantName"
           :stock="product.stock"
+          :sales-count="product.salesCount"
+          :likes-count="product.likesCount"
+          :sku-count="product.skuCount"
+          :is-favorited="product.isFavorited"
           :tags="product.tags"
           :show-quick-add="true"
         />

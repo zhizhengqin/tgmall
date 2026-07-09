@@ -32,8 +32,21 @@
     "stockLeft": "仅剩 {count} 件",
     "description": "商品描述",
     "sales": "已售",
+    "likes": "收藏",
     "stockHint": "仅剩 {count} 件",
     "notFound": "商品不存在或已下架"
+  },
+  "filter": {
+    "priceRange": "价格区间",
+    "min": "最低",
+    "max": "最高",
+    "clear": "清除"
+  },
+  "time": {
+    "day": "天",
+    "hour": "时",
+    "minute": "分",
+    "second": "秒"
   },
   "cart": {
     "title": "购物车",
