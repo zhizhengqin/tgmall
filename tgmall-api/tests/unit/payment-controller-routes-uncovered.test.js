@@ -237,8 +237,8 @@ describe('payment.routes', () => {
   it('TC-PAY-ROUTE-006: GET /status/:orderId 使用 status 控制器', () => {
     const route = findRoute('/status/:orderId', 'get');
     expect(route).toBeDefined();
-    expect(route.stack).toHaveLength(1);
-    expect(route.stack[0].handle.name).toBe('status');
+    expect(route.stack).toHaveLength(2);
+    expect(route.stack[route.stack.length - 1].handle.name).toBe('status');
   });
 });
 

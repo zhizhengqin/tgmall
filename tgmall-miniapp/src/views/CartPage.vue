@@ -125,6 +125,8 @@ async function loadCart() {
     const res = await getCart();
     groups.value = res.data.groups || [];
     cartStore.items = groups.value.flatMap(g => g.items);
+    // 默认全选，避免用户进入购物车后合计为 0
+    checkedIds.value = cartStore.items.map(i => i.id);
   } catch { groups.value = []; }
   loading.value = false;
 }

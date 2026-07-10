@@ -1,5 +1,6 @@
 // 支付路由 — /api/v1/payments/*
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { auth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import {
@@ -20,8 +21,15 @@ router.use(auth);
 // 生成 KHQR 支付二维码
 router.post('/khqr', validate(khqrPaymentSchema), ctrl.khqr);
 
-// 查询支付状态（前端轮询）
-router.get('/status/:orderId', ctrl.status);
+// 查询支付状态（前端轮询）—— 单独放宽限流：每 15 分钟 600 次，支持 3 秒轮询
+const statusRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { code: 'RATE_LIMIT', message: '请求过于频繁，请稍后再试' } },
+});
+router.get('/status/:orderId', statusRateLimit, ctrl.status);
 
 router.post('/aba_pay', validate(abaPayPaymentSchema), ctrl.abaPay);
 router.post('/wing_pay', validate(wingPayPaymentSchema), ctrl.wingPay);
