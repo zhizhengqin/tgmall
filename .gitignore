@@ -9,3 +9,36 @@ coverage/
 test-results/
 playwright-report/
 
+# 之前生成的未审查测试文件（待逐个审过后移除对应行）
+tgmall-api/tests/unit/aba-pay-uncovered.test.js
+tgmall-api/tests/unit/address-service-uncovered.test.js
+tgmall-api/tests/unit/admin-service-uncovered.test.js
+tgmall-api/tests/unit/cache-service-uncovered.test.js
+tgmall-api/tests/unit/cart-controller.test.js
+tgmall-api/tests/unit/cart-schema.test.js
+tgmall-api/tests/unit/cart-service-uncovered.test.js
+tgmall-api/tests/unit/config-uncovered.test.js
+tgmall-api/tests/unit/inventory-service-uncovered.test.js
+tgmall-api/tests/unit/merchant-service-uncovered.test.js
+tgmall-api/tests/unit/notification-service-uncovered.test.js
+tgmall-api/tests/unit/order-service-uncovered.test.js
+tgmall-api/tests/unit/payment-order-schemas-uncovered.test.js
+tgmall-api/tests/unit/product-routes-uncovered.test.js
+tgmall-api/tests/unit/product-service-uncovered.test.js
+tgmall-api/tests/unit/shopConfig-routes-uncovered.test.js
+tgmall-api/tests/unit/sms-uncovered.test.js
+tgmall-api/tests/unit/telegram-payments-uncovered.test.js
+tgmall-api/tests/unit/telegram-uncovered.test.js
+tgmall-api/tests/unit/upload-service-uncovered.test.js
+tgmall-api/tests/unit/validators-uncovered.test.js
+tgmall-api/tests/unit/webhook-routes-uncovered.test.js
+tgmall-api/tests/unit/wing-pay-uncovered.test.js
+tgmall-miniapp/tests/unit/CityPicker.test.js
+tgmall-miniapp/tests/unit/FlashDealCard.test.js
+tgmall-miniapp/tests/unit/MiniCartBar.test.js
+tgmall-miniapp/tests/unit/ProductCard.test.js
+tgmall-miniapp/tests/unit/StaticInfoPage.test.js
+tgmall-miniapp/tests/unit/phone.test.js
+tgmall-miniapp/tests/unit/useShopConfig.exchangeRate.test.js
+tgmall-miniapp/tests/unit/useTelegram.test.js
+
