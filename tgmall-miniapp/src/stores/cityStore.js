@@ -36,12 +36,17 @@ export const useCityStore = defineStore('city', () => {
     }
   }
 
+  const GPS_PROMPT_KEY = 'tgmall_gps_prompted';
+
   /**
    * 通过 Telegram WebApp GPS 定位匹配最近城市
-   * 仅在用户未手动选择城市时自动调用
+   * 仅在用户未手动选择城市时自动调用，且同一次会话只尝试一次
    */
   async function detectCityByGPS() {
     if (detecting.value) return;
+    // 同一次 Mini App 会话内只弹出一次位置授权提示
+    if (sessionStorage.getItem(GPS_PROMPT_KEY)) return;
+    sessionStorage.setItem(GPS_PROMPT_KEY, '1');
     detecting.value = true;
 
     try {
