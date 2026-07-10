@@ -1,4 +1,4 @@
-// 支付服务 — KHQR 支付统一入口 + 回调处理
+// 支付服务 — KHQR / ABA Pay / Wing Pay / Telegram Invoice 统一入口 + 回调处理
 import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
@@ -321,17 +321,17 @@ export async function handlePaymentCallback(payload) {
     console.error(`未知支付渠道回调: provider=${provider}`);
     throw new AppError('未知的支付渠道', 400, 'INVALID_PROVIDER');
   }
-  const isValid = verifyFn(payload, signature);
+  const isValid = await verifyFn(payload, signature);
   if (!isValid) {
     console.error(`支付回调验签失败: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     throw new AppError('签名验证失败', 401, 'UNAUTHORIZED');
   }
 
   // ---- 2. 幂等检查（Redis 分布式防重） ----
-  // 注意：幂等标记在事务成功后设置（见第 224 行），避免事务失败导致订单 stuck
+  // 使用 SET NX 原子抢占处理锁，事务成功后再改为长期标记
   const idempotencyKey = `payment:callback:${provider}:${transactionId}`;
-  const isDuplicate = await redis.get(idempotencyKey);
-  if (isDuplicate) {
+  const claimed = await redis.set(idempotencyKey, 'processing', 'NX', 'EX', 60);
+  if (!claimed) {
     console.warn(`重复支付回调已忽略: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     return { status: 'duplicate', message: '回调已处理过' };
   }
@@ -496,10 +496,10 @@ export async function handleTelegramPaymentUpdate(update) {
   }
 
   if (paymentInfo.type === 'successful_payment') {
-    // 幂等检查
+    // 幂等检查：原子抢占处理锁
     const idempotencyKey = `payment:callback:telegram:${paymentInfo.telegramPaymentChargeId}`;
-    const isDuplicate = await redis.get(idempotencyKey);
-    if (isDuplicate) {
+    const claimed = await redis.set(idempotencyKey, 'processing', 'NX', 'EX', 60);
+    if (!claimed) {
       return { status: 'duplicate', message: '回调已处理过' };
     }
 
@@ -552,8 +552,8 @@ export async function handleTelegramPaymentUpdate(update) {
           select: { id: true, telegramId: true, language: true },
         });
         if (user?.telegramId) {
-          sendOrderNotification(
-            { telegramId: user.telegramId, languageCode: user.language },
+          notificationService.notifyUserOrder(
+            { userId: user.id, telegramId: user.telegramId, languageCode: user.language },
             order, 'paid',
           ).catch((e) => console.error('[Bot] Telegram 支付成功通知失败:', e.message));
         }
