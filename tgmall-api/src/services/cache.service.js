@@ -43,9 +43,39 @@ export async function incr(key) {
   }
 }
 
+export async function delPattern(pattern) {
+  return new Promise((resolve, reject) => {
+    const stream = redis.scanStream({ match: pattern, count: 100 });
+    const pipeline = redis.pipeline();
+    let keyCount = 0;
+    stream.on('data', (keys) => {
+      if (keys.length) {
+        keys.forEach((key) => pipeline.del(key));
+        keyCount += keys.length;
+      }
+    });
+    stream.on('end', async () => {
+      try {
+        if (keyCount > 0) await pipeline.exec();
+        resolve(keyCount);
+      } catch (err) {
+        reject(err);
+      }
+    });
+    stream.on('error', (err) => {
+      console.error('[Cache] scanStream 失败:', err.message);
+      reject(err);
+    });
+  });
+}
+
 export async function invalidateProductCache(productId) {
   if (!productId) return;
-  await delKey(`products:detail:v1:${productId}`);
+  try {
+    await delPattern(`products:detail:v1:${productId}:*`);
+  } catch (err) {
+    console.error('[Cache] invalidateProductCache 失败:', err.message);
+  }
 }
 
 export async function bumpProductListVersion() {
