@@ -159,6 +159,37 @@ export async function setDefaultCustomerService(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// ---- Admin: Hot Searches ----
+export async function listHotSearches(req, res, next) {
+  try {
+    const { page, limit } = getPagination(req.query);
+    const { status } = req.query;
+    const result = await shopConfig.listHotSearches({ page, limit, status });
+    res.json(ok(result.items, { total: result.total, page: result.page, limit: result.limit, totalPages: result.totalPages, hasNext: result.hasNext }));
+  } catch (err) { next(err); }
+}
+
+export async function createHotSearch(req, res, next) {
+  try {
+    const data = await shopConfig.createHotSearch(req.validatedBody);
+    res.status(201).json(ok(data));
+  } catch (err) { next(err); }
+}
+
+export async function updateHotSearch(req, res, next) {
+  try {
+    const data = await shopConfig.updateHotSearch(req.params.id, req.validatedBody);
+    res.json(ok(data));
+  } catch (err) { next(err); }
+}
+
+export async function toggleHotSearch(req, res, next) {
+  try {
+    const data = await shopConfig.toggleHotSearch(req.params.id);
+    res.json(ok(data));
+  } catch (err) { next(err); }
+}
+
 // ---- Public: Mini App ----
 export async function publicBanners(req, res, next) {
   try {
@@ -198,10 +229,26 @@ export async function publicDefaultCustomerService(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// GET /hot-searches — 公开热门搜索词
+export async function publicHotSearches(_req, res, next) {
+  try {
+    const data = await shopConfig.listActiveHotSearches();
+    res.json(ok(data));
+  } catch (err) { next(err); }
+}
+
 // GET /login-banner — 登录引导横幅配置
 export async function publicLoginBanner(_req, res, next) {
   try {
     const settings = await systemConfig.getPlatformSettings();
     res.json({ success: true, data: { image: settings.loginBannerImage || '' } });
+  } catch (err) { next(err); }
+}
+
+// GET /exchange-rate — 公开汇率
+export async function publicExchangeRate(_req, res, next) {
+  try {
+    const rate = await systemConfig.getExchangeRate();
+    res.json({ success: true, data: { rate } });
   } catch (err) { next(err); }
 }

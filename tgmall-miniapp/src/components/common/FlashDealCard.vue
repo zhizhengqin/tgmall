@@ -31,15 +31,25 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
   deal: { type: Object, required: true },
 });
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const imgFail = ref(false);
+const now = ref(Date.now());
+let timer = null;
+
+onMounted(() => {
+  timer = setInterval(() => { now.value = Date.now(); }, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
 
 const productName = computed(() => {
   const p = props.deal.product || {};
@@ -62,17 +72,32 @@ const progressPct = computed(() => {
 
 const timeLeft = computed(() => {
   if (!props.deal.endAt) return null;
-  const now = Date.now();
   const end = new Date(props.deal.endAt).getTime();
-  const diff = end - now;
+  const diff = end - now.value;
   if (diff <= 0) return null;
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  if (days > 0) return `${days}天${hours}时`;
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}时${mins}分`;
+  const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const d = t('time.day');
+  const h = t('time.hour');
+  const m = t('time.minute');
+  const s = t('time.second');
+
+  if (days > 0) {
+    return `${days}${d}${pad(hours)}${h}${pad(mins)}${m}${pad(secs)}${s}`;
+  }
+  if (hours > 0) {
+    return `${hours}${h}${pad(mins)}${m}${pad(secs)}${s}`;
+  }
+  return `${mins}${m}${pad(secs)}${s}`;
 });
+
+function pad(n) {
+  return n < 10 ? `0${n}` : String(n);
+}
 </script>
 
 <style scoped>

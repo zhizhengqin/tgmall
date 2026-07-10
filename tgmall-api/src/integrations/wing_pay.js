@@ -55,14 +55,33 @@ function generateMockDeepLink({ orderNumber, amountUsd, amountKhr, expiresAt }) 
 
 /**
  * 验证 Wing Pay 回调签名
- * 真实算法需对接 Wing 官方文档；目前未实现真实验签，生产环境应拒绝。
+ * 生产环境默认使用 HMAC-SHA256（常见模式），真实算法需按 Wing 官方文档调整。
+ * 未配置 WING_PAY_SECRET 时拒绝回调，防止伪造。
  */
 export function verifySignature(payload, signature) {
   if (isMockMode()) {
     return signature === 'mock-signature' || signature?.startsWith('MOCK-');
   }
-  console.error('Wing Pay 真实回调验签未实现，拒绝回调');
-  return false;
+
+  const secret = config.wingPaySecret;
+  if (!secret) {
+    console.error('Wing Pay 未配置 WING_PAY_SECRET，拒绝回调');
+    return false;
+  }
+
+  const signString = Object.keys(payload)
+    .filter((k) => k !== 'signature')
+    .sort()
+    .map((k) => `${k}=${payload[k]}`)
+    .join('&');
+
+  const expected = crypto.createHmac('sha256', secret).update(signString).digest('hex');
+  const safeSignature = String(signature || '');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(safeSignature));
+  } catch {
+    return false;
+  }
 }
 
 export default { generateDeepLink, isMockMode, verifySignature };

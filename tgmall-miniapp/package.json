@@ -1,6 +1,6 @@
 {
   "name": "tgmall-miniapp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TG Mall 消费者端 — Telegram Mini App",
   "private": true,
   "type": "module",

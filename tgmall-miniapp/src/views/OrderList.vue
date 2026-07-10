@@ -48,16 +48,19 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLanguageStore } from '@/stores/languageStore';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import { getOrders } from '@/api/orders';
 import BottomNav from '@/components/common/BottomNav.vue';
 
 const router = useRouter();
 const { t, locale } = useI18n();
 const languageStore = useLanguageStore();
+const { exchangeRate } = useShopConfig();
 
 const tabs = [
   { value: '', labelKey: 'all' },
   { value: 'pending_payment', labelKey: 'pending_payment' },
+  { value: 'confirmed', labelKey: 'confirmed' },
   { value: 'paid', labelKey: 'paid' },
   { value: 'shipped', labelKey: 'shipped' },
   { value: 'completed', labelKey: 'completed' },
@@ -73,7 +76,7 @@ const sentinel = ref(null);
 let observer = null;
 
 function statusClass(s) {
-  const map = { pending_payment: 's-pending', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
+  const map = { pending_payment: 's-pending', confirmed: 's-confirmed', paid: 's-paid', shipped: 's-shipped', completed: 's-done', cancelled: 's-cancel' };
   return map[s] || '';
 }
 function formatDate(d) {
@@ -95,7 +98,7 @@ function goPay(order) {
       orderNumber: order.orderNumber,
       paymentMethod: order.paymentMethod,
       amountUsd: order.totalUsd,
-      amountKhr: order.totalKhr || Math.round(order.totalUsd * 4000),
+      amountKhr: order.totalKhr || Math.round(order.totalUsd * exchangeRate.value),
     },
   });
 }
@@ -185,6 +188,7 @@ onUnmounted(teardownObserver);
 .oc-number { font-size: 12px; color: var(--muted); font-family: monospace; }
 .oc-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
 .s-pending { color: var(--accent); background: oklch(64% 0.16 82 / 0.1); }
+.s-confirmed { color: var(--accent); background: oklch(64% 0.16 82 / 0.08); }
 .s-paid { color: var(--accent-blue); background: oklch(58% 0.16 255 / 0.1); }
 .s-shipped { color: var(--accent-green); background: oklch(58% 0.16 155 / 0.1); }
 .s-done { color: var(--muted); background: oklch(90% 0.005 95); }

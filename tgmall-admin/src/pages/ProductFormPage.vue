@@ -74,7 +74,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue'; import ImageUploader from '@/components/common/ImageUploader.vue';
 const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
-const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[] });
+const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[], descriptionKm:'', descriptionEn:'', descriptionZh:'' });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
 function onUploadImage(url) { if (url) f.images.push({ url }); }
 function selectTag(tag) {
@@ -89,7 +89,36 @@ function addSpec() {
 function addValue(spec) {
   spec.values.push({ valueEn: '', valueKm: '', valueZh: '', priceUsd: null, priceKhr: null, stock: null });
 }
-async function save() { saving.value = true; isEdit ? await updateProduct(route.params.id, f) : await createProduct(f); router.push('/products'); }
+async function save() {
+  saving.value = true;
+  const payload = {
+    name_km: f.nameKm,
+    name_en: f.nameEn,
+    name_zh: f.nameZh,
+    price_usd: f.priceUsd,
+    price_khr: f.priceKhr,
+    stock: f.stock,
+    alert_threshold: f.alertThreshold,
+    category: f.category,
+    images: f.images,
+    specs: f.specs,
+    tags: f.tags,
+    status: f.status,
+    description_km: f.descriptionKm,
+    description_en: f.descriptionEn,
+    description_zh: f.descriptionZh,
+  };
+  try {
+    if (isEdit) {
+      await updateProduct(route.params.id, payload);
+    } else {
+      await createProduct(payload);
+    }
+    router.push('/products');
+  } finally {
+    saving.value = false;
+  }
+}
 onMounted(async () => {
   if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); }
   const tagRes = await getTags({ page: 1, limit: 100 });

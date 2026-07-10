@@ -55,14 +55,34 @@ function generateMockDeepLink({ orderNumber, amountUsd, amountKhr, expiresAt }) 
 
 /**
  * 验证 ABA Pay 回调签名
- * 真实算法需对接 ABA 官方文档；目前未实现真实验签，生产环境应拒绝。
+ * 生产环境默认使用 HMAC-SHA256（常见模式），真实算法需按 ABA 官方文档调整。
+ * 未配置 ABA_PAY_SECRET 时拒绝回调，防止伪造。
  */
 export function verifySignature(payload, signature) {
   if (isMockMode()) {
     return signature === 'mock-signature' || signature?.startsWith('MOCK-');
   }
-  console.error('ABA Pay 真实回调验签未实现，拒绝回调');
-  return false;
+
+  const secret = config.abaPaySecret;
+  if (!secret) {
+    console.error('ABA Pay 未配置 ABA_PAY_SECRET，拒绝回调');
+    return false;
+  }
+
+  // 按 key 排序后拼接为验签字符串（具体格式需按 ABA 文档替换）
+  const signString = Object.keys(payload)
+    .filter((k) => k !== 'signature')
+    .sort()
+    .map((k) => `${k}=${payload[k]}`)
+    .join('&');
+
+  const expected = crypto.createHmac('sha256', secret).update(signString).digest('hex');
+  const safeSignature = String(signature || '');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(safeSignature));
+  } catch {
+    return false;
+  }
 }
 
 export default { generateDeepLink, isMockMode, verifySignature };

@@ -19,6 +19,10 @@
         </div>
         <h3 class="card-name">{{ name }}</h3>
         <p class="card-merchant">{{ merchantName }}</p>
+        <div v-if="salesCount > 0 || likesCount > 0" class="card-stats">
+          <span v-if="salesCount > 0">{{ $t('product.sales') }} {{ salesCount }}</span>
+          <span v-if="likesCount > 0" class="likes">❤️ {{ likesCount }}</span>
+        </div>
         <PriceDisplay :price-usd="priceUsd" :price-khr="priceKhr" sm />
       </div>
     </router-link>
@@ -40,10 +44,12 @@
 <script setup>
 import { ref } from 'vue';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { addToCart } from '@/api/cart';
 import PriceDisplay from './PriceDisplay.vue';
 
+const router = useRouter();
 const { locale, t } = useI18n();
 
 const props = defineProps({
@@ -54,6 +60,9 @@ const props = defineProps({
   thumbnail: { type: String, default: '' },
   merchantName: { type: String, default: '' },
   stock: { type: Number, default: 0 },
+  salesCount: { type: Number, default: 0 },
+  likesCount: { type: Number, default: 0 },
+  skuCount: { type: Number, default: 0 },
   tags: { type: Array, default: () => [] },
   layout: { type: String, default: 'grid' },
   showQuickAdd: { type: Boolean, default: false },
@@ -66,6 +75,13 @@ const addAnimating = ref(false);
 
 async function quickAdd() {
   if (props.stock <= 0 || adding.value) return;
+
+  // 多规格商品跳详情选规格
+  if (props.skuCount > 1) {
+    router.push(`/product/${props.id}`);
+    return;
+  }
+
   adding.value = true;
   try {
     await addToCart({ product_id: props.id, quantity: 1 });
@@ -168,6 +184,19 @@ function onImageError(e) {
   font-size: 11px;
   color: var(--muted);
   margin: 4px 0 6px;
+}
+.card-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.card-stats .likes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 /* 列表模式 */

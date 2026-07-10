@@ -25,7 +25,7 @@
         <p v-if="orderNumber" class="order-number">{{ orderNumber }}</p>
         <p v-else-if="orderId" class="order-number">{{ orderId }}</p>
         <div v-if="amountUsd > 0" class="result-amount">
-          <PriceDisplay :priceUsd="amountUsd" :priceKhr="amountKhr || amountUsd * 4000" />
+          <PriceDisplay :priceUsd="amountUsd" :priceKhr="amountKhr || amountUsd * exchangeRate" />
         </div>
       </div>
 
@@ -85,11 +85,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useShopConfig } from '@/composables/useShopConfig.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const { exchangeRate } = useShopConfig();
 
 // ── 路由参数 ──
 const status = ref(route.query.status || 'success');

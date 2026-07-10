@@ -30,6 +30,15 @@
         </el-card></el-col>
       </el-row>
 
+      <el-row :gutter="20" style="margin-bottom:20px">
+        <el-col :span="6"><el-card shadow="hover">
+          <div class="stat-card">
+            <div class="stat-label">{{ t('dashboard.todayNewSkus') }}</div>
+            <div class="stat-value" style="color:#409eff">{{ data.todayNewSkus || 0 }}</div>
+          </div>
+        </el-card></el-col>
+      </el-row>
+
       <!-- 图表区：趋势 + 品类饼图 -->
       <el-row :gutter="20" style="margin-bottom:20px">
         <el-col :span="14"><el-card>

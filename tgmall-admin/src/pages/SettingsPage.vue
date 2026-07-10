@@ -28,6 +28,11 @@
           <div class="card-title">{{ $t('settings.customerServices') }}</div>
           <div class="card-desc">{{ $t('settings.customerServices') }}</div>
         </el-card>
+        <el-card class="settings-card" @click="$router.push('/settings/hot-searches')">
+          <div class="card-icon">🔥</div>
+          <div class="card-title">{{ $t('settings.hotKeywords') }}</div>
+          <div class="card-desc">{{ $t('settings.hotKeywords') }}</div>
+        </el-card>
         <el-card class="settings-card" @click="$router.push('/settings/flash-deals')">
           <div class="card-icon">⚡</div>
           <div class="card-title">限时专区</div>

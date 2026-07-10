@@ -5,6 +5,7 @@ import {
   getCities,
   getDeliveryRule,
   getDefaultCustomerService,
+  getExchangeRate,
 } from '@/api/shopConfig.js';
 
 export function useShopConfig() {
@@ -13,6 +14,7 @@ export function useShopConfig() {
   const cities = ref([]);
   const deliveryRule = ref(null);
   const customerService = ref(null);
+  const exchangeRate = ref(4000);
   const loading = ref(false);
   const error = ref(null);
 
@@ -56,6 +58,16 @@ export function useShopConfig() {
     }
   }
 
+  async function loadExchangeRate() {
+    try {
+      const res = await getExchangeRate();
+      const rate = Number(res.data?.rate);
+      if (rate > 0) exchangeRate.value = rate;
+    } catch (err) {
+      console.error('加载汇率失败:', err);
+    }
+  }
+
   function reload(options) {
     return load(options);
   }
@@ -66,11 +78,13 @@ export function useShopConfig() {
     cities,
     deliveryRule,
     customerService,
+    exchangeRate,
     loading,
     error,
     load,
     loadDeliveryRule,
     loadCustomerService,
+    loadExchangeRate,
     reload,
   };
 }

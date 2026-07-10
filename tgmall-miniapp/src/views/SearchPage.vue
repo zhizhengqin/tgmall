@@ -6,6 +6,16 @@
       <input ref="inputRef" v-model="keyword" type="text" :placeholder="$t('home.searchPlaceholder')" class="search-input" @input="onInput" />
     </div>
 
+    <!-- 热门搜索 -->
+    <div v-if="!keyword && hotSearches.length" class="section">
+      <div class="section-header">
+        <span>{{ $t('search.hotTitle') }}</span>
+      </div>
+      <div class="tag-cloud">
+        <span v-for="h in hotSearches" :key="h.id" class="tag tag-hot" @click="selectKeyword(h.keyword)">{{ h.keyword }}</span>
+      </div>
+    </div>
+
     <!-- 历史搜索 -->
     <div v-if="!keyword && history.length" class="section">
       <div class="section-header">
@@ -31,6 +41,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getProducts } from '@/api/products';
+import { getHotSearches } from '@/api/shopConfig';
 import ProductCard from '@/components/common/ProductCard.vue';
 
 const keyword = ref('');
@@ -38,13 +49,19 @@ const products = ref([]);
 const loading = ref(false);
 const searched = ref(false);
 const history = ref(JSON.parse(localStorage.getItem('search_history') || '[]'));
+const hotSearches = ref([]);
 const inputRef = ref(null);
 
 let timer;
 
 function onInput() {
   clearTimeout(timer);
-  timer = setTimeout(search, 400);
+  timer = setTimeout(search, 300);
+}
+
+function selectKeyword(k) {
+  keyword.value = k;
+  search();
 }
 
 async function search() {
@@ -68,7 +85,17 @@ function clearHistory() {
   localStorage.removeItem('search_history');
 }
 
-onMounted(() => { inputRef.value?.focus(); });
+async function loadHotSearches() {
+  try {
+    const res = await getHotSearches();
+    hotSearches.value = res.data || [];
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  inputRef.value?.focus();
+  loadHotSearches();
+});
 </script>
 
 <style scoped>
@@ -81,6 +108,7 @@ onMounted(() => { inputRef.value?.focus(); });
 .section-header button { color: var(--accent); font-size: 12px; }
 .tag-cloud { display: flex; gap: 8px; flex-wrap: wrap; }
 .tag { padding: 4px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+.tag-hot { color: var(--accent); border-color: var(--accent); }
 .result-count { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .no-result { text-align: center; padding: 60px 0; color: var(--muted); font-size: 14px; }

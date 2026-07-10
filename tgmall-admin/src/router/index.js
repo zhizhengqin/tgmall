@@ -10,6 +10,7 @@ const routes = [
   { path: '/settings/cities', name: 'Cities', component: () => import('@/pages/CitiesPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/delivery-rules', name: 'DeliveryRules', component: () => import('@/pages/DeliveryRulesPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/customer-services', name: 'CustomerServices', component: () => import('@/pages/CustomerServicesPage.vue'), meta: { requiresAuth: true } },
+  { path: '/settings/hot-searches', name: 'HotSearches', component: () => import('@/pages/HotSearchesPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/flash-deals', name: 'FlashDeals', component: () => import('@/pages/FlashDealsPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/platform', name: 'PlatformSettings', component: () => import('@/pages/PlatformSettingsPage.vue'), meta: { requiresAuth: true } },
   { path: '/settings/admin-users', name: 'AdminUsers', component: () => import('@/pages/AdminUsersPage.vue'), meta: { requiresAuth: true } },

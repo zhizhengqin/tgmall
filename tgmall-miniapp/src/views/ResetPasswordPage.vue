@@ -63,6 +63,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { sendSms, resetPassword } from '@/api/auth';
+import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -77,13 +78,20 @@ const errorMsg = ref('');
 const successMsg = ref('');
 
 function onPhoneInput() {
-  if (phone.value && !phone.value.startsWith('+')) phone.value = '+' + phone.value.replace(/[^0-9]/g, '');
-  phone.value = phone.value.replace(/[^0-9+]/g, '');
+  phone.value = formatPhoneInput(phone.value);
 }
 
 let cooldownTimer = null;
 async function handleSendSms() {
   errorMsg.value = '';
+  if (!phone.value) {
+    errorMsg.value = t('error.enterPhone');
+    return;
+  }
+  if (!isValidPhone(phone.value)) {
+    errorMsg.value = t('error.invalidPhone');
+    return;
+  }
   try {
     await sendSms(phone.value, 'reset_password');
     cooldown.value = 60;
@@ -97,6 +105,7 @@ async function handleNext() {
   errorMsg.value = '';
   if (step.value === 1) {
     if (!phone.value) { errorMsg.value = t('error.enterPhone'); return; }
+    if (!isValidPhone(phone.value)) { errorMsg.value = t('error.invalidPhone'); return; }
     await handleSendSms();
     step.value = 2;
     return;

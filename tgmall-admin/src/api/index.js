@@ -71,6 +71,11 @@ export const updateCustomerService = (id, data) => api.put(`/admin/customer-serv
 export const toggleCustomerService = (id) => api.post(`/admin/customer-services/${id}/toggle`);
 export const setDefaultCustomerService = (id) => api.post(`/admin/customer-services/${id}/set-default`);
 
+export const getHotSearches = (params) => api.get('/admin/hot-searches', { params });
+export const createHotSearch = (data) => api.post('/admin/hot-searches', data);
+export const updateHotSearch = (id, data) => api.put(`/admin/hot-searches/${id}`, data);
+export const toggleHotSearch = (id) => api.post(`/admin/hot-searches/${id}/toggle`);
+
 // ── 限时专区管理 ──
 export const getFlashDeals = (params) => api.get('/admin/flash-deals', { params });
 export const createFlashDeal = (data) => api.post('/admin/flash-deals', data);

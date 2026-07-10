@@ -39,11 +39,11 @@
         <div class="spec-values">
           <button v-for="val in spec.values" :key="val.valueEn"
             class="spec-btn"
-            :class="{ active: selectedSpecs[spec.nameEn] === val.valueEn, disabled: val.stock === 0 }"
+            :class="{ active: selectedSpecs[spec.nameEn] === val.valueEn, disabled: valueStock(spec.nameEn, val.valueEn) === 0 }"
             @click="selectSpec(spec.nameEn, val)"
           >
             {{ specDisplayValue(val) }}
-            <span v-if="val.stock === 0" class="soldout-chip">{{ $t('product.soldOut') }}</span>
+            <span v-if="valueStock(spec.nameEn, val.valueEn) === 0" class="soldout-chip">{{ $t('product.soldOut') }}</span>
           </button>
         </div>
       </div>
@@ -94,7 +94,7 @@ import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const product = ref(null);
 const loading = ref(true);
@@ -110,44 +110,37 @@ const descLangs = [
   { code: 'zh', label: '中文' },
 ];
 
-// 当前选中规格对应的价格和库存
-const currentSkuInventory = computed(() => {
-  if (!product.value?.specs?.length) return product.value?.stock || 0;
-  let stock = product.value.stock;
-  for (const spec of product.value.specs) {
-    const sel = selectedSpecs.value[spec.nameEn];
-    if (sel) {
-      const val = spec.values.find((v) => v.valueEn === sel);
-      if (val?.stock !== undefined) stock = Math.min(stock, val.stock);
-    }
+// 当前选中规格对应的 SKU
+const matchedSku = computed(() => {
+  if (!product.value?.skus?.length) return null;
+  if (!product.value?.specs?.length) {
+    return product.value.skus.find((s) => s.skuCode === 'DEFAULT') || product.value.skus[0] || null;
   }
-  return stock;
+  return product.value.skus.find((s) => {
+    const sspec = s.spec || {};
+    return product.value.specs.every((spec) => {
+      const sel = selectedSpecs.value[spec.nameEn];
+      if (!sel) return false;
+      return sspec[spec.nameEn] === sel;
+    });
+  });
+});
+
+const currentSkuInventory = computed(() => {
+  if (matchedSku.value) return matchedSku.value.stock;
+  return product.value?.stock || 0;
 });
 
 const maxQuantity = computed(() => Math.min(currentSkuInventory.value, 99));
 const canBuy = computed(() => maxQuantity.value > 0);
 
 const currentPriceUsd = computed(() => {
-  if (!product.value?.specs?.length) return product.value?.priceUsd || 0;
-  for (const spec of product.value.specs) {
-    const sel = selectedSpecs.value[spec.nameEn];
-    if (sel) {
-      const val = spec.values.find((v) => v.valueEn === sel);
-      if (val?.priceUsd) return val.priceUsd;
-    }
-  }
+  if (matchedSku.value) return matchedSku.value.priceUsd;
   return product.value?.priceUsd || 0;
 });
 
 const currentPriceKhr = computed(() => {
-  if (!product.value?.specs?.length) return product.value?.priceKhr || 0;
-  for (const spec of product.value.specs) {
-    const sel = selectedSpecs.value[spec.nameEn];
-    if (sel) {
-      const val = spec.values.find((v) => v.valueEn === sel);
-      if (val?.priceKhr) return val.priceKhr;
-    }
-  }
+  if (matchedSku.value) return matchedSku.value.priceKhr;
   return product.value?.priceKhr || 0;
 });
 
@@ -157,10 +150,7 @@ const displayName = computed(() => {
   return product.value[map[locale.value]] || product.value.nameKm;
 });
 
-const displayMerchant = computed(() => {
-  if (!product.value?.merchant) return '';
-  return locale.value === 'en' ? product.value.merchant.nameEn || product.value.merchant.name : product.value.merchant.name;
-});
+const displayMerchant = computed(() => 'TG Mall');
 
 const displayDescription = computed(() => {
   if (!product.value) return '';
@@ -175,6 +165,12 @@ function specDisplayName(spec) {
 function specDisplayValue(val) {
   const map = { km: 'valueKm', en: 'valueEn' };
   return val[map[locale.value]] || val.valueEn;
+}
+
+function valueStock(specName, valueEn) {
+  if (!product.value?.skus?.length) return 0;
+  const sku = product.value.skus.find((s) => (s.spec || {})[specName] === valueEn);
+  return sku ? sku.stock : 0;
 }
 
 function tagDisplay(tag) {
@@ -194,7 +190,7 @@ async function toggleFavorite() {
 }
 
 function selectSpec(specName, val) {
-  if (val.stock === 0) return;
+  if (valueStock(specName, val.valueEn) === 0) return;
   selectedSpecs.value = { ...selectedSpecs.value, [specName]: val.valueEn };
   quantity.value = 1;
 }
@@ -215,7 +211,9 @@ async function handleAddToCart() {
       const val = selectedSpecs.value[s.nameEn];
       if (val) spec[s.nameEn] = val;
     }
-    await addToCart({ product_id: product.value.id, quantity: quantity.value, spec });
+    const payload = { product_id: product.value.id, quantity: quantity.value, spec };
+    if (matchedSku.value?.id) payload.sku_id = matchedSku.value.id;
+    await addToCart(payload);
     alert(t('cart.added'));
   } catch (e) {
     alert(t('cart.addFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));
@@ -232,10 +230,10 @@ onMounted(async () => {
     const res = await getProductById(route.params.id);
     product.value = res.data;
     isFavorited.value = res.data.isFavorited || false;
-    // 初始化默认规格
+    // 初始化默认规格：选择有库存的 SKU 对应规格
     if (res.data.specs?.length) {
       for (const spec of res.data.specs) {
-        const inStock = spec.values.find((v) => v.stock !== 0);
+        const inStock = spec.values.find((v) => valueStock(spec.nameEn, v.valueEn) > 0);
         if (inStock) selectedSpecs.value[spec.nameEn] = inStock.valueEn;
       }
     }

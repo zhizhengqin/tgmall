@@ -168,35 +168,43 @@ export async function sendMessage(telegramId, text, options = {}) {
 }
 
 /**
- * 发送订单通知（消费者）
+ * 渲染订单通知文本（纯函数，不发送网络请求）
+ * @returns {string|null}  返回 null 表示未知类型
  */
-export async function sendOrderNotification(user, order, type) {
+export function renderOrderNotificationText(user, order, type) {
   const lang = user.languageCode || 'km';
   const t = notificationTemplates[lang] || notificationTemplates.km;
 
-  let text = '';
   switch (type) {
     case 'created':
-      text = t.orderCreated
+      return t.orderCreated
         .replace('{{orderNumber}}', escapeHtml(order.orderNumber))
         .replace('{{amount}}', order.totalUsd)
         .replace('{{paymentMethod}}', escapeHtml(order.paymentMethod));
-      break;
     case 'paid':
-      text = t.orderPaid
+      return t.orderPaid
         .replace('{{orderNumber}}', escapeHtml(order.orderNumber))
         .replace('{{amount}}', order.totalUsd);
-      break;
-    case 'shipped':
-      text = t.orderShipped
+    case 'shipped': {
+      const info = order.logisticsInfo || {};
+      return t.orderShipped
         .replace('{{orderNumber}}', escapeHtml(order.orderNumber))
-        .replace('{{logistics}}', escapeHtml(order.logisticsCompany || ''))
-        .replace('{{tracking}}', escapeHtml(order.trackingNumber || ''));
-      break;
+        .replace('{{logistics}}', escapeHtml(info.logistics_company || info.company || ''))
+        .replace('{{tracking}}', escapeHtml(info.tracking_number || info.trackingNumber || ''));
+    }
     default:
-      return { ok: false, error: 'UNKNOWN_NOTIFICATION_TYPE' };
+      return null;
   }
+}
 
+/**
+ * 发送订单通知（消费者）
+ */
+export async function sendOrderNotification(user, order, type) {
+  const text = renderOrderNotificationText(user, order, type);
+  if (text === null) {
+    return { ok: false, error: 'UNKNOWN_NOTIFICATION_TYPE' };
+  }
   return sendMessage(user.telegramId, text);
 }
 

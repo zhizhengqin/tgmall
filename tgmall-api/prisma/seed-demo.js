@@ -762,7 +762,7 @@ async function main() {
         { productId: products[5].id, quantity: 1, priceUsd: 28.00, spec: { Color: 'White' } },
         { productId: products[6].id, quantity: 2, priceUsd: 15.00, spec: {} },
       ],
-      logisticsInfo: { company: 'J&T Express', trackingNumber: 'JT123456789KH' },
+      logisticsInfo: { logistics_company: 'J&T Express', tracking_number: 'JT123456789KH' },
     },
     // 在线支付订单 - 待发货
     {
@@ -823,7 +823,7 @@ async function main() {
       items: [
         { productId: products[8].id, quantity: 2, priceUsd: 9.50, spec: { Color: 'Pink' } },
       ],
-      logisticsInfo: { company: 'Kerry Express', trackingNumber: 'KE987654321KH' },
+      logisticsInfo: { logistics_company: 'Kerry Express', tracking_number: 'KE987654321KH' },
     },
     // COD 订单 - 已完成
     {
@@ -842,7 +842,7 @@ async function main() {
       items: [
         { productId: products[7].id, quantity: 1, priceUsd: 45.00, spec: {} },
       ],
-      logisticsInfo: { company: 'J&T Express', trackingNumber: 'JT555666777KH' },
+      logisticsInfo: { logistics_company: 'J&T Express', tracking_number: 'JT555666777KH' },
     },
     // 已取消订单
     {
@@ -876,7 +876,7 @@ async function main() {
         { productId: products[1].id, quantity: 1, priceUsd: 8.90, spec: { Color: 'Blue', Size: 'L' } },
         { productId: products[10].id, quantity: 1, priceUsd: 11.00, spec: { Weight: '250g' } },
       ],
-      logisticsInfo: { company: 'Ninja Van', trackingNumber: 'NV1122334455KH' },
+      logisticsInfo: { logistics_company: 'Ninja Van', tracking_number: 'NV1122334455KH' },
     },
   ];
 

@@ -25,7 +25,7 @@
     "todayRevenue": "Today's Revenue",
     "lowStock": "Low Stock",
     "recent7Days": "Last 7 Days Revenue",
-    "noData": "No data yet", "paymentRate": "Payment Success", "categorySales": "Sales by Category", "topProducts": "Top 10 Products"
+    "noData": "No data yet", "paymentRate": "Payment Success", "categorySales": "Sales by Category", "topProducts": "Top 10 Products", "todayNewSkus": "Today's New SKUs"
   },
   "merchants": {
     "title": "Merchant Management",
@@ -168,12 +168,13 @@
   },
   "orders": {
     "title": "Orders", "all": "All",
-    "pending_payment": "Pending", "paid": "Paid",
-    "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
+    "pending_payment": "Pending", "confirmed": "Confirmed",
+    "paid": "Paid", "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
     "orderNumber": "Order No.", "amount": "Amount", "customer": "Customer",
     "date": "Date", "detail": "Detail", "items": "Items",
     "shippingAddress": "Address", "total": "Total", "ship": "Ship",
-    "logisticsCompany": "Logistics", "trackingNumber": "Tracking", "confirmShip": "Confirm"
+    "logisticsCompany": "Logistics", "trackingNumber": "Tracking", "confirmShip": "Confirm",
+    "exportCsv": "Export CSV", "dateRange": "Date Range", "startDate": "Start Date", "endDate": "End Date"
   },
   "common": {
     "save": "Save",

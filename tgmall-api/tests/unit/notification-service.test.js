@@ -1,6 +1,7 @@
 // Bot 通知服务单元测试 — TC-N-001~011
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { createMockTx, createMockRedis } from '../helpers/mocks.js';
+import { renderOrderNotificationText } from '../../src/integrations/telegram.js';
+import { createMockRedis } from '../helpers/mocks.js';
 
 /**
  * HTML 转义函数（从 telegram.js 提取）
@@ -136,6 +137,60 @@ describe('Bot 通知服务 (notification.service)', () => {
   // 模板变量 HTML 转义
   it('模板变量中的 HTML 应被转义', () => {
     const text = renderTemplate('en', 'orderCreated', { order: '<script>', amount: '10' });
+    expect(text).not.toContain('<script>');
+    expect(text).toContain('&lt;script&gt;');
+  });
+});
+
+describe('订单通知文本渲染 (renderOrderNotificationText)', () => {
+  const baseUser = { languageCode: 'zh' };
+  const order = {
+    orderNumber: 'ORD-2024-001',
+    totalUsd: 29.99,
+    paymentMethod: 'khqr',
+    logisticsInfo: { logistics_company: 'J&T', tracking_number: 'JT123456' },
+  };
+
+  it('created 类型渲染含订单号、金额、支付方式', () => {
+    const text = renderOrderNotificationText(baseUser, order, 'created');
+    expect(text).toContain('ORD-2024-001');
+    expect(text).toContain('29.99');
+    expect(text).toContain('khqr');
+  });
+
+  it('paid 类型渲染含订单号、金额', () => {
+    const text = renderOrderNotificationText(baseUser, order, 'paid');
+    expect(text).toContain('ORD-2024-001');
+    expect(text).toContain('29.99');
+  });
+
+  it('shipped 类型渲染含物流公司、运单号', () => {
+    const text = renderOrderNotificationText(baseUser, order, 'shipped');
+    expect(text).toContain('J&amp;T');
+    expect(text).toContain('JT123456');
+  });
+
+  it('shipped 兼容旧键 company / trackingNumber', () => {
+    const legacyOrder = {
+      orderNumber: 'ORD-OLD-001',
+      logisticsInfo: { company: 'Legacy Express', trackingNumber: 'LEG789' },
+    };
+    const text = renderOrderNotificationText(baseUser, legacyOrder, 'shipped');
+    expect(text).toContain('Legacy Express');
+    expect(text).toContain('LEG789');
+  });
+
+  it('未知类型返回 null', () => {
+    expect(renderOrderNotificationText(baseUser, order, 'unknown')).toBeNull();
+  });
+
+  it('用户输入 HTML 在模板中被转义', () => {
+    const maliciousOrder = {
+      orderNumber: '<script>alert(1)</script>',
+      totalUsd: 10,
+      paymentMethod: 'cod',
+    };
+    const text = renderOrderNotificationText(baseUser, maliciousOrder, 'created');
     expect(text).not.toContain('<script>');
     expect(text).toContain('&lt;script&gt;');
   });

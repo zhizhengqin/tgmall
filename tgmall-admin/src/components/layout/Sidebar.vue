@@ -18,6 +18,7 @@
       <el-menu-item index="/settings/cities">{{ $t('settings.cities') }}</el-menu-item>
       <el-menu-item index="/settings/delivery-rules">{{ $t('settings.deliveryRules') }}</el-menu-item>
       <el-menu-item index="/settings/customer-services">{{ $t('settings.customerServices') }}</el-menu-item>
+      <el-menu-item index="/settings/hot-searches">{{ $t('settings.hotKeywords') }}</el-menu-item>
       <el-menu-item index="/settings/flash-deals">⚡ 限时专区</el-menu-item>
       <el-menu-item index="/settings/platform">⚙️ 平台设置</el-menu-item>
       <el-menu-item index="/settings/admin-users">👤 管理员账号</el-menu-item>

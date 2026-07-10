@@ -1,7 +1,27 @@
 // 商品服务 — 列表查询 + 详情
 import prisma from '../config/database.js';
+import * as cache from './cache.service.js';
 
-export async function listProducts({ page, limit, category, q, sort, language = 'km', userId }) {
+async function getListVersion() {
+  return (await cache.getJson('products:list:version')) || 0;
+}
+
+export async function listProducts({
+  page,
+  limit,
+  category,
+  q,
+  sort,
+  minPrice,
+  maxPrice,
+  language = 'km',
+  userId,
+}) {
+  const version = await getListVersion();
+  const cacheKey = `products:list:v1:${version}:${page}:${limit}:${sort || '_'}:${category || '_'}:${q || '_'}:${minPrice !== undefined ? minPrice : '_'}:${maxPrice !== undefined ? maxPrice : '_'}:${language}:${userId || '_'}`;
+  const cached = await cache.getJson(cacheKey);
+  if (cached) return cached;
+
   const skip = (page - 1) * limit;
 
   // 构建查询条件
@@ -16,6 +36,11 @@ export async function listProducts({ page, limit, category, q, sort, language = 
       { nameEn: { contains: q, mode: 'insensitive' } },
       { nameZh: { contains: q, mode: 'insensitive' } },
     ];
+  }
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.priceUsd = {};
+    if (minPrice !== undefined) where.priceUsd.gte = minPrice;
+    if (maxPrice !== undefined) where.priceUsd.lte = maxPrice;
   }
 
   // 排序映射
@@ -39,6 +64,7 @@ export async function listProducts({ page, limit, category, q, sort, language = 
         nameZh: true,
         priceUsd: true,
         priceKhr: true,
+        stock: true,
         images: true,
         category: true,
         salesCount: true,
@@ -49,15 +75,42 @@ export async function listProducts({ page, limit, category, q, sort, language = 
     prisma.product.count({ where }),
   ]);
 
+  const productIds = items.map((i) => i.id);
+
   // 查询当前用户的收藏状态
   let favoritedIds = new Set();
-  if (userId) {
-    const productIds = items.map((i) => i.id);
+  if (userId && productIds.length > 0) {
     const wishlist = await prisma.wishlist.findMany({
       where: { userId, productId: { in: productIds } },
       select: { productId: true },
     });
     favoritedIds = new Set(wishlist.map((w) => w.productId));
+  }
+
+  // 聚合收藏数（所有用户）
+  const likesMap = {};
+  if (productIds.length > 0) {
+    const likesRows = await prisma.wishlist.groupBy({
+      by: ['productId'],
+      where: { productId: { in: productIds } },
+      _count: { productId: true },
+    });
+    for (const row of likesRows) {
+      likesMap[row.productId] = row._count.productId;
+    }
+  }
+
+  // 聚合 active SKU 数
+  const skuCountMap = {};
+  if (productIds.length > 0) {
+    const skuRows = await prisma.productSku.groupBy({
+      by: ['productId'],
+      where: { productId: { in: productIds }, status: 'active' },
+      _count: { productId: true },
+    });
+    for (const row of skuRows) {
+      skuCountMap[row.productId] = row._count.productId;
+    }
   }
 
   // 根据用户语言返回对应的名称字段
@@ -68,15 +121,18 @@ export async function listProducts({ page, limit, category, q, sort, language = 
           : item.nameKm,
     priceUsd: Number(item.priceUsd),
     priceKhr: item.priceKhr,
+    stock: item.stock,
     thumbnail: item.images?.[0]?.thumb_url || item.images?.[0]?.url || null,
     category: item.category,
     salesCount: item.salesCount,
+    likesCount: likesMap[item.id] || 0,
+    skuCount: skuCountMap[item.id] || 0,
     tags: item.tags || [],
     isFavorited: favoritedIds.has(item.id),
     createdAt: item.createdAt,
   }));
 
-  return {
+  const result = {
     items: itemsMapped,
     total,
     page,
@@ -84,11 +140,37 @@ export async function listProducts({ page, limit, category, q, sort, language = 
     totalPages: Math.ceil(total / limit),
     hasNext: page * limit < total,
   };
+
+  // 仅缓存前 3 页热门列表，避免冷数据堆积
+  if (page <= 3) {
+    await cache.setJson(cacheKey, result, 300);
+  }
+
+  return result;
 }
 
 export async function getProductById(id, userId) {
+  const cacheKey = `products:detail:v1:${id}:${userId || '_'}`;
+  const cached = await cache.getJson(cacheKey);
+  if (cached) return cached;
+
   const product = await prisma.product.findUnique({
     where: { id },
+    include: {
+      skus: {
+        where: { status: 'active' },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          skuCode: true,
+          spec: true,
+          priceUsd: true,
+          priceKhr: true,
+          stock: true,
+          status: true,
+        },
+      },
+    },
   });
 
   if (!product) return null;
@@ -103,7 +185,7 @@ export async function getProductById(id, userId) {
     isFavorited = !!wl;
   }
 
-  return {
+  const result = {
     id: product.id,
     nameKm: product.nameKm,
     nameEn: product.nameEn,
@@ -116,10 +198,22 @@ export async function getProductById(id, userId) {
     stock: product.stock,
     images: product.images,
     specs: product.specs,
+    skus: product.skus.map((s) => ({
+      id: s.id,
+      skuCode: s.skuCode,
+      spec: s.spec,
+      priceUsd: Number(s.priceUsd),
+      priceKhr: s.priceKhr,
+      stock: s.stock,
+      status: s.status,
+    })),
     category: product.category,
     salesCount: product.salesCount,
     tags: product.tags || [],
     isFavorited,
     createdAt: product.createdAt,
   };
+
+  await cache.setJson(cacheKey, result, 600);
+  return result;
 }

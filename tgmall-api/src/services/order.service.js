@@ -4,9 +4,30 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
-import { sendOrderNotification } from '../integrations/telegram.js';
+import * as notificationService from './notification.service.js';
+import * as cache from './cache.service.js';
 import { calculateShippingFee } from './shopConfig.service.js';
 import { getExchangeRate } from './systemConfig.service.js';
+
+function specKey(spec) {
+  if (!spec || Object.keys(spec).length === 0) return '';
+  return Object.keys(spec)
+    .sort()
+    .map((k) => `${k}:${spec[k]}`)
+    .join('|');
+}
+
+async function resolveOrderSku(tx, item) {
+  if (item.skuId) {
+    return tx.productSku.findFirst({ where: { id: item.skuId, productId: item.productId, status: 'active' } });
+  }
+  const sortedSpec = specKey(item.spec || {});
+  if (!sortedSpec) {
+    return tx.productSku.findFirst({ where: { productId: item.productId, skuCode: 'DEFAULT', status: 'active' } });
+  }
+  const skus = await tx.productSku.findMany({ where: { productId: item.productId, status: 'active' } });
+  return skus.find((s) => specKey(s.spec) === sortedSpec) || null;
+}
 
 export async function createOrder(userId, body) {
   const { items: rawItems, shipping_address_id, coupon_id, payment_method, notes } = body;
@@ -14,7 +35,7 @@ export async function createOrder(userId, body) {
   const couponId = coupon_id;
   const paymentMethod = payment_method;
   // 将 snake_case 的 items 转为 camelCase
-  const items = rawItems.map(i => ({ ...i, productId: i.product_id, quantity: i.quantity, spec: i.spec }));
+  const items = rawItems.map(i => ({ ...i, productId: i.product_id, quantity: i.quantity, spec: i.spec, skuId: i.sku_id }));
 
   // 1. 验证收货地址
   const address = await prisma.address.findFirst({ where: { id: shippingAddressId, userId } });
@@ -34,6 +55,7 @@ export async function createOrder(userId, body) {
       let totalKhr = 0;
       const itemDetails = []; // 记录每个商品的单价快照
       const productMap = new Map(); // 锁定后的商品快照，供后续扣减库存使用
+      const skuMap = new Map(); // 锁定后的 SKU 快照
 
       for (const item of items) {
         const [product] = await tx.$queryRaw`
@@ -44,16 +66,32 @@ export async function createOrder(userId, body) {
         `;
         if (!product) throw new AppError(`商品不存在: ${item.productId}`, 404, 'NOT_FOUND');
         if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
-        if (product.stock < item.quantity) {
-          throw new AppError(`"${product.name_km}"库存不足，仅剩${product.stock}件`, 400, 'INSUFFICIENT_STOCK');
+
+        // 解析 SKU：优先使用传入 skuId，否则按 spec 匹配；对 SKU 加 SELECT FOR UPDATE 防止并发超卖
+        const resolvedSku = await resolveOrderSku(tx, item);
+        let sku = null;
+        if (resolvedSku) {
+          const [lockedSku] = await tx.$queryRaw`
+            SELECT id, stock, price_usd, price_khr
+            FROM product_skus
+            WHERE id = ${resolvedSku.id}::uuid
+            FOR UPDATE
+          `;
+          sku = lockedSku;
+        }
+        const skuStock = sku ? sku.stock : product.stock;
+        const skuPriceUsd = sku ? Number(sku.price_usd) : Number(product.price_usd);
+        const skuPriceKhr = sku ? sku.price_khr : product.price_khr;
+
+        if (skuStock < item.quantity) {
+          throw new AppError(`"${product.name_km}"库存不足，仅剩${skuStock}件`, 400, 'INSUFFICIENT_STOCK');
         }
 
-        const unitPriceUsd = Number(product.price_usd);
-        const unitPriceKhr = product.price_khr;
-        totalUsd += unitPriceUsd * item.quantity;
-        totalKhr += unitPriceKhr * item.quantity;
-        itemDetails.push({ ...item, unitPriceUsd, unitPriceKhr });
+        totalUsd += skuPriceUsd * item.quantity;
+        totalKhr += skuPriceKhr * item.quantity;
+        itemDetails.push({ ...item, unitPriceUsd: skuPriceUsd, unitPriceKhr: skuPriceKhr, skuId: sku?.id });
         productMap.set(item.productId, product);
+        if (sku) skuMap.set(sku.id, sku);
       }
 
       // 1.1 校验地址城市与配送规则
@@ -90,34 +128,40 @@ export async function createOrder(userId, body) {
           ? Number(userCoupon.coupon.value)
           : Math.round(totalUsd * Number(userCoupon.coupon.value) / 100 * 100) / 100;
 
-        await tx.userCoupon.update({
-          where: { id: userCoupon.id },
+        // 使用 updateMany + 状态条件实现原子占用，防止并发将同一张券重复标记为已使用
+        const couponUpdate = await tx.userCoupon.updateMany({
+          where: { id: userCoupon.id, status: 'unused' },
           data: { status: 'used', usedAt: new Date() },
         });
+        if (couponUpdate.count === 0) {
+          throw new AppError('优惠券已被使用，请刷新后重试', 409, 'COUPON_ALREADY_USED');
+        }
       }
 
       // 3c. 预扣库存 + 写 StockLog
-      for (const item of items) {
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i];
+        const detail = itemDetails[i];
         const productBefore = productMap.get(item.productId);
-        const newStock = productBefore.stock - item.quantity;
+        const newProductStock = productBefore.stock - item.quantity;
 
         await tx.product.update({
           where: { id: item.productId },
-          data: { stock: newStock, ...(newStock === 0 ? { status: 'inactive' } : {}) },
+          data: { stock: newProductStock, ...(newProductStock === 0 ? { status: 'inactive' } : {}) },
         });
 
         await tx.stockLog.create({
           data: {
             productId: item.productId,
             beforeQty: productBefore.stock,
-            afterQty: newStock,
+            afterQty: newProductStock,
             changeQty: -item.quantity,
             reason: 'order_create',
           },
         });
 
         // 库存归零自动下架
-        if (newStock === 0) {
+        if (newProductStock === 0) {
           await tx.stockLog.create({
             data: {
               productId: item.productId,
@@ -125,6 +169,15 @@ export async function createOrder(userId, body) {
               reason: 'auto_delist',
               note: '库存归零自动下架',
             },
+          });
+        }
+
+        // 扣减 SKU 库存
+        if (detail?.skuId) {
+          const skuBefore = skuMap.get(detail.skuId);
+          await tx.productSku.update({
+            where: { id: detail.skuId },
+            data: { stock: skuBefore.stock - item.quantity },
           });
         }
       }
@@ -201,6 +254,7 @@ export async function createOrder(userId, body) {
           shippingAddress: {
             recipient_name: address.recipientName,
             phone: address.phone,
+            city_code: address.cityCode || normalizeProvinceToCityCode(address.province),
             province: address.province,
             district: address.district,
             detail: address.detail,
@@ -209,6 +263,7 @@ export async function createOrder(userId, body) {
           items: {
             create: itemDetails.map((item, idx) => ({
               productId: item.productId,
+              skuId: item.skuId || null,
               quantity: item.quantity,
               priceUsd: distributedUsd[idx],
               priceKhr: distributedKhr[idx],
@@ -224,15 +279,19 @@ export async function createOrder(userId, body) {
     // 4. 清除购物车
     await redis.del(`cart:${userId}`);
 
-    // 5. Bot 通知（fire and forget，不阻塞业务）
+    // 5. 失效相关商品缓存
+    await cache.bumpProductListVersion();
+    await Promise.all(rawItems.map((i) => cache.invalidateProductCache(i.product_id)));
+
+    // 6. Bot 通知（fire and forget，不阻塞业务）
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { telegramId: true, language: true },
+        select: { id: true, telegramId: true, language: true },
       });
       if (user?.telegramId) {
-        sendOrderNotification(
-          { telegramId: user.telegramId, languageCode: user.language },
+        notificationService.notifyUserOrder(
+          { userId: user.id, telegramId: user.telegramId, languageCode: user.language },
           order,
           'created',
         ).catch((e) => console.error('[Bot] 下单通知失败:', e.message));
@@ -307,7 +366,6 @@ export async function getUserOrders(userId, { status, page, limit }) {
       take: limit,
       include: {
         items: {
-          take: 1,
           include: { product: { select: { images: true } } },
         },
       },
@@ -323,7 +381,7 @@ export async function getUserOrders(userId, { status, page, limit }) {
       paymentMethod: o.paymentMethod,
       totalUsd: Number(o.totalUsd),
       totalKhr: o.totalKhr,
-      itemCount: o.items.length,
+      itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
       thumbnail: o.items[0]?.product?.images?.[0]?.thumb_url || '',
       merchantName: 'TG Mall',
       createdAt: o.createdAt,
@@ -341,24 +399,94 @@ export async function getOrderById(userId, orderId) {
     where: { id: orderId, userId },
     include: {
       items: {
-        include: { product: { select: { images: true } } },
+        include: { product: { select: { nameKm: true, nameEn: true, nameZh: true, images: true } } },
       },
-      coupon: { select: { titleKm: true, type: true, value: true } },
+      coupon: { select: { titleKm: true, titleEn: true, titleZh: true, type: true, value: true } },
     },
   });
   if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
 
   // 当前状态允许的操作
   const actions = {
-    canCancel: order.status === 'pending_payment',
-    canConfirm: order.status === 'shipped',
+    canCancel: ['pending_payment', 'confirmed'].includes(order.status),
+    canConfirm: order.status === 'shipped' || (order.paymentMethod === 'cod' && order.status === 'paid'),
   };
 
-  return { ...order, totalUsd: Number(order.totalUsd), actions };
+  // 构建价格明细
+  const subtotalUsd = Number(order.totalUsd) + Number(order.discountUsd) - Number(order.shippingFeeUsd);
+  const priceBreakdown = {
+    subtotalUsd: Math.max(0, Math.round(subtotalUsd * 100) / 100),
+    discountUsd: Number(order.discountUsd),
+    shippingFeeUsd: Number(order.shippingFeeUsd),
+    totalUsd: Number(order.totalUsd),
+    totalKhr: order.totalKhr,
+  };
+
+  // 收货地址 snake_case → camelCase
+  const rawAddr = order.shippingAddress || {};
+  const shippingAddress = {
+    recipientName: rawAddr.recipient_name || '',
+    phone: rawAddr.phone || '',
+    province: rawAddr.province || '',
+    district: rawAddr.district || '',
+    detail: rawAddr.detail || '',
+  };
+
+  // 商品清单补齐名称/缩略图
+  const items = order.items.map((item) => {
+    const product = item.product || {};
+    const firstImage = Array.isArray(product.images) ? product.images[0] : null;
+    return {
+      ...item,
+      productName: product.nameKm || product.nameEn || '',
+      thumbnail: firstImage?.thumb_url || firstImage?.url || '',
+      priceUsd: Number(item.priceUsd),
+      priceKhr: item.priceKhr,
+    };
+  });
+
+  // 物流信息字段名与前端对齐（兼容旧键）
+  const info = order.logisticsInfo || {};
+  const logistics = {
+    logistics_company: info.logistics_company || info.company || '',
+    tracking_number: info.tracking_number || info.trackingNumber || '',
+    estimatedDelivery: info.estimatedDelivery || '',
+    trackingUrl: info.trackingUrl || '',
+  };
+
+  // 订单时间线
+  const timeline = [];
+  const statusSteps = [
+    { key: 'createdAt', label: 'orders.timeline.created' },
+    { key: 'paidAt', label: 'orders.timeline.paid' },
+    { key: 'shippedAt', label: 'orders.timeline.shipped' },
+    { key: 'completedAt', label: 'orders.timeline.completed' },
+    { key: 'cancelledAt', label: 'orders.timeline.cancelled' },
+  ];
+  for (const step of statusSteps) {
+    const time = order[step.key];
+    if (time) {
+      timeline.push({ label: step.label, time });
+    }
+  }
+
+  return {
+    ...order,
+    totalUsd: Number(order.totalUsd),
+    discountUsd: Number(order.discountUsd),
+    shippingFeeUsd: Number(order.shippingFeeUsd),
+    shippingAddress,
+    logistics,
+    items,
+    priceBreakdown,
+    timeline,
+    actions,
+  };
 }
 
 export async function cancelOrder(userId, orderId, reason) {
-  return prisma.$transaction(async (tx) => {
+  let cancelledItems = [];
+  const result = await prisma.$transaction(async (tx) => {
     // 在事务内读取订单并校验状态，防止并发重复取消/重复恢复库存
     const order = await tx.order.findFirst({
       where: { id: orderId, userId },
@@ -403,6 +531,22 @@ export async function cancelOrder(userId, orderId, reason) {
           reason: 'order_cancel',
         },
       });
+
+      // 恢复 SKU 库存（如有）
+      if (item.skuId) {
+        const [sku] = await tx.$queryRaw`
+          SELECT id, stock
+          FROM product_skus
+          WHERE id = ${item.skuId}::uuid
+          FOR UPDATE
+        `;
+        if (sku) {
+          await tx.productSku.update({
+            where: { id: sku.id },
+            data: { stock: sku.stock + item.quantity },
+          });
+        }
+      }
     }
 
     // 退还优惠券
@@ -413,8 +557,15 @@ export async function cancelOrder(userId, orderId, reason) {
       });
     }
 
+    cancelledItems = order.items;
     return { status: 'cancelled' };
   });
+
+  // 失效相关商品缓存
+  await cache.bumpProductListVersion();
+  await Promise.all(cancelledItems.map((i) => cache.invalidateProductCache(i.productId)));
+
+  return result;
 }
 
 export async function confirmOrder(userId, orderId) {
@@ -422,8 +573,10 @@ export async function confirmOrder(userId, orderId) {
     where: { id: orderId, userId },
   });
   if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
-  if (order.status !== 'shipped') {
-    throw new AppError('只有已发货订单可以确认收货', 400, 'ORDER_CANNOT_CONFIRM');
+  const canConfirm = order.status === 'shipped' ||
+    (order.paymentMethod === 'cod' && order.status === 'paid');
+  if (!canConfirm) {
+    throw new AppError('只有已发货或 COD 已收款订单可以确认收货', 400, 'ORDER_CANNOT_CONFIRM');
   }
 
   return prisma.order.update({
@@ -452,7 +605,11 @@ export async function exportOrdersCsv({ status, startDate, endDate }) {
   if (startDate || endDate) {
     where.createdAt = {};
     if (startDate) where.createdAt.gte = new Date(startDate);
-    if (endDate) where.createdAt.lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt.lte = end;
+    }
   }
 
   const orders = await prisma.order.findMany({

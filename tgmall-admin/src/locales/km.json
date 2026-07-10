@@ -30,7 +30,8 @@
     "noData": "មិនទាន់មានទិន្នន័យ",
     "paymentRate": "អត្រាទូទាត់",
     "categorySales": "ការលក់តាមប្រភេទ",
-    "topProducts": "ទំនិញលក់ដាច់បំផុត TOP 10"
+    "topProducts": "ទំនិញលក់ដាច់បំផុត TOP 10",
+    "todayNewSkus": "SKU ថ្មីថ្ងៃនេះ"
   },
   "merchants": {
     "title": "គ្រប់គ្រងហាង",
@@ -188,6 +189,7 @@
     "title": "កម្មង",
     "all": "ទាំងអស់",
     "pending_payment": "រង់ចាំ",
+    "confirmed": "បញ្ជាក់",
     "paid": "បានបង់",
     "shipped": "បានដឹក",
     "completed": "បញ្ចប់",
@@ -203,7 +205,11 @@
     "ship": "ដឹក",
     "logisticsCompany": "ក្រុមហ៊ុន",
     "trackingNumber": "លេខតាមដាន",
-    "confirmShip": "បញ្ជាក់"
+    "confirmShip": "បញ្ជាក់",
+    "exportCsv": "នាំចេញ CSV",
+    "dateRange": "ជយរសកលវត្ថុ",
+    "startDate": "ថ្ងៃចាប់ផ្តើម",
+    "endDate": "ថ្ងៃបញ្ចប់"
   },
   "common": {
     "save": "រក្សាទុក",

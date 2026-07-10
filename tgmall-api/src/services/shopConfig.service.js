@@ -309,3 +309,60 @@ export async function getDefaultCustomerService() {
     where: { status: 'active', isDefault: true },
   });
 }
+
+// ---------- Hot Searches ----------
+
+export async function listHotSearches({ page = 1, limit = 20, status } = {}) {
+  const { page: normalizedPage, limit: normalizedLimit, skip } = getPagination({ page, limit });
+  const where = {};
+  if (status) where.status = status;
+  const [items, total] = await Promise.all([
+    prisma.hotSearch.findMany({ where, orderBy: { sortOrder: 'asc' }, skip, take: normalizedLimit }),
+    prisma.hotSearch.count({ where }),
+  ]);
+  return {
+    items,
+    total,
+    page: normalizedPage,
+    limit: normalizedLimit,
+    totalPages: Math.ceil(total / normalizedLimit),
+    hasNext: normalizedPage * normalizedLimit < total,
+  };
+}
+
+export async function createHotSearch(input) {
+  return prisma.hotSearch.create({
+    data: {
+      keyword: input.keyword,
+      sortOrder: input.sort_order,
+      status: input.status,
+    },
+  });
+}
+
+export async function updateHotSearch(id, input) {
+  return prisma.hotSearch.update({
+    where: { id },
+    data: {
+      keyword: input.keyword,
+      sortOrder: input.sort_order,
+      status: input.status,
+    },
+  });
+}
+
+export async function toggleHotSearch(id) {
+  const hs = await prisma.hotSearch.findUnique({ where: { id } });
+  if (!hs) throw new AppError('热门搜索词不存在', 404, 'NOT_FOUND');
+  const nextStatus = hs.status === 'active' ? 'inactive' : 'active';
+  return prisma.hotSearch.update({ where: { id }, data: { status: nextStatus } });
+}
+
+export async function listActiveHotSearches() {
+  return prisma.hotSearch.findMany({
+    where: { status: 'active' },
+    orderBy: { sortOrder: 'asc' },
+    take: 10,
+  });
+}
+

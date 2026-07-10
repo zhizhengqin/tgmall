@@ -1,11 +1,12 @@
-// 支付服务 — KHQR 支付统一入口 + 回调处理
+// 支付服务 — KHQR / ABA Pay / Wing Pay / Telegram Invoice 统一入口 + 回调处理
 import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import * as bakong from '../integrations/bakong.js';
 import * as abaPay from '../integrations/aba_pay.js';
 import * as wingPay from '../integrations/wing_pay.js';
-import { sendOrderNotification } from '../integrations/telegram.js';
+import * as telegramPayments from '../integrations/telegram_payments.js';
+import * as notificationService from './notification.service.js';
 
 /**
  * 生成 KHQR 支付二维码
@@ -197,6 +198,55 @@ export async function createWingPayPayment(userId, orderId) {
 }
 
 /**
+ * 发起 Telegram Invoice 支付 — 通过 Bot API 创建发票链接
+ * POST /payments/telegram_invoice
+ */
+export async function createTelegramInvoicePayment(userId, orderId) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+  });
+
+  if (!order) throw new AppError('订单不存在', 404, 'NOT_FOUND');
+  if (order.status === 'cancelled') throw new AppError('订单已取消', 400, 'ORDER_CANCELLED');
+  if (order.paymentStatus === 'success') throw new AppError('订单已支付，无需重复支付', 400, 'ORDER_ALREADY_PAID');
+  if (order.status !== 'pending_payment') throw new AppError('订单状态不支持支付', 400, 'ORDER_NOT_PAYABLE');
+  if (order.paymentMethod !== 'telegram_invoice') throw new AppError('该订单未选择 Telegram 支付', 400, 'VALIDATION_ERROR');
+  if (order.paymentTimeout && new Date() > order.paymentTimeout) throw new AppError('支付已超时，请重新下单', 400, 'ORDER_CANCELLED');
+
+  let result;
+  try {
+    result = await telegramPayments.createInvoiceLink({
+      orderNumber: order.orderNumber,
+      amountUsd: Number(order.totalUsd),
+      title: `TG Mall #${order.orderNumber}`,
+      description: `Order ${order.orderNumber}`,
+    });
+  } catch (err) {
+    console.error('Telegram Invoice 创建失败:', err.message);
+    throw new AppError('支付服务暂不可用，请稍后重试或选择其他支付方式', 503, 'PAYMENT_SERVICE_UNAVAILABLE');
+  }
+
+  // 缓存支付信息到 Redis
+  const paymentKey = `payment:${order.id}`;
+  await redis.set(paymentKey, JSON.stringify({
+    transactionId: result.payload,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    createdAt: new Date().toISOString(),
+    expiresAt: order.paymentTimeout?.toISOString() || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  }), 'EX', 1800);
+
+  return {
+    orderNumber: order.orderNumber,
+    invoiceUrl: result.invoiceUrl,
+    payload: result.payload,
+    amountUsd: Number(order.totalUsd),
+    amountKhr: order.totalKhr,
+    expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+  };
+}
+
+/**
  * 查询支付状态
  * GET /payments/status/:orderId
  *
@@ -271,17 +321,17 @@ export async function handlePaymentCallback(payload) {
     console.error(`未知支付渠道回调: provider=${provider}`);
     throw new AppError('未知的支付渠道', 400, 'INVALID_PROVIDER');
   }
-  const isValid = verifyFn(payload, signature);
+  const isValid = await verifyFn(payload, signature);
   if (!isValid) {
     console.error(`支付回调验签失败: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     throw new AppError('签名验证失败', 401, 'UNAUTHORIZED');
   }
 
   // ---- 2. 幂等检查（Redis 分布式防重） ----
-  // 注意：幂等标记在事务成功后设置（见第 224 行），避免事务失败导致订单 stuck
+  // 使用 SET NX 原子抢占处理锁，事务成功后再改为长期标记
   const idempotencyKey = `payment:callback:${provider}:${transactionId}`;
-  const isDuplicate = await redis.get(idempotencyKey);
-  if (isDuplicate) {
+  const claimed = await redis.set(idempotencyKey, 'processing', 'NX', 'EX', 60);
+  if (!claimed) {
     console.warn(`重复支付回调已忽略: provider=${provider}, order=${orderNumber}, txn=${transactionId}`);
     return { status: 'duplicate', message: '回调已处理过' };
   }
@@ -358,11 +408,11 @@ export async function handlePaymentCallback(payload) {
         // 通知消费者支付成功
         const user = await prisma.user.findUnique({
           where: { id: order.userId },
-          select: { telegramId: true, language: true },
+          select: { id: true, telegramId: true, language: true },
         });
         if (user?.telegramId) {
-          sendOrderNotification(
-            { telegramId: user.telegramId, languageCode: user.language },
+          notificationService.notifyUserOrder(
+            { userId: order.userId, telegramId: user.telegramId, languageCode: user.language },
             order, 'paid',
           ).catch((e) => console.error('[Bot] 支付成功通知失败:', e.message));
         }
@@ -394,4 +444,129 @@ export async function handlePaymentCallback(payload) {
   }
 
   return { status: 'processed', message: '回调处理完成' };
+}
+
+/**
+ * 处理 Telegram Payments 更新（pre_checkout_query / successful_payment）
+ *
+ * 安全要求：
+ * 1. pre_checkout_query 必须快速响应（<10s）
+ * 2. successful_payment 需要幂等 + 事务更新订单
+ */
+export async function handleTelegramPaymentUpdate(update) {
+  const paymentInfo = telegramPayments.parseTelegramPaymentUpdate(update);
+  if (!paymentInfo) {
+    return { status: 'ignored', message: '非支付相关更新' };
+  }
+
+  // payload 格式: tgmall:{orderNumber}:{timestamp} 或 orderNumber（兼容 mock）
+  const payload = paymentInfo.payload || '';
+  const orderNumber = payload.startsWith('tgmall:')
+    ? payload.split(':')[1]
+    : payload;
+
+  if (!orderNumber) {
+    throw new AppError('缺少订单号 payload', 400, 'VALIDATION_ERROR');
+  }
+
+  if (paymentInfo.type === 'pre_checkout_query') {
+    const order = await prisma.order.findUnique({
+      where: { orderNumber },
+      select: { id: true, status: true, paymentStatus: true, totalUsd: true },
+    });
+
+    if (!order) {
+      await telegramPayments.answerPreCheckoutQuery(paymentInfo.preCheckoutQueryId, false, '订单不存在');
+      throw new AppError('订单不存在', 404, 'NOT_FOUND');
+    }
+
+    if (order.status === 'cancelled' || order.paymentStatus === 'success') {
+      await telegramPayments.answerPreCheckoutQuery(paymentInfo.preCheckoutQueryId, false, '订单不可支付');
+      throw new AppError('订单不可支付', 400, 'ORDER_NOT_PAYABLE');
+    }
+
+    // 金额校验：允许 1 美分误差
+    if (paymentInfo.totalAmountUsd !== undefined && Math.abs(paymentInfo.totalAmountUsd - Number(order.totalUsd)) > 0.01) {
+      await telegramPayments.answerPreCheckoutQuery(paymentInfo.preCheckoutQueryId, false, '支付金额不匹配');
+      throw new AppError('支付金额不匹配', 400, 'AMOUNT_MISMATCH');
+    }
+
+    await telegramPayments.answerPreCheckoutQuery(paymentInfo.preCheckoutQueryId, true);
+    return { status: 'pre_checkout_answered', message: '预结账已确认' };
+  }
+
+  if (paymentInfo.type === 'successful_payment') {
+    // 幂等检查：原子抢占处理锁
+    const idempotencyKey = `payment:callback:telegram:${paymentInfo.telegramPaymentChargeId}`;
+    const claimed = await redis.set(idempotencyKey, 'processing', 'NX', 'EX', 60);
+    if (!claimed) {
+      return { status: 'duplicate', message: '回调已处理过' };
+    }
+
+    const order = await prisma.order.findUnique({ where: { orderNumber } });
+    if (!order) {
+      throw new AppError('订单不存在', 404, 'NOT_FOUND');
+    }
+
+    let transactionCommitted = false;
+    try {
+      await prisma.$transaction(async (tx) => {
+        const currentOrder = await tx.order.findUnique({ where: { id: order.id } });
+        if (currentOrder.paymentStatus === 'success') return;
+
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: 'success',
+            status: 'paid',
+            paidAt: new Date(),
+            logisticsInfo: {
+              ...(currentOrder.logisticsInfo || {}),
+              telegramPaymentChargeId: paymentInfo.telegramPaymentChargeId,
+              providerPaymentChargeId: paymentInfo.providerPaymentChargeId,
+            },
+          },
+        });
+
+        const orderItems = await tx.orderItem.findMany({
+          where: { orderId: order.id },
+          select: { productId: true, quantity: true },
+        });
+
+        for (const item of orderItems) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { salesCount: { increment: item.quantity } },
+          });
+        }
+        transactionCommitted = true;
+      });
+
+      if (transactionCommitted) {
+        await redis.set(idempotencyKey, '1', 'EX', 86400);
+      }
+
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: order.userId },
+          select: { id: true, telegramId: true, language: true },
+        });
+        if (user?.telegramId) {
+          notificationService.notifyUserOrder(
+            { userId: user.id, telegramId: user.telegramId, languageCode: user.language },
+            order, 'paid',
+          ).catch((e) => console.error('[Bot] Telegram 支付成功通知失败:', e.message));
+        }
+      } catch (e) {
+        console.error('[Bot] Telegram 支付通知查询失败:', e.message);
+      }
+
+      return { status: 'processed', message: '支付成功处理完成' };
+    } catch (err) {
+      console.error(`Telegram 支付成功处理异常: ${err.message}`, err);
+      throw new AppError('支付处理异常，请人工核查', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  return { status: 'ignored', message: '未识别的支付更新类型' };
 }

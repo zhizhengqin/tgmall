@@ -72,7 +72,7 @@ const checkedTotalUsd = computed(() => {
   let sum = 0;
   for (const g of groups.value) {
     for (const i of g.items) {
-      if (checkedIds.value.includes(i.productId)) sum += i.subtotalUsd;
+      if (checkedIds.value.includes(i.id)) sum += i.subtotalUsd;
     }
   }
   return Math.round(sum * 100) / 100;
@@ -82,7 +82,7 @@ const checkedTotalKhr = computed(() => {
   let sum = 0;
   for (const g of groups.value) {
     for (const i of g.items) {
-      if (checkedIds.value.includes(i.productId)) sum += i.priceKhr * i.quantity;
+      if (checkedIds.value.includes(i.id)) sum += i.priceKhr * i.quantity;
     }
   }
   return sum;
@@ -131,17 +131,7 @@ async function loadCart() {
 
 function goCheckout() {
   if (checkedIds.value.length === 0) return;
-  // 将选中商品信息存入 localStorage 供结算页使用
-  const items = [];
-  for (const g of groups.value) {
-    for (const i of g.items) {
-      if (checkedIds.value.includes(i.id)) {
-        items.push({ productId: i.productId, quantity: i.quantity, spec: i.spec, priceUsd: i.priceUsd, priceKhr: i.priceKhr, productName: i.productName, thumbnail: i.thumbnail, merchantId: i.merchantId, merchantName: i.merchantName });
-      }
-    }
-  }
-  localStorage.setItem('checkout_items', JSON.stringify(items));
-  router.push('/checkout');
+  router.push({ path: '/checkout', query: { ids: checkedIds.value.join(',') } });
 }
 
 function specStr(spec) {

@@ -52,3 +52,9 @@ export const customerServiceSchema = z.object({
   sort_order: z.number().int().min(0).default(0),
   status: z.enum(['active', 'inactive']).optional().default('active'),
 });
+
+export const hotSearchSchema = z.object({
+  keyword: z.string().min(1, '搜索词必填').max(100),
+  sort_order: z.number().int('排序必须是整数').min(0).default(0),
+  status: z.enum(['active', 'inactive']).optional().default('active'),
+});
