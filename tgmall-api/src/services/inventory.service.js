@@ -1,5 +1,6 @@
 // 库存管理服务
 import prisma from '../config/database.js';
+import * as cache from './cache.service.js';
 import { AppError } from '../utils/AppError.js';
 import { getPagination } from '../utils/pagination.js';
 
@@ -48,7 +49,7 @@ export async function adjustStock(productId, newQty, operatorId, note = null) {
     throw new AppError('库存数量必须是非负整数', 400, 'INVALID_QUANTITY');
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // 在事务内加行级锁读取，防止并发调整导致日志与实际不一致
     const [product] = await tx.$queryRaw`
       SELECT id, stock, name_km
@@ -82,6 +83,11 @@ export async function adjustStock(productId, newQty, operatorId, note = null) {
       select: { id: true, nameKm: true, stock: true, status: true, alertThreshold: true },
     });
   });
+
+  await cache.invalidateProductCache(productId);
+  await cache.bumpProductListVersion();
+
+  return result;
 }
 
 export async function getStockLogs(productId, { page = 1, limit = 20 } = {}) {
@@ -103,7 +109,7 @@ export async function checkInventory({ productId, actualQty, checkedBy, note }) 
     throw new AppError('盘点数量必须是非负整数', 400, 'INVALID_QUANTITY');
   }
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     // 在事务内加行级锁读取当前库存，防止并发盘点覆盖
     const [product] = await tx.$queryRaw`
       SELECT id, stock, name_km
@@ -133,6 +139,13 @@ export async function checkInventory({ productId, actualQty, checkedBy, note }) 
 
     return { ...check, productName: product.name_km };
   });
+
+  if (result.diff !== 0) {
+    await cache.invalidateProductCache(productId);
+    await cache.bumpProductListVersion();
+  }
+
+  return result;
 }
 
 export async function setAlertThreshold(productId, threshold) {

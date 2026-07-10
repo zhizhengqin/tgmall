@@ -153,14 +153,17 @@ export async function getFailedNotificationsForRetry() {
  * 消费者订单通知
  */
 export async function notifyUserOrder(user, order, type) {
-  const result = await telegram.sendOrderNotification(user, order, type);
+  const text = telegram.renderOrderNotificationText(user, order, type);
+  if (text === null) {
+    return { ok: false, error: 'UNKNOWN_NOTIFICATION_TYPE' };
+  }
   return sendNotification({
     userId: user.userId,
     telegramId: user.telegramId,
     type: `user_${type}`,
     templateId: `order_${type}`,
     params: { orderNumber: order.orderNumber, amount: order.totalUsd },
-    text: result.text || '',
+    text,
   });
 }
 

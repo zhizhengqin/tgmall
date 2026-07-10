@@ -1,5 +1,10 @@
 // 商品服务 — 列表查询 + 详情
 import prisma from '../config/database.js';
+import * as cache from './cache.service.js';
+
+async function getListVersion() {
+  return (await cache.getJson('products:list:version')) || 0;
+}
 
 export async function listProducts({
   page,
@@ -12,6 +17,11 @@ export async function listProducts({
   language = 'km',
   userId,
 }) {
+  const version = await getListVersion();
+  const cacheKey = `products:list:v1:${version}:${page}:${limit}:${sort || '_'}:${category || '_'}:${q || '_'}:${minPrice !== undefined ? minPrice : '_'}:${maxPrice !== undefined ? maxPrice : '_'}:${language}:${userId || '_'}`;
+  const cached = await cache.getJson(cacheKey);
+  if (cached) return cached;
+
   const skip = (page - 1) * limit;
 
   // 构建查询条件
@@ -122,7 +132,7 @@ export async function listProducts({
     createdAt: item.createdAt,
   }));
 
-  return {
+  const result = {
     items: itemsMapped,
     total,
     page,
@@ -130,9 +140,20 @@ export async function listProducts({
     totalPages: Math.ceil(total / limit),
     hasNext: page * limit < total,
   };
+
+  // 仅缓存前 3 页热门列表，避免冷数据堆积
+  if (page <= 3) {
+    await cache.setJson(cacheKey, result, 300);
+  }
+
+  return result;
 }
 
 export async function getProductById(id, userId) {
+  const cacheKey = `products:detail:v1:${id}:${userId || '_'}`;
+  const cached = await cache.getJson(cacheKey);
+  if (cached) return cached;
+
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
@@ -164,7 +185,7 @@ export async function getProductById(id, userId) {
     isFavorited = !!wl;
   }
 
-  return {
+  const result = {
     id: product.id,
     nameKm: product.nameKm,
     nameEn: product.nameEn,
@@ -192,4 +213,7 @@ export async function getProductById(id, userId) {
     isFavorited,
     createdAt: product.createdAt,
   };
+
+  await cache.setJson(cacheKey, result, 600);
+  return result;
 }

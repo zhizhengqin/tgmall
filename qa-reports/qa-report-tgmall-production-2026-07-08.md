@@ -31,7 +31,7 @@
 | 检查项 | 结果 |
 |---|---|
 | Mini App 单元测试 | **50 / 50 通过** |
-| 后端 API 单元测试 | **251 / 251 通过** |
+| 后端 API 单元测试 | **290 / 290 通过** |
 | Mini App 构建 | **成功** |
 | 管理后台构建 | **成功** |
 | 生产环境健康检查 | **200 OK /health 正常** |
@@ -202,9 +202,14 @@
 - **涉及文件：** `tgmall-api/src/services/admin.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-admin/src/pages/DashboardPage.vue`、`tgmall-admin/src/pages/OrdersPage.vue`、`tgmall-admin/src/locales/{km,en,zh}.json`
 
 ### P1-09 通知服务未接入订单/支付流程
+- **状态：** ✅ 已修复
 - **需求/问题：** 通知应可审计、可重试。
-- **涉及文件：** `tgmall-api/src/services/notification.service.js`、`order.service.js`、`payment.service.js`
-- **建议：** 统一通过 notification service 发送订单/支付事件通知。
+- **修复：**
+  - `telegram.js` 新增纯渲染函数 `renderOrderNotificationText`，`sendOrderNotification` 改为渲染 + `sendMessage` 的薄封装。
+  - `notification.service.js` 修复 `notifyUserOrder` 重复发送 bug：先渲染文本，创建通知记录，再通过 `telegram.sendMessage` 发送。
+  - `order.service.js`、`payment.service.js`、`merchant.service.js` 统一调用 `notificationService.notifyUserOrder(...)` 发送 `created`/`paid`/`shipped` 通知。
+  - 新增 `notification-service.test.js` 单测覆盖渲染、HTML 转义、新旧字段兼容。
+- **涉及文件：** `tgmall-api/src/integrations/telegram.js`、`tgmall-api/src/services/notification.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-api/src/services/payment.service.js`、`tgmall-api/src/services/merchant.service.js`、`tgmall-api/tests/unit/notification-service.test.js`
 
 ### P1-10 ProductCard 未显示销量/收藏、快捷加购未处理多规格
 - **状态：** ✅ 已修复
@@ -246,19 +251,33 @@
 - **涉及文件：** `tgmall-miniapp/src/views/HomePage.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-14 商品图片上传未接入 S3/R2/CDN
+- **状态：** ✅ 已修复
 - **需求/问题：** Backlog S1-14 要求上传至对象存储、压缩、WebP、CDN URL。
-- **涉及文件：** `tgmall-api/src/services/upload.service.js`、`src/routes/upload.routes.js`
-- **建议：** 接入 CloudFlare R2/S3，使用 sharp 压缩转 WebP。
+- **修复：**
+  - 安装 `@aws-sdk/client-s3`；`config/index.js` 增加 `aws.s3Endpoint`、`s3ForcePathStyle` 以支持 Cloudflare R2。
+  - `upload.service.js` 重写：`sharp` 将 jpeg/png/webp 压缩转 WebP（质量 85，最大边 1200），GIF 跳过转换保留动画；S3 配置完整时上传并返回 `CDN_BASE_URL/key`，否则回退到本地 `uploads/`。
+  - 新增 `upload.service.test.js` 覆盖本地 WebP 回退、无效图片类型、GIF 保留。
+- **涉及文件：** `tgmall-api/package.json`、`tgmall-api/src/config/index.js`、`tgmall-api/src/services/upload.service.js`、`tgmall-api/tests/unit/upload.service.test.js`
 
 ### P1-15 商品列表/详情未加 Redis 缓存
-- **需求/问题：** Backlog S1-07/S1-15 要求缓存。
-- **涉及文件：** `tgmall-api/src/services/product.service.js`
-- **建议：** 对高频接口加 Redis 缓存与失效策略。
+- **状态：** ✅ 已修复
+- **需求/问题：** Backlog S1-07/S1-15 要求缓存高频商品接口。
+- **修复：**
+  - 新增 `cache.service.js`，封装 `getJson`/`setJson`/`delKey`/`incr`/`invalidateProductCache`/`bumpProductListVersion`，Redis 异常时静默降级。
+  - `product.service.js`：`listProducts` 对前 3 页使用版本化 key 缓存（TTL 300s）；`getProductById` 按 `id:userId` 缓存（TTL 600s）。
+  - 失效策略：商品创建/更新/上下架（`merchant.service.js`）、订单创建/取消（`order.service.js`）、库存调整/盘点（`inventory.service.js`）时递增全局列表版本并失效对应详情缓存。
+- **涉及文件：** `tgmall-api/src/services/cache.service.js`、`tgmall-api/src/services/product.service.js`、`tgmall-api/src/services/merchant.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-api/src/services/inventory.service.js`
 
-### P1-16 地址未关联 City 模型，缺少三级联动
-- **需求/问题：** Backlog S2-03 要求省/市/区三级联动。
-- **涉及文件：** `tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-api/src/validators/address.schema.js`
-- **建议：** 地址表关联 `cityId`，提供城市选择器。
+### P1-16 地址未关联 City 模型，缺少城市选择器
+- **状态：** ✅ 已修复（城市级联动）
+- **需求/问题：** Backlog S2-03 要求地址与城市关联，提供城市选择器；当前 `province` 为自由文本，配送规则匹配不准。
+- **修复：**
+  - 后端 `address.schema.js` 新增必填 `city_code`；`address.service.js` 在创建/更新时映射 `cityCode`，查询地址时 `include` `City` 返回城市多语名称。
+  - `order.service.js` 创建订单时优先使用 `address.cityCode`，并回退到 `normalizeProvinceToCityCode`；`shippingAddress` 快照增加 `city_code`。
+  - 小程序新增可复用 `CityPicker.vue`，从 `/cities` 拉取城市列表，支持三语名称。
+  - `ProfilePage.vue` 与 `CheckoutPage.vue` 的地址表单将省份输入替换为城市选择器；`CheckoutPage` 选中地址后按地址城市重新加载结算预览。
+  - 三语 `profile.form.city` 与 `error.selectCity` 文案。
+- **涉及文件：** `tgmall-api/src/validators/address.schema.js`、`tgmall-api/src/services/address.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-miniapp/src/components/common/CityPicker.vue`、`tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-17 发货字段名与 Backlog 不一致
 - **状态：** ✅ 已修复
@@ -296,14 +315,14 @@ Test Files  7 passed (7)
 Tests       50 passed (50)
 
 # 后端 API 测试
-Test Suites 27 passed, 27 total
-Tests       251 passed, 251 total
+Test Suites 33 passed, 33 total
+Tests       290 passed, 290 total
 
 # Mini App 构建
-✓ built in 731ms
+✓ built in 531ms
 
 # 管理后台构建
-✓ built in 7.15s
+✓ built in 2.83s
 
 # 生产健康检查
 GET https://tgmall-production.up.railway.app/     → 200

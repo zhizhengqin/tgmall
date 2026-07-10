@@ -6,7 +6,7 @@ import * as bakong from '../integrations/bakong.js';
 import * as abaPay from '../integrations/aba_pay.js';
 import * as wingPay from '../integrations/wing_pay.js';
 import * as telegramPayments from '../integrations/telegram_payments.js';
-import { sendOrderNotification } from '../integrations/telegram.js';
+import * as notificationService from './notification.service.js';
 
 /**
  * 生成 KHQR 支付二维码
@@ -408,11 +408,11 @@ export async function handlePaymentCallback(payload) {
         // 通知消费者支付成功
         const user = await prisma.user.findUnique({
           where: { id: order.userId },
-          select: { telegramId: true, language: true },
+          select: { id: true, telegramId: true, language: true },
         });
         if (user?.telegramId) {
-          sendOrderNotification(
-            { telegramId: user.telegramId, languageCode: user.language },
+          notificationService.notifyUserOrder(
+            { userId: order.userId, telegramId: user.telegramId, languageCode: user.language },
             order, 'paid',
           ).catch((e) => console.error('[Bot] 支付成功通知失败:', e.message));
         }
@@ -549,7 +549,7 @@ export async function handleTelegramPaymentUpdate(update) {
       try {
         const user = await prisma.user.findUnique({
           where: { id: order.userId },
-          select: { telegramId: true, language: true },
+          select: { id: true, telegramId: true, language: true },
         });
         if (user?.telegramId) {
           sendOrderNotification(

@@ -101,8 +101,8 @@
               <input v-model="addressForm.phone" type="tel" placeholder="+855..." @input="addressForm.phone = formatPhoneInput(addressForm.phone)" />
             </label>
             <label class="form-field">
-              <span>{{ $t('profile.form.province') }}</span>
-              <input v-model="addressForm.province" type="text" />
+              <span>{{ $t('profile.form.city') }}</span>
+              <CityPicker v-model:code="addressForm.city_code" v-model:name="addressForm.province" />
             </label>
             <label class="form-field">
               <span>{{ $t('profile.form.district') }}</span>
@@ -157,6 +157,7 @@ import { useCityStore } from '@/stores/cityStore.js';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
+import CityPicker from '@/components/common/CityPicker.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -182,7 +183,7 @@ const showCouponPicker = ref(false);
 const showAddressForm = ref(false);
 const submitting = ref(false);
 const savingAddress = ref(false);
-const addressForm = ref({ recipient_name: '', phone: '', province: '', district: '', detail: '', is_default: false });
+const addressForm = ref({ recipient_name: '', phone: '', city_code: '', province: '', district: '', detail: '', is_default: false });
 
 const paymentMethods = computed(() => [
   { value: 'khqr', label: t('payment.khqr') },
@@ -232,12 +233,12 @@ function selectAddress(a) { selectedAddress.value = a; showAddressPicker.value =
 function selectCoupon(uc) {
   selectedCoupon.value = uc;
   showCouponPicker.value = false;
-  loadPreview();
+  loadPreview(selectedAddress.value?.cityCode);
 }
 function specStr(spec) { return Object.values(spec || {}).join(' / '); }
 
 async function saveAddress() {
-  if (!addressForm.value.recipient_name || !addressForm.value.phone || !addressForm.value.province || !addressForm.value.district || !addressForm.value.detail) {
+  if (!addressForm.value.recipient_name || !addressForm.value.phone || !addressForm.value.city_code || !addressForm.value.district || !addressForm.value.detail) {
     alert(t('checkout.formIncomplete'));
     return;
   }
@@ -251,7 +252,7 @@ async function saveAddress() {
     const newAddr = res.data;
     addresses.value.unshift(newAddr);
     selectAddress(newAddr);
-    addressForm.value = { recipient_name: '', phone: '', province: '', district: '', detail: '', is_default: false };
+    addressForm.value = { recipient_name: '', phone: '', city_code: '', province: '', district: '', detail: '', is_default: false };
     showAddressForm.value = false;
   } catch (e) {
     alert(t('checkout.saveAddressFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));
@@ -277,14 +278,14 @@ function formatDate(d) {
   return date.toLocaleDateString('en-US');
 }
 
-async function loadPreview() {
+async function loadPreview(cityCode = cityStore.currentCity?.code) {
   if (!itemIds.value.length) return;
   previewLoading.value = true;
   previewError.value = '';
   try {
     const res = await checkoutPreview({
       item_ids: itemIds.value,
-      city_code: cityStore.currentCity.code,
+      city_code: cityCode || cityStore.currentCity?.code,
       coupon_id: selectedCoupon.value?.id,
     });
     preview.value = res.data;
@@ -294,6 +295,12 @@ async function loadPreview() {
   }
   previewLoading.value = false;
 }
+
+watch(selectedAddress, (a) => {
+  if (a?.cityCode) {
+    loadPreview(a.cityCode);
+  }
+}, { immediate: false });
 
 async function submitOrder() {
   if (!selectedAddress.value) return;

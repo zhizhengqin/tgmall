@@ -131,6 +131,7 @@
     "form": {
       "name": "Recipient Name",
       "phone": "+855 Phone Number",
+      "city": "City",
       "province": "Province",
       "district": "District",
       "detail": "Detailed Address",
@@ -288,7 +289,8 @@
     "enterPassword": "Please enter password",
     "passwordRule": "Password: 8-20 chars",
     "passwordsNotMatch": "Passwords do not match",
-    "resetFailed": "Reset failed"
+    "resetFailed": "Reset failed",
+    "selectCity": "Please select a city"
   },
   "search": {
     "historyTitle": "Search History",

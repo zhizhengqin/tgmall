@@ -40,7 +40,7 @@
         <div v-if="showAddrForm" class="addr-form">
           <input v-model="addrForm.recipient_name" :placeholder="$t('profile.form.name')" />
           <input v-model="addrForm.phone" :placeholder="$t('profile.form.phone')" @input="addrForm.phone = formatPhoneInput(addrForm.phone)" />
-          <input v-model="addrForm.province" :placeholder="$t('profile.form.province')" />
+          <CityPicker v-model:code="addrForm.city_code" v-model:name="addrForm.province" />
           <input v-model="addrForm.district" :placeholder="$t('profile.form.district')" />
           <input v-model="addrForm.detail" :placeholder="$t('profile.form.detail')" />
           <label class="default-check"><input type="checkbox" v-model="addrForm.is_default" /> {{ $t('profile.form.setDefault') }}</label>
@@ -112,6 +112,7 @@ import { useShopConfig } from '@/composables/useShopConfig.js';
 import { proxifyImageUrl } from '@/utils/imageProxy.js';
 import { isValidPhone, formatPhoneInput } from '@/utils/phone.js';
 import BottomNav from '@/components/common/BottomNav.vue';
+import CityPicker from '@/components/common/CityPicker.vue';
 
 const { locale, t } = useI18n();
 const languageStore = useLanguageStore();
@@ -138,7 +139,7 @@ const langs = [
 const addresses = ref([]);
 const showAddresses = ref(false);
 const showAddrForm = ref(false);
-const addrForm = reactive({ recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
+const addrForm = reactive({ recipient_name: '', phone: '+855', city_code: '', province: '', district: '', detail: '', is_default: false });
 const addressCount = computed(() => addresses.value.length);
 const avatarError = ref(false);
 
@@ -161,9 +162,13 @@ async function handleSaveAddr() {
     alert(t('error.invalidPhone'));
     return;
   }
+  if (!addrForm.city_code) {
+    alert(t('error.selectCity'));
+    return;
+  }
   try {
     await createAddress({ ...addrForm });
-    Object.assign(addrForm, { recipient_name: '', phone: '+855', province: '', district: '', detail: '', is_default: false });
+    Object.assign(addrForm, { recipient_name: '', phone: '+855', city_code: '', province: '', district: '', detail: '', is_default: false });
     showAddrForm.value = false;
     await loadAddresses();
   } catch (e) { alert(e?.response?.data?.error?.message || t('profile.saveFailed')); }

@@ -4,7 +4,8 @@ import prisma from '../config/database.js';
 import redis from '../config/redis.js';
 import { AppError } from '../utils/AppError.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
-import { sendOrderNotification } from '../integrations/telegram.js';
+import * as notificationService from './notification.service.js';
+import * as cache from './cache.service.js';
 import { calculateShippingFee } from './shopConfig.service.js';
 import { getExchangeRate } from './systemConfig.service.js';
 
@@ -238,6 +239,7 @@ export async function createOrder(userId, body) {
           shippingAddress: {
             recipient_name: address.recipientName,
             phone: address.phone,
+            city_code: address.cityCode || normalizeProvinceToCityCode(address.province),
             province: address.province,
             district: address.district,
             detail: address.detail,
@@ -262,15 +264,19 @@ export async function createOrder(userId, body) {
     // 4. 清除购物车
     await redis.del(`cart:${userId}`);
 
-    // 5. Bot 通知（fire and forget，不阻塞业务）
+    // 5. 失效相关商品缓存
+    await cache.bumpProductListVersion();
+    await Promise.all(rawItems.map((i) => cache.invalidateProductCache(i.product_id)));
+
+    // 6. Bot 通知（fire and forget，不阻塞业务）
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { telegramId: true, language: true },
+        select: { id: true, telegramId: true, language: true },
       });
       if (user?.telegramId) {
-        sendOrderNotification(
-          { telegramId: user.telegramId, languageCode: user.language },
+        notificationService.notifyUserOrder(
+          { userId: user.id, telegramId: user.telegramId, languageCode: user.language },
           order,
           'created',
         ).catch((e) => console.error('[Bot] 下单通知失败:', e.message));
@@ -521,6 +527,12 @@ export async function cancelOrder(userId, orderId, reason) {
 
     return { status: 'cancelled' };
   });
+
+  // 失效相关商品缓存
+  await cache.bumpProductListVersion();
+  await Promise.all(order.items.map((i) => cache.invalidateProductCache(i.productId)));
+
+  return { status: 'cancelled' };
 }
 
 export async function confirmOrder(userId, orderId) {

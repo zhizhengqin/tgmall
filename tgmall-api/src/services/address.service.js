@@ -8,6 +8,9 @@ export async function getUserAddresses(userId) {
   const addresses = await prisma.address.findMany({
     where: { userId },
     orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+    include: {
+      city: { select: { code: true, nameKm: true, nameEn: true, nameZh: true } },
+    },
   });
   return addresses;
 }
@@ -17,6 +20,7 @@ export async function createAddress(userId, data) {
   const mapped = {
     recipientName: data.recipient_name,
     phone: data.phone,
+    cityCode: data.city_code,
     province: data.province,
     district: data.district,
     detail: data.detail,
@@ -39,6 +43,9 @@ export async function createAddress(userId, data) {
 
   return prisma.address.create({
     data: { ...mapped, userId },
+    include: {
+      city: { select: { code: true, nameKm: true, nameEn: true, nameZh: true } },
+    },
   });
 }
 
@@ -52,6 +59,7 @@ export async function updateAddress(userId, addressId, data) {
   const mapped = {};
   if (data.recipient_name !== undefined) mapped.recipientName = data.recipient_name;
   if (data.phone !== undefined) mapped.phone = data.phone;
+  if (data.city_code !== undefined) mapped.cityCode = data.city_code;
   if (data.province !== undefined) mapped.province = data.province;
   if (data.district !== undefined) mapped.district = data.district;
   if (data.detail !== undefined) mapped.detail = data.detail;
@@ -67,6 +75,9 @@ export async function updateAddress(userId, addressId, data) {
   return prisma.address.update({
     where: { id: addressId },
     data: mapped,
+    include: {
+      city: { select: { code: true, nameKm: true, nameEn: true, nameZh: true } },
+    },
   });
 }
 

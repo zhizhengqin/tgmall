@@ -131,6 +131,7 @@
     "form": {
       "name": "收件人姓名",
       "phone": "+855 手机号",
+      "city": "城市",
       "province": "省份",
       "district": "区/县",
       "detail": "详细地址",
@@ -288,7 +289,8 @@
     "enterPassword": "请输入密码",
     "passwordRule": "密码需 8-20 位",
     "passwordsNotMatch": "两次密码不一致",
-    "resetFailed": "重置失败"
+    "resetFailed": "重置失败",
+    "selectCity": "请选择城市"
   },
   "search": {
     "historyTitle": "历史搜索",

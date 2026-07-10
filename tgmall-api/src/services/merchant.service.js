@@ -1,6 +1,7 @@
 // 商家服务 — 公司自营商品管理、订单处理
 import prisma from '../config/database.js';
-import { sendShippedNotification } from '../integrations/telegram.js';
+import * as notificationService from './notification.service.js';
+import * as cache from './cache.service.js';
 import { AppError } from '../utils/AppError.js';
 
 async function syncProductSkus(tx, productId, specs, basePriceUsd, basePriceKhr, baseStock) {
@@ -192,6 +193,9 @@ export async function createProduct(body) {
     return created;
   });
 
+  await cache.invalidateProductCache(product.id);
+  await cache.bumpProductListVersion();
+
   return {
     ...product,
     priceUsd: Number(product.priceUsd),
@@ -250,6 +254,9 @@ export async function updateProduct(productId, body) {
     return product;
   });
 
+  await cache.invalidateProductCache(productId);
+  await cache.bumpProductListVersion();
+
   return {
     ...updated,
     priceUsd: Number(updated.priceUsd),
@@ -272,6 +279,9 @@ export async function toggleProduct(productId) {
     data: { status: newStatus },
     select: { id: true, nameKm: true, status: true },
   });
+
+  await cache.invalidateProductCache(productId);
+  await cache.bumpProductListVersion();
 
   return updated;
 }
@@ -401,7 +411,7 @@ export async function shipOrder(orderId, logisticsInfo) {
   const order = await prisma.order.findFirst({
     where: { id: orderId },
     include: {
-      user: { select: { telegramId: true, language: true } },
+      user: { select: { id: true, telegramId: true, language: true } },
     },
   });
   if (!order) throw new AppError('订单不存在或不属于您的店铺', 404, 'NOT_FOUND');
@@ -424,6 +434,7 @@ export async function shipOrder(orderId, logisticsInfo) {
     select: {
       id: true,
       orderNumber: true,
+      totalUsd: true,
       status: true,
       shippedAt: true,
       logisticsInfo: true,
@@ -432,8 +443,11 @@ export async function shipOrder(orderId, logisticsInfo) {
 
   // 3. Bot 通知消费者（异步，不阻塞响应）
   if (order.user?.telegramId) {
-    sendShippedNotification(order.user.telegramId, order.orderNumber, order.user.language)
-      .catch((err) => console.error('[Bot] 发货通知失败:', err.message));
+    notificationService.notifyUserOrder(
+      { userId: order.user.id, telegramId: order.user.telegramId, languageCode: order.user.language },
+      updated,
+      'shipped',
+    ).catch((err) => console.error('[Bot] 发货通知失败:', err.message));
   }
 
   return updated;
