@@ -12,6 +12,23 @@ export async function verifyInitData(initData) {
   const hash = params.get('hash');
   params.delete('hash');
 
+  // 演示环境浏览器登录：hash=demo 时跳过签名校验（仅在 PAYMENT_MOCK_MODE 启用时）
+  const isDemo = hash === 'demo';
+  if (isDemo) {
+    if (!config.paymentMockMode) {
+      throw new Error('initData 签名校验失败');
+    }
+    const user = JSON.parse(params.get('user') || '{}');
+    return {
+      telegramId: user.id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      username: user.username,
+      languageCode: user.language_code || 'km',
+      photoUrl: user.photo_url || null,
+    };
+  }
+
   const dataCheckString = Array.from(params.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${v}`)

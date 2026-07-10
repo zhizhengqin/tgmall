@@ -11,8 +11,9 @@ import zh from './locales/zh.json';
 
 import './assets/styles/tokens.css';
 
-// 开发环境注入 Telegram SDK Mock（生产环境跳过）
-if (import.meta.env.DEV) {
+// 开发环境或演示参数 ?demo=1 时注入 Telegram SDK Mock
+const isDemoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1';
+if (import.meta.env.DEV || isDemoMode) {
   import('./dev/telegram-mock.js').then((m) => m.installTelegramMock());
 }
 

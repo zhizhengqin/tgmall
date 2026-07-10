@@ -1,5 +1,7 @@
-// 本地开发用的 Telegram WebApp SDK Mock
-// 仅在 Vite 开发模式下注入，生产环境不会执行
+// 本地开发 / 演示环境浏览器访问用的 Telegram WebApp SDK Mock
+// 触发条件：
+//   - Vite 开发模式（import.meta.env.DEV）自动注入
+//   - 生产环境 URL 携带 ?demo=1 时注入，方便客户演示
 export function installTelegramMock() {
   if (typeof window === 'undefined') return;
 
@@ -18,7 +20,8 @@ export function installTelegramMock() {
     photo_url: null,
   };
 
-  const initData = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(mockUser))}&auth_date=1717900000&hash=mockhash123`;
+  // hash=demo 让后端在 PAYMENT_MOCK_MODE 模式下免验签登录
+  const initData = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(mockUser))}&auth_date=1717900000&hash=demo`;
 
   window.Telegram = {
     WebApp: {
@@ -47,5 +50,6 @@ export function installTelegramMock() {
     },
   };
 
-  console.info('[TG Mock] 本地开发模式：已注入 Telegram WebApp SDK Mock');
+  const mode = import.meta.env.DEV ? '本地开发模式' : '演示模式';
+  console.info(`[TG Mock] ${mode}：已注入 Telegram WebApp SDK Mock`);
 }
