@@ -168,8 +168,8 @@
   },
   "orders": {
     "title": "Orders", "all": "All",
-    "pending_payment": "Pending", "paid": "Paid",
-    "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
+    "pending_payment": "Pending", "confirmed": "Confirmed",
+    "paid": "Paid", "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
     "orderNumber": "Order No.", "amount": "Amount", "customer": "Customer",
     "date": "Date", "detail": "Detail", "items": "Items",
     "shippingAddress": "Address", "total": "Total", "ship": "Ship",
