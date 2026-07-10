@@ -67,11 +67,21 @@ export async function createOrder(userId, body) {
         if (!product) throw new AppError(`商品不存在: ${item.productId}`, 404, 'NOT_FOUND');
         if (product.status !== 'active') throw new AppError('商品已下架', 410, 'PRODUCT_INACTIVE');
 
-        // 解析 SKU：优先使用传入 skuId，否则按 spec 匹配
-        const sku = await resolveOrderSku(tx, item);
+        // 解析 SKU：优先使用传入 skuId，否则按 spec 匹配；对 SKU 加 SELECT FOR UPDATE 防止并发超卖
+        const resolvedSku = await resolveOrderSku(tx, item);
+        let sku = null;
+        if (resolvedSku) {
+          const [lockedSku] = await tx.$queryRaw`
+            SELECT id, stock, price_usd, price_khr
+            FROM product_skus
+            WHERE id = ${resolvedSku.id}::uuid
+            FOR UPDATE
+          `;
+          sku = lockedSku;
+        }
         const skuStock = sku ? sku.stock : product.stock;
-        const skuPriceUsd = sku ? Number(sku.priceUsd) : Number(product.price_usd);
-        const skuPriceKhr = sku ? sku.priceKhr : product.price_khr;
+        const skuPriceUsd = sku ? Number(sku.price_usd) : Number(product.price_usd);
+        const skuPriceKhr = sku ? sku.price_khr : product.price_khr;
 
         if (skuStock < item.quantity) {
           throw new AppError(`"${product.name_km}"库存不足，仅剩${skuStock}件`, 400, 'INSUFFICIENT_STOCK');
@@ -118,14 +128,20 @@ export async function createOrder(userId, body) {
           ? Number(userCoupon.coupon.value)
           : Math.round(totalUsd * Number(userCoupon.coupon.value) / 100 * 100) / 100;
 
-        await tx.userCoupon.update({
-          where: { id: userCoupon.id },
+        // 使用 updateMany + 状态条件实现原子占用，防止并发将同一张券重复标记为已使用
+        const couponUpdate = await tx.userCoupon.updateMany({
+          where: { id: userCoupon.id, status: 'unused' },
           data: { status: 'used', usedAt: new Date() },
         });
+        if (couponUpdate.count === 0) {
+          throw new AppError('优惠券已被使用，请刷新后重试', 409, 'COUPON_ALREADY_USED');
+        }
       }
 
       // 3c. 预扣库存 + 写 StockLog
-      for (const item of items) {
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i];
+        const detail = itemDetails[i];
         const productBefore = productMap.get(item.productId);
         const newProductStock = productBefore.stock - item.quantity;
 
@@ -157,11 +173,10 @@ export async function createOrder(userId, body) {
         }
 
         // 扣减 SKU 库存
-        const skuId = itemDetails.find((d) => d.productId === item.productId && JSON.stringify(d.spec) === JSON.stringify(item.spec))?.skuId;
-        if (skuId) {
-          const skuBefore = skuMap.get(skuId);
+        if (detail?.skuId) {
+          const skuBefore = skuMap.get(detail.skuId);
           await tx.productSku.update({
-            where: { id: skuId },
+            where: { id: detail.skuId },
             data: { stock: skuBefore.stock - item.quantity },
           });
         }
@@ -470,7 +485,8 @@ export async function getOrderById(userId, orderId) {
 }
 
 export async function cancelOrder(userId, orderId, reason) {
-  return prisma.$transaction(async (tx) => {
+  let cancelledItems = [];
+  const result = await prisma.$transaction(async (tx) => {
     // 在事务内读取订单并校验状态，防止并发重复取消/重复恢复库存
     const order = await tx.order.findFirst({
       where: { id: orderId, userId },
@@ -515,6 +531,22 @@ export async function cancelOrder(userId, orderId, reason) {
           reason: 'order_cancel',
         },
       });
+
+      // 恢复 SKU 库存（如有）
+      if (item.skuId) {
+        const [sku] = await tx.$queryRaw`
+          SELECT id, stock
+          FROM product_skus
+          WHERE id = ${item.skuId}::uuid
+          FOR UPDATE
+        `;
+        if (sku) {
+          await tx.productSku.update({
+            where: { id: sku.id },
+            data: { stock: sku.stock + item.quantity },
+          });
+        }
+      }
     }
 
     // 退还优惠券
@@ -525,14 +557,15 @@ export async function cancelOrder(userId, orderId, reason) {
       });
     }
 
+    cancelledItems = order.items;
     return { status: 'cancelled' };
   });
 
   // 失效相关商品缓存
   await cache.bumpProductListVersion();
-  await Promise.all(order.items.map((i) => cache.invalidateProductCache(i.productId)));
+  await Promise.all(cancelledItems.map((i) => cache.invalidateProductCache(i.productId)));
 
-  return { status: 'cancelled' };
+  return result;
 }
 
 export async function confirmOrder(userId, orderId) {
