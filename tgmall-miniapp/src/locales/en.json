@@ -23,7 +23,10 @@
     "sortNewest": "Newest",
     "sortPriceLow": "Price↑",
     "sortPriceHigh": "Price↓",
-    "sortPopular": "Best Selling"
+    "sortPopular": "Best Selling",
+    "pullDownToRefresh": "Pull down to refresh",
+    "releaseToRefresh": "Release to refresh",
+    "refreshing": "Refreshing..."
   },
   "product": {
     "addToCart": "Add to Cart",

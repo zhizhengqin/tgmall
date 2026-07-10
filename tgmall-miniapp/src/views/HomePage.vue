@@ -1,6 +1,19 @@
 <!-- 首页 — 商品浏览主入口 -->
 <template>
-  <div class="home-page">
+  <div
+    class="home-page"
+    :class="{ 'is-refreshing': isRefreshing }"
+    :style="ptrStyle"
+    @touchstart="onPtrStart"
+    @touchmove="onPtrMove"
+    @touchend="onPtrEnd"
+  >
+    <div class="ptr-indicator" :style="{ opacity: pullProgress }">
+      <span v-if="isRefreshing">{{ $t('home.refreshing') }}</span>
+      <span v-else-if="willRefresh">{{ $t('home.releaseToRefresh') }}</span>
+      <span v-else>{{ $t('home.pullDownToRefresh') }}</span>
+    </div>
+
     <!-- 顶部搜索栏 -->
     <header class="top-header">
       <div class="city-entry" @click="$router.push('/cities')">
@@ -169,7 +182,7 @@ const cityStore = useCityStore();
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
-const { enableCloseConfirmation } = useTelegram();
+const { tg, enableCloseConfirmation } = useTelegram();
 const { banners, categories: apiCategories, cities: shopCities, load } = useShopConfig();
 
 // 开启 Mini App 关闭确认
@@ -230,6 +243,89 @@ const touchMoveDistance = ref(0);
 const bannerLoadFailed = reactive({});
 const SWIPE_THRESHOLD = 40;
 const CLICK_MOVE_THRESHOLD = 10;
+
+// 下拉刷新状态
+const pullY = ref(0);
+const isPulling = ref(false);
+const isRefreshing = ref(false);
+const willRefresh = ref(false);
+const ptrStartY = ref(0);
+const ptrStartX = ref(0);
+const MAX_PULL = 80;
+const TRIGGER_AT = 60;
+
+const pullProgress = computed(() => {
+  if (isRefreshing.value) return 1;
+  return Math.min(pullY.value / TRIGGER_AT, 1);
+});
+const ptrStyle = computed(() => ({
+  transform: `translateY(${Math.min(pullY.value, MAX_PULL)}px)`,
+  transition: isPulling.value ? 'none' : 'transform 0.25s ease',
+}));
+
+function onPtrStart(e) {
+  if (isRefreshing.value) return;
+  const touch = e.touches[0];
+  ptrStartY.value = touch.clientY;
+  ptrStartX.value = touch.clientX;
+  isPulling.value = false;
+  pullY.value = 0;
+  willRefresh.value = false;
+}
+
+function onPtrMove(e) {
+  if (isRefreshing.value) return;
+  const touch = e.touches[0];
+  const deltaY = touch.clientY - ptrStartY.value;
+  const deltaX = touch.clientX - ptrStartX.value;
+  // 只在页面顶部且垂直位移大于水平位移时触发
+  if (window.scrollY > 0) return;
+  if (Math.abs(deltaY) < Math.abs(deltaX)) return;
+  if (deltaY <= 0) return;
+
+  if (!isPulling.value && deltaY > 10) {
+    isPulling.value = true;
+  }
+  if (isPulling.value) {
+    pullY.value = deltaY;
+    willRefresh.value = pullY.value >= TRIGGER_AT;
+  }
+}
+
+async function onPtrEnd() {
+  if (isRefreshing.value) return;
+  if (!isPulling.value) return;
+  isPulling.value = false;
+  if (willRefresh.value) {
+    isRefreshing.value = true;
+    await Promise.all([
+      refreshProducts(),
+      load(),
+      loadFlashDeals(),
+      fetchLoginBanner(),
+    ]);
+    isRefreshing.value = false;
+  }
+  pullY.value = 0;
+  willRefresh.value = false;
+}
+
+async function runRefresh() {
+  isRefreshing.value = true;
+  await Promise.all([
+    refreshProducts(),
+    load(),
+    loadFlashDeals(),
+    fetchLoginBanner(),
+  ]);
+  isRefreshing.value = false;
+  pullY.value = 0;
+}
+
+// 暴露给手动刷新（保留原有 refreshProducts 语义）
+function refreshProducts() {
+  return fetchProducts(true);
+}
 
 // 监听 URL 分类参数，支持 Banner category 跳转时自动切换品类
 watch(
@@ -342,10 +438,6 @@ async function fetchProducts(reset = false) {
   }
 }
 
-function refreshProducts() {
-  fetchProducts(true);
-}
-
 async function loadFlashDeals() {
   try {
     const res = await getFlashDeals(cityStore.currentCode || 'phnom_penh');
@@ -362,6 +454,9 @@ function handleScroll() {
 }
 
 onMounted(() => {
+  // 禁用 Telegram 原生垂直滑动，避免与下拉刷新冲突
+  tg?.disableVerticalSwipes?.();
+
   // 同步 vue-i18n locale 和 languageStore（处理首次加载）
   if (locale.value !== languageStore.current) {
     locale.value = languageStore.current;
@@ -384,14 +479,31 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  tg?.enableVerticalSwipes?.();
   window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
 <style scoped>
 .home-page {
+  position: relative;
   min-height: 100vh;
   background: var(--bg);
+}
+
+.ptr-indicator {
+  position: absolute;
+  top: -50px;
+  left: 0;
+  right: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--muted);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 /* 顶部搜索栏 */

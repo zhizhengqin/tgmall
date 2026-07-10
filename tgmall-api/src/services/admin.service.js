@@ -7,11 +7,12 @@ export async function getPlatformDashboard() {
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  const [gmvToday, gmvMonth, totalUsers, totalOrders] = await Promise.all([
+  const [gmvToday, gmvMonth, totalUsers, totalOrders, todayNewSkus] = await Promise.all([
     prisma.order.aggregate({ _sum: { totalUsd: true }, where: { paidAt: { gte: today }, status: { in: ['paid', 'shipped', 'completed'] } } }),
     prisma.order.aggregate({ _sum: { totalUsd: true }, where: { paidAt: { gte: monthStart }, status: { in: ['paid', 'shipped', 'completed'] } } }),
     prisma.user.count({ where: { status: 'active' } }),
     prisma.order.count(),
+    prisma.productSku.count({ where: { createdAt: { gte: today } } }),
   ]);
 
   // Recent 7 days trend
@@ -72,7 +73,7 @@ export async function getPlatformDashboard() {
   return {
     gmvToday: Number(gmvToday._sum.totalUsd || 0),
     gmvThisMonth: Number(gmvMonth._sum.totalUsd || 0),
-    totalMerchants: 0, pendingAudit: 0, totalUsers, totalOrders,
+    totalMerchants: 0, pendingAudit: 0, totalUsers, totalOrders, todayNewSkus,
     recent7DaysTrend: Object.values(dailyMap),
     topProducts: topProducts.map(p => ({
       id: p.id,

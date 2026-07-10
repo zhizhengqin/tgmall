@@ -23,7 +23,10 @@
     "sortNewest": "ថ្មីបំផុត",
     "sortPriceLow": "តម្លៃ↑",
     "sortPriceHigh": "តម្លៃ↓",
-    "sortPopular": "លក់ដាច់"
+    "sortPopular": "លក់ដាច់",
+    "pullDownToRefresh": "ទាញចុះដើម្បីធ្វើឱ្យស្រស់",
+    "releaseToRefresh": "ដោះដើម្បីធ្វើឱ្យស្រស់",
+    "refreshing": "កំពុងធ្វើឱ្យស្រស់..."
   },
   "product": {
     "addToCart": "ដាក់ក្នុងកន្ត្រក",

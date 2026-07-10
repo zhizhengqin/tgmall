@@ -43,8 +43,8 @@ export const merchantProductSchema = z.object({
 
 // 发货
 export const shipOrderSchema = z.object({
-  company: z.string().min(1, '物流公司必填').max(100, '物流公司名称最长100字符'),
-  trackingNumber: z.string().min(1, '运单号必填').max(100, '运单号最长100字符'),
+  logistics_company: z.string().min(1, '物流公司必填').max(100, '物流公司名称最长100字符'),
+  tracking_number: z.string().min(1, '运单号必填').max(100, '运单号最长100字符'),
   estimatedDelivery: z.string().optional(),
   trackingUrl: z.string().url('物流链接格式无效').optional(),
 });

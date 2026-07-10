@@ -26,7 +26,7 @@
             </el-form>
           </el-card>
           <el-card v-else-if="order.logisticsInfo" style="margin-top:10px">
-            <p>{{ $t('orders.logisticsCompany') }}: {{ order.logisticsInfo.logistics_company || order.logisticsInfo.company }}</p>
+            <p>{{ $t('orders.logisticsCompany') }}: {{ order.logisticsInfo.logistics_company }}</p>
             <p>{{ $t('orders.trackingNumber') }}: {{ order.logisticsInfo.tracking_number }}</p>
           </el-card>
         </el-col>

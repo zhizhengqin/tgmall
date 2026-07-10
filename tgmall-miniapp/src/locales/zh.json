@@ -23,7 +23,10 @@
     "sortNewest": "最新",
     "sortPriceLow": "价格↑",
     "sortPriceHigh": "价格↓",
-    "sortPopular": "销量"
+    "sortPopular": "销量",
+    "pullDownToRefresh": "下拉刷新",
+    "releaseToRefresh": "松开刷新",
+    "refreshing": "刷新中..."
   },
   "product": {
     "addToCart": "加入购物车",

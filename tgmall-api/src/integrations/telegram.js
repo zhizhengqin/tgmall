@@ -187,12 +187,14 @@ export async function sendOrderNotification(user, order, type) {
         .replace('{{orderNumber}}', escapeHtml(order.orderNumber))
         .replace('{{amount}}', order.totalUsd);
       break;
-    case 'shipped':
+    case 'shipped': {
+      const info = order.logisticsInfo || {};
       text = t.orderShipped
         .replace('{{orderNumber}}', escapeHtml(order.orderNumber))
-        .replace('{{logistics}}', escapeHtml(order.logisticsCompany || ''))
-        .replace('{{tracking}}', escapeHtml(order.trackingNumber || ''));
+        .replace('{{logistics}}', escapeHtml(info.logistics_company || info.company || ''))
+        .replace('{{tracking}}', escapeHtml(info.tracking_number || info.trackingNumber || ''));
       break;
+    }
     default:
       return { ok: false, error: 'UNKNOWN_NOTIFICATION_TYPE' };
   }

@@ -67,8 +67,8 @@
       <div class="section" v-if="order.logistics">
         <p class="section-title">{{ $t('orders.logistics') }}</p>
         <div class="logistics-info">
-          <p><span class="logi-label">{{ $t('orders.logisticsCompany') }}</span> {{ order.logistics.company }}</p>
-          <p><span class="logi-label">{{ $t('orders.trackingNumber') }}</span> {{ order.logistics.trackingNumber }}</p>
+          <p><span class="logi-label">{{ $t('orders.logisticsCompany') }}</span> {{ order.logistics.logistics_company || order.logistics.company }}</p>
+          <p><span class="logi-label">{{ $t('orders.trackingNumber') }}</span> {{ order.logistics.tracking_number || order.logistics.trackingNumber }}</p>
           <p v-if="order.logistics.estimatedDelivery">
             <span class="logi-label">{{ $t('orders.estimatedDelivery') }}</span> {{ order.logistics.estimatedDelivery }}
           </p>

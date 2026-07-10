@@ -424,8 +424,14 @@ export async function getOrderById(userId, orderId) {
     };
   });
 
-  // 物流信息字段名与前端对齐
-  const logistics = order.logisticsInfo || null;
+  // 物流信息字段名与前端对齐（兼容旧键）
+  const info = order.logisticsInfo || {};
+  const logistics = {
+    logistics_company: info.logistics_company || info.company || '',
+    tracking_number: info.tracking_number || info.trackingNumber || '',
+    estimatedDelivery: info.estimatedDelivery || '',
+    trackingUrl: info.trackingUrl || '',
+  };
 
   // 订单时间线
   const timeline = [];
@@ -554,7 +560,11 @@ export async function exportOrdersCsv({ status, startDate, endDate }) {
   if (startDate || endDate) {
     where.createdAt = {};
     if (startDate) where.createdAt.gte = new Date(startDate);
-    if (endDate) where.createdAt.lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.createdAt.lte = end;
+    }
   }
 
   const orders = await prisma.order.findMany({
