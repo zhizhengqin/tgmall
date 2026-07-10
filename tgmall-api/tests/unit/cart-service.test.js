@@ -30,6 +30,7 @@ jest.unstable_mockModule('../../src/config/redis.js', () => ({
     get: (key) => redisMock.get(key),
     set: (key, value, ...args) => redisMock.set(key, value, ...args),
     del: (key) => redisMock.del(key),
+    eval: (script, numKeys, ...args) => redisMock.eval(script, numKeys, ...args),
   },
 }));
 

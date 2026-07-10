@@ -87,6 +87,38 @@ export function createMockRedis() {
       store.set(key, value);
       return 'OK';
     }),
+    eval: jest.fn(async (script, numKeys, ...args) => {
+      const key = args[0];
+      const raw = store.get(key) || null;
+      const itemJson = args[numKeys];
+      const ttl = args[numKeys + 1];
+      if (script.includes('items[i].id ~= itemId')) {
+        // REMOVE_ITEM_SCRIPT
+        const itemId = args[numKeys];
+        const items = raw ? JSON.parse(raw) : [];
+        const filtered = items.filter((i) => i.id !== itemId);
+        store.set(key, JSON.stringify(filtered));
+        return JSON.stringify(filtered);
+      }
+      const item = JSON.parse(itemJson);
+      const items = raw ? JSON.parse(raw) : [];
+      if (script.includes('items[i].quantity = items[i].quantity + item.quantity')) {
+        // ADD_ITEM_SCRIPT
+        const idx = items.findIndex((i) => i.id === item.id);
+        if (idx >= 0) items[idx].quantity += item.quantity;
+        else items.push(item);
+        store.set(key, JSON.stringify(items));
+        return JSON.stringify(items);
+      }
+      if (script.includes('items[i].quantity = update.quantity')) {
+        // UPDATE_ITEM_SCRIPT
+        const idx = items.findIndex((i) => i.id === item.id);
+        if (idx >= 0) items[idx].quantity = item.quantity;
+        store.set(key, JSON.stringify(items));
+        return JSON.stringify(items);
+      }
+      throw new Error('Unknown Lua script in mock eval');
+    }),
     del: jest.fn((key) => {
       store.delete(key);
       return 1;

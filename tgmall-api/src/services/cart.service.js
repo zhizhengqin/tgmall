@@ -47,6 +47,67 @@ export async function getCart(userId) {
   return groupCartItems(enriched);
 }
 
+const CART_TTL = 7 * 86400;
+
+const ADD_ITEM_SCRIPT = `
+  local key = KEYS[1]
+  local itemJson = ARGV[1]
+  local ttl = tonumber(ARGV[2])
+  local item = cjson.decode(itemJson)
+  local raw = redis.call('GET', key)
+  local items = raw and cjson.decode(raw) or {}
+  local found = false
+  for i = 1, #items do
+    if items[i].id == item.id then
+      items[i].quantity = items[i].quantity + item.quantity
+      found = true
+      break
+    end
+  end
+  if not found then
+    items[#items + 1] = item
+  end
+  redis.call('SET', key, cjson.encode(items), 'EX', ttl)
+  return cjson.encode(items)
+`;
+
+const UPDATE_ITEM_SCRIPT = `
+  local key = KEYS[1]
+  local itemJson = ARGV[1]
+  local ttl = tonumber(ARGV[2])
+  local update = cjson.decode(itemJson)
+  local raw = redis.call('GET', key)
+  local items = raw and cjson.decode(raw) or {}
+  for i = 1, #items do
+    if items[i].id == update.id then
+      items[i].quantity = update.quantity
+      break
+    end
+  end
+  redis.call('SET', key, cjson.encode(items), 'EX', ttl)
+  return cjson.encode(items)
+`;
+
+const REMOVE_ITEM_SCRIPT = `
+  local key = KEYS[1]
+  local itemId = ARGV[1]
+  local ttl = tonumber(ARGV[2])
+  local raw = redis.call('GET', key)
+  local items = raw and cjson.decode(raw) or {}
+  local filtered = {}
+  for i = 1, #items do
+    if items[i].id ~= itemId then
+      filtered[#filtered + 1] = items[i]
+    end
+  end
+  if #filtered == 0 then
+    redis.call('DEL', key)
+    return '[]'
+  end
+  redis.call('SET', key, cjson.encode(filtered), 'EX', ttl)
+  return cjson.encode(filtered)
+`;
+
 export async function addCartItem(userId, { product_id, quantity, spec = {}, sku_id }) {
   const productId = product_id;
   const product = await prisma.product.findUnique({ where: { id: productId } });
@@ -55,40 +116,25 @@ export async function addCartItem(userId, { product_id, quantity, spec = {}, sku
 
   const sku = await resolveSku(productId, spec, sku_id);
 
-  // 获取现有购物车
-  const raw = await redis.get(cartKey(userId));
-  const items = raw ? JSON.parse(raw) : [];
-
-  // 查重：同商品+同 SKU → 累加数量
+  // 查重：同商品+同 SKU → 累加数量；使用 Lua 脚本原子执行 GET-修改-SET
   const itemId = makeItemId(productId, sku?.id, spec);
-  const index = items.findIndex(
-    (i) => i.id === itemId,
-  );
-  if (index >= 0) {
-    items[index].quantity += quantity;
-  } else {
-    items.push({ id: itemId, productId, skuId: sku?.id, quantity, spec });
-  }
-
-  await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
+  const item = { id: itemId, productId, skuId: sku?.id || null, quantity, spec };
+  const resultJson = await redis.eval(ADD_ITEM_SCRIPT, 1, cartKey(userId), JSON.stringify(item), CART_TTL);
+  const items = JSON.parse(resultJson);
   return { cartTotalItems: items.reduce((s, i) => s + i.quantity, 0) };
 }
 
 export async function updateCartItem(userId, itemId, { quantity }) {
-  const raw = await redis.get(cartKey(userId));
-  const items = raw ? JSON.parse(raw) : [];
+  const update = { id: itemId, quantity };
+  const resultJson = await redis.eval(UPDATE_ITEM_SCRIPT, 1, cartKey(userId), JSON.stringify(update), CART_TTL);
+  const items = JSON.parse(resultJson);
   const item = items.find((i) => i.id === itemId);
   if (!item) throw new AppError('购物车商品不存在', 404, 'NOT_FOUND');
-  item.quantity = quantity;
-  await redis.set(cartKey(userId), JSON.stringify(items), 'EX', 7 * 86400);
   return item;
 }
 
 export async function removeCartItem(userId, itemId) {
-  const raw = await redis.get(cartKey(userId));
-  const items = raw ? JSON.parse(raw) : [];
-  const filtered = items.filter((i) => i.id !== itemId);
-  await redis.set(cartKey(userId), JSON.stringify(filtered), 'EX', 7 * 86400);
+  await redis.eval(REMOVE_ITEM_SCRIPT, 1, cartKey(userId), itemId, CART_TTL);
 }
 
 export async function clearCart(userId) {
