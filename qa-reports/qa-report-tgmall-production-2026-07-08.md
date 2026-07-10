@@ -192,9 +192,14 @@
 - **涉及文件：** `tgmall-miniapp/src/views/AboutPage.vue`、`tgmall-miniapp/src/views/PrivacyPage.vue`、`tgmall-miniapp/src/views/TermsPage.vue`、`tgmall-miniapp/src/components/common/StaticInfoPage.vue`、`tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-miniapp/src/router/index.js`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-08 后台首页缺少今日新增 SKU 数与日期范围导出
+- **状态：** ✅ 已修复
 - **需求/问题：** 运营需要监控新品与导出订单。
-- **涉及文件：** `tgmall-admin/src/pages/DashboardPage.vue`、`OrdersPage.vue`
-- **建议：** 新增聚合查询与 CSV 导出接口/UI。
+- **修复：**
+  - 后端 `admin.service.js` 的 `getPlatformDashboard` 增加 `prisma.productSku.count({ where: { createdAt: { gte: today } } })`，返回 `todayNewSkus`。
+  - `DashboardPage.vue` 新增「今日新增 SKU」指标卡片。
+  - `OrdersPage.vue` 增加日期范围选择器，将 `start_date`/`end_date` 透传给订单列表与 CSV 导出接口；后端 `exportOrdersCsv` 的 `endDate` 调整为当天 23:59:59.999，确保含当天。
+  - 补充 admin 三语 `dashboard.todayNewSkus`、`orders.dateRange`/`startDate`/`endDate` 文案。
+- **涉及文件：** `tgmall-api/src/services/admin.service.js`、`tgmall-api/src/services/order.service.js`、`tgmall-admin/src/pages/DashboardPage.vue`、`tgmall-admin/src/pages/OrdersPage.vue`、`tgmall-admin/src/locales/{km,en,zh}.json`
 
 ### P1-09 通知服务未接入订单/支付流程
 - **需求/问题：** 通知应可审计、可重试。
@@ -231,9 +236,14 @@
 - **涉及文件：** `tgmall-miniapp/src/utils/phone.js`、`tgmall-miniapp/src/views/LoginPage.vue`、`tgmall-miniapp/src/views/ResetPasswordPage.vue`、`tgmall-miniapp/src/views/ProfilePage.vue`、`tgmall-miniapp/src/views/CheckoutPage.vue`、`tgmall-api/src/validators/address.schema.js`
 
 ### P1-13 首页未实现下拉刷新
+- **状态：** ✅ 已修复
 - **需求/问题：** Backlog S1-08 要求支持下拉刷新。
-- **涉及文件：** `tgmall-miniapp/src/views/HomePage.vue`
-- **建议：** 实现 pull-to-refresh。
+- **修复：**
+  - `HomePage.vue` 在 `.home-page` 根元素实现触摸下拉刷新：仅在 `window.scrollY <= 0` 且垂直位移占主导时启动，最大下拉 80px、触发阈值 60px。
+  - 顶部指示器显示「下拉刷新 / 松开刷新 / 刷新中」，释放后调用 `refreshProducts()`、`load()`、`loadFlashDeals()`、`fetchLoginBanner()` 重新加载首页数据。
+  - 在 `onMounted`/`onUnmounted` 中禁用/恢复 Telegram WebView 原生垂直滑动，避免与下拉刷新冲突。
+  - 补充小程序三语 `home.pullDownToRefresh` / `home.releaseToRefresh` / `home.refreshing` 文案。
+- **涉及文件：** `tgmall-miniapp/src/views/HomePage.vue`、`tgmall-miniapp/src/locales/{km,en,zh}.json`
 
 ### P1-14 商品图片上传未接入 S3/R2/CDN
 - **需求/问题：** Backlog S1-14 要求上传至对象存储、压缩、WebP、CDN URL。
@@ -251,9 +261,15 @@
 - **建议：** 地址表关联 `cityId`，提供城市选择器。
 
 ### P1-17 发货字段名与 Backlog 不一致
+- **状态：** ✅ 已修复
 - **需求/问题：** Backlog 要求字段 `logistics_company`，代码中为 `company`。
-- **涉及文件：** `tgmall-api/src/validators/order.schema.js`、`tgmall-api/src/services/order.service.js`
-- **建议：** 统一字段名。
+- **修复：**
+  - 后端 `merchant.schema.js` 的 `shipOrderSchema` 将 `company`/`trackingNumber` 重命名为 `logistics_company`/`tracking_number`，与 admin 发货表单对齐。
+  - `order.service.js` 在返回订单详情时把 `logisticsInfo` 映射为 `{ logistics_company, tracking_number, estimatedDelivery, trackingUrl }`，并保留旧键回退以兼容历史数据。
+  - `telegram.js` 的 `shipped` 通知模板读取新字段（含旧键回退）。
+  - `seed-demo.js` 中示例订单的 `logisticsInfo` 统一改为新键名。
+  - 小程序 `OrderDetail.vue` 读取 `logistics.logistics_company` / `tracking_number` 并保留旧键回退；admin `OrderDetailPage.vue` 移除 `company` 回退显示。
+- **涉及文件：** `tgmall-api/src/validators/merchant.schema.js`、`tgmall-api/src/services/order.service.js`、`tgmall-api/src/integrations/telegram.js`、`tgmall-api/prisma/seed-demo.js`、`tgmall-miniapp/src/views/OrderDetail.vue`、`tgmall-admin/src/pages/OrderDetailPage.vue`
 
 ---
 
