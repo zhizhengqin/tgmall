@@ -21,6 +21,12 @@ export const telegramInvoicePaymentSchema = z.object({
   order_id: z.string().uuid('订单 ID 格式无效'),
 });
 
+/** 演示模式模拟支付确认 */
+export const mockConfirmPaymentSchema = z.object({
+  orderId: z.string().uuid('订单 ID 格式无效'),
+  provider: z.enum(['khqr', 'aba_pay', 'wing_pay']),
+});
+
 /** 支付回调 Webhook 请求（统一入口） */
 export const paymentWebhookSchema = z.object({
   provider: z.enum(['bakong', 'aba_pay', 'wing_pay']),

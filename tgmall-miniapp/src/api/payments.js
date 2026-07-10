@@ -15,3 +15,7 @@ export const createTelegramInvoicePayment = (orderId) => api.post('/payments/tel
 
 /** GET /payments/status/:orderId — 查询支付状态（前端轮询） */
 export const getPaymentStatus = (orderId) => api.get(`/payments/status/${orderId}`);
+
+/** POST /payments/mock-confirm — 演示模式模拟支付确认 */
+export const mockConfirmPayment = (orderId, provider) =>
+  api.post('/payments/mock-confirm', { orderId, provider });

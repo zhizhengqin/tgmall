@@ -312,7 +312,8 @@ export async function handlePaymentCallback(payload) {
 
   // ---- 1. 按 provider 验签 ----
   const verifyFns = {
-    bakong: bakong.verifySignature,
+    khqr: bakong.verifySignature,     // 主 key，与前端/订单一致
+    bakong: bakong.verifySignature,   // 向后兼容旧 key
     aba_pay: abaPay.verifySignature,
     wing_pay: wingPay.verifySignature,
   };

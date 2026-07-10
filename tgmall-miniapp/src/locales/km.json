@@ -239,7 +239,15 @@
     "telegramInvoice": "Telegram ទូទាត់",
     "openInvoice": "ទូទាត់ឥឡូវនេះ",
     "telegramInvoiceHint": "នឹងបើកការគិតប្រាក់ Telegram ដើម្បីបញ្ចប់ការទូទាត់",
-    "cod": "ទូទាត់ពេលទទួល"
+    "cod": "ទូទាត់ពេលទទួល",
+    "mockPayKhqr": "ក្លែងធ្វើការទូទាត់ QR",
+    "mockPay": "ក្លែងធ្វើការទូទាត់",
+    "mockConfirmTitle": "បញ្ជាក់ការទូទាត់ក្លែងធ្វើ",
+    "mockConfirmDesc": "ការបញ្ជាទិញនឹងត្រូវបានសម្គាល់ថាបានបង់បន្ទាប់ពីការបញ្ជាក់",
+    "mockConfirmBtn": "បញ្ជាក់ការទូទាត់",
+    "mockCancelBtn": "បោះបង់",
+    "mockProcessing": "កំពុងដំណើរការ...",
+    "mockFailed": "ការទូទាត់ក្លែងធ្វើបានបរាជ័យ"
   },
   "wishlist": {
     "title": "ចំណូលចិត្ត",

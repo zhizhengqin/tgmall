@@ -239,7 +239,15 @@
     "telegramInvoice": "Telegram Pay",
     "openInvoice": "Pay Now",
     "telegramInvoiceHint": "Telegram's native checkout will open to complete payment",
-    "cod": "Cash on Delivery"
+    "cod": "Cash on Delivery",
+    "mockPayKhqr": "Simulate QR Payment",
+    "mockPay": "Simulate Payment",
+    "mockConfirmTitle": "Confirm Simulated Payment",
+    "mockConfirmDesc": "Order will be marked as paid after confirmation",
+    "mockConfirmBtn": "Confirm Payment",
+    "mockCancelBtn": "Cancel",
+    "mockProcessing": "Processing...",
+    "mockFailed": "Simulated payment failed"
   },
   "wishlist": {
     "title": "Wishlist",

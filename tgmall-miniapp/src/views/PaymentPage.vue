@@ -83,6 +83,13 @@
         </template>
       </div>
 
+      <!-- Mock 模拟支付按钮 -->
+      <div v-if="pageState === 'qr-ready'" class="mock-section">
+        <button class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
+          {{ $t('payment.mockPayKhqr') }}
+        </button>
+      </div>
+
       <!-- 操作按钮 -->
       <div class="action-buttons">
         <button class="btn btn-outline" @click="switchPaymentMethod">
@@ -110,6 +117,12 @@
         <button class="btn btn-primary redirect-btn" @click="openPaymentApp(deepLinkUrl)">
           {{ $t('payment.openApp') }}
         </button>
+
+        <!-- Mock 模拟支付按钮 -->
+        <button class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
+          {{ $t('payment.mockPay') }}
+        </button>
+
         <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
           {{ $t('payment.changeMethod') }}
         </button>
@@ -143,6 +156,34 @@
         </button>
       </div>
     </template>
+
+    <!-- Mock 确认支付卡片（全屏覆盖） -->
+    <div v-if="showMockConfirm" class="mock-overlay" data-test="mock-confirm-card">
+      <div class="mock-card">
+        <div class="mock-card-icon">💳</div>
+        <h3 class="mock-card-title">{{ $t('payment.mockConfirmTitle') }}</h3>
+        <p class="mock-card-desc">{{ $t('payment.mockConfirmDesc') }}</p>
+        <p v-if="mockConfirmError" class="mock-card-error" data-test="mock-error-msg">{{ mockConfirmError }}</p>
+        <div class="mock-card-actions">
+          <button
+            class="btn btn-outline"
+            data-test="mock-cancel-btn"
+            @click="handleMockCancel"
+            :disabled="mockConfirmLoading"
+          >
+            {{ $t('payment.mockCancelBtn') }}
+          </button>
+          <button
+            class="btn btn-primary"
+            data-test="mock-confirm-submit"
+            @click="handleMockConfirmSubmit"
+            :disabled="mockConfirmLoading"
+          >
+            {{ mockConfirmLoading ? $t('payment.mockProcessing') : $t('payment.mockConfirmBtn') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -150,7 +191,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { createKHQRPayment, createABAPayPayment, createWingPayPayment, createTelegramInvoicePayment, getPaymentStatus } from '@/api/payments';
+import { createKHQRPayment, createABAPayPayment, createWingPayPayment, createTelegramInvoicePayment, getPaymentStatus, mockConfirmPayment } from '@/api/payments';
 import { cancelOrder } from '@/api/orders';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useShopConfig } from '@/composables/useShopConfig.js';
@@ -193,6 +234,11 @@ const supportedBanks = ref([]);
 const expiresAt = ref(null);
 const deepLinkUrl = ref('');
 const invoiceUrl = ref('');
+
+// ── Mock 确认支付 ──
+const showMockConfirm = ref(false);
+const mockConfirmLoading = ref(false);
+const mockConfirmError = ref('');
 
 // ── 倒计时 ──
 const timeLeft = ref(15 * 60);
@@ -472,6 +518,42 @@ onUnmounted(() => {
   clearInterval(timerInterval);
   clearInterval(pollInterval);
 });
+
+// ── Mock 确认支付 ──
+function handleMockConfirmOpen() {
+  showMockConfirm.value = true;
+  mockConfirmError.value = '';
+}
+
+function handleMockCancel() {
+  showMockConfirm.value = false;
+  mockConfirmError.value = '';
+}
+
+async function handleMockConfirmSubmit() {
+  mockConfirmLoading.value = true;
+  mockConfirmError.value = '';
+  try {
+    const res = await mockConfirmPayment(orderId.value, paymentMethod.value);
+    clearInterval(timerInterval);
+    clearInterval(pollInterval);
+    router.replace({
+      name: 'PaymentResult',
+      query: {
+        status: 'success',
+        orderId: orderId.value,
+        orderNumber: res.data?.orderNumber || orderNumber.value,
+        amountUsd: amountUsd.value,
+        amountKhr: amountKhr.value,
+        isMock: 'true',
+      },
+    });
+  } catch (err) {
+    mockConfirmError.value = err?.response?.data?.message || err?.message || t('payment.mockFailed');
+  } finally {
+    mockConfirmLoading.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -687,4 +769,69 @@ onUnmounted(() => {
 .redirect-title { font-size: 18px; font-weight: 700; }
 .redirect-hint { font-size: 14px; color: var(--muted); line-height: 1.6; }
 .redirect-btn { max-width: 280px; width: 100%; }
+
+/* ── Mock 模拟支付按钮 ── */
+.mock-section {
+  padding: 0 16px 12px;
+}
+.btn-mock {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; border: 2px dashed var(--accent);
+  background: rgba(196, 147, 42, 0.06);
+  color: var(--accent);
+  transition: all 0.15s;
+  min-height: var(--touch-target);
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-mock:active { opacity: 0.8; transform: scale(0.98); }
+
+/* ── Mock 确认覆盖层 ── */
+.mock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  animation: overlayIn 0.2s ease;
+}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.mock-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%;
+  max-width: var(--max-width);
+  padding: 32px 20px 24px;
+  text-align: center;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.mock-card-icon { font-size: 48px; margin-bottom: 12px; }
+.mock-card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.mock-card-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+
+.mock-card-error {
+  font-size: 13px; color: var(--accent-red);
+  background: rgba(196, 58, 48, 0.06);
+  padding: 10px 16px; border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.mock-card-actions {
+  display: flex; gap: 10px;
+  padding-top: 8px;
+}
+.mock-card-actions .btn { flex: 1; }
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
 </style>

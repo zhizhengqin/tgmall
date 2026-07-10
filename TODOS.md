@@ -1,6 +1,68 @@
 # TODOS
 
-> 最后更新: 2026-07-03 | 基于 PRD V2.1 + Backlog V1.1 vs 代码实际实现的差距分析
+> 最后更新: 2026-07-10 | 新增：演示环境支付全链路模拟改造
+
+---
+
+## 🔄 演示环境改造 — 支付全链路模拟（进行中）
+
+> 目标：补齐 mock 模式下的支付回调链路，使全流程（浏览→下单→支付→订单完成→通知）在演示中流畅可跑。
+> 设计文档：`~/.gstack/projects/telegrammall/qinzz-main-design-20260710-160811.md`
+> 测试计划：`~/.gstack/projects/telegrammall/qinzz-main-eng-review-test-plan-20260710-163038.md`
+
+### T1 (P1) 🔴 统一 provider 命名
+
+- **做什么**：把 `payment.service.js` 里 `handlePaymentCallback` 的 `verifyFns.bakong` 改成 `verifyFns.khqr`，同时保留 `bakong` 兼容键（防止真实回调受影响）
+- **文件**：`tgmall-api/src/services/payment.service.js`（约第 315 行）
+- **为什么**：前端和订单用的都是 `khqr`，只有这个内部字典用 `bakong`，不统一容易搞混导致 bug
+- **验证**：跑 `npm test -- --testPathPattern=payment`，现有测试全部通过
+
+### T2 (P1) 🔴 新增 mock-confirm 接口
+
+- **做什么**：新建一个 `POST /api/v1/payments/mock-confirm` 接口。只在演示模式下存在（生产环境连路由都不注册）。收到请求后构造一个假的支付回调，调用现有的 `handlePaymentCallback` 完成支付
+- **文件**：
+  - `tgmall-api/src/routes/payment.routes.js` — 加路由（用 `if (config.paymentMockMode)` 包起来）
+  - `tgmall-api/src/controllers/payment.controller.js` — 加控制器函数 `mockConfirmPayment`
+  - `tgmall-api/src/validators/payment.schema.js` — 加 Zod 校验（orderId 是 UUID、provider 是枚举）
+- **注意**：控制器里要把前端传来的 `provider: 'khqr'` 转成 `'bakong'` 再传给 `handlePaymentCallback`（等 T1 做完之后就不需要了）
+- **验证**：写单元测试覆盖：正常支付 ✅、订单不存在 ❌、已支付 ❌、已取消 ❌
+
+### T3 (P0) 🔴🔴 映射单元测试（最高优先级）
+
+- **做什么**：写一个测试，模拟调用 mock-confirm 传 `provider: 'khqr'`，确认内部正确映射为 `bakong`
+- **文件**：`tgmall-api/tests/unit/payment-service-uncovered.test.js`
+- **为什么**：如果映射错了，演示时点"确认支付"会报错"未知支付渠道"，直接翻车
+- **验证**：这个测试必须先写，先看到它失败，再写 T1/T2 的代码让它通过
+
+### T4 (P2) 🟡 前端 — 支付页加"模拟支付"按钮
+
+- **做什么**：在 `PaymentPage.vue` 里，每种支付方式（KHQR / ABA Pay / Wing Pay）旁边加一个"模拟支付"按钮。点击后弹出一个确认卡片（三种支付方式共用同一个卡片样式，只换名字和图标）
+- **卡片功能**：
+  - 显示商户名、订单号、金额（美元+瑞尔）
+  - "确认支付"按钮 → 调 mock-confirm 接口 → 成功后跳转支付成功页
+  - "取消"按钮 → 关闭卡片，回到支付方式页
+  - 点击确认后按钮变灰（防止双击）
+- **文件**：`tgmall-miniapp/src/views/PaymentPage.vue`
+- **验证**：浏览器里手动走一遍完整流程
+
+### T5 (P2) 🟡 前端 — 新增 API 函数
+
+- **做什么**：在已有的 `payments.js` 文件里加一个 `mockConfirmPayment` 函数，调用后端的 mock-confirm 接口
+- **文件**：`tgmall-miniapp/src/api/payments.js`（已存在，加函数即可）
+- **验证**：和 T4 联调
+
+### T6 (P3) 🟢 三语翻译
+
+- **做什么**：给模拟支付卡片上的文字（"模拟支付"、"确认支付"、"取消"、"这是模拟支付，用于演示"等）加到三个语言文件里
+- **文件**：`tgmall-miniapp/src/locales/km.json`、`en.json`、`zh.json`
+- **数量**：每个语言约 10 个 key
+- **验证**：切换三种语言，确认卡片文字正确显示
+
+### T7 (P2) 🟡 后端 — API 响应加 isMock 字段
+
+- **做什么**：在 `createKHQRPayment`、`createABAPayPayment`、`createWingPayPayment` 三个函数的返回值里加一个 `isMock: true/false` 字段，前端根据这个字段决定要不要显示"模拟支付"按钮
+- **文件**：`tgmall-api/src/services/payment.service.js`
+- **验证**：调支付接口，确认返回的 JSON 里有 `isMock` 字段
 
 ---
 

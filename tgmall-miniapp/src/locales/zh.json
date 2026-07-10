@@ -239,7 +239,15 @@
     "telegramInvoice": "Telegram 支付",
     "openInvoice": "立即支付",
     "telegramInvoiceHint": "将调起 Telegram 原生收银台完成支付",
-    "cod": "货到付款"
+    "cod": "货到付款",
+    "mockPayKhqr": "模拟扫码支付",
+    "mockPay": "模拟支付",
+    "mockConfirmTitle": "确认模拟支付",
+    "mockConfirmDesc": "点击确认后订单将直接变为已支付状态",
+    "mockConfirmBtn": "确认支付",
+    "mockCancelBtn": "取消",
+    "mockProcessing": "处理中...",
+    "mockFailed": "模拟支付失败"
   },
   "wishlist": {
     "title": "我的收藏",
