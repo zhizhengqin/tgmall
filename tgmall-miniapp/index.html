@@ -12,8 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
-    // 生产环境自托管 Telegram SDK，开发环境由 Vite 注入 Mock
-    if ('%MODE%' === 'production') {
+    // 生产环境自托管 Telegram SDK；?demo=1 浏览器演示模式跳过，改由 main.js 注入 Mock
+    if ('%MODE%' === 'production' && new URLSearchParams(location.search).get('demo') !== '1') {
       document.write('<script src="/telegram-web-app.js"><\/script>');
     }
   </script>
