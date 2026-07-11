@@ -27,7 +27,7 @@ import { useLanguageStore } from '@/stores/languageStore';
 import { useUserStore } from '@/stores/userStore';
 import { useShopConfig } from '@/composables/useShopConfig.js';
 import { useTelegram } from '@/composables/useTelegram.js';
-import { telegramLogin } from '@/api/auth';
+import { telegramLogin, demoLogin } from '@/api/auth';
 import router from '@/router';
 
 const languageStore = useLanguageStore();
@@ -110,7 +110,25 @@ onMounted(() => {
       debugInfo.storeUser = JSON.stringify(userStore.user);
 
       // 异步 API 认证获取 JWT + 持久化用户信息
-      if (tg.initData) {
+      const isMockInstalled = window.__TG_MOCK_INSTALLED__ === true;
+
+      if (isMockInstalled && u) {
+        // Demo / 本地开发模式：走独立 demo-login 端点，不依赖 initData 签名
+        try {
+          const res = await demoLogin(u);
+          const data = res?.data || res;
+          if (data?.token) {
+            const mergedUser = { ...userStore.user, ...(data.user || {}) };
+            userStore.setAuth(data.token, mergedUser);
+          }
+        } catch (e) {
+          const errDetail = e?.response?.data?.error;
+          const errMsg = errDetail
+            ? `${errDetail.code}: ${errDetail.message}${errDetail.detail ? ' | ' + JSON.stringify(errDetail.detail) : ''}`
+            : (e?.message || 'unknown');
+          debugInfo.storeUser += ' | API_ERR:' + errMsg;
+        }
+      } else if (tg.initData) {
         try {
           const res = await telegramLogin(tg.initData);
           const data = res?.data || res;

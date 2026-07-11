@@ -16,7 +16,51 @@ export async function telegramLogin(initData) {
     throw new AppError(err.message, 401, 'INVALID_INIT_DATA');
   }
 
-  // 2. 查找或创建用户
+  // 2. 查找或创建用户并签发 JWT
+  const { user, isNewUser } = await upsertUserFromTelegramData(userData);
+  const token = signToken({
+    userId: user.id,
+    telegramId: user.telegramId,
+    role: 'user',
+  });
+
+  return buildAuthResponse(user, isNewUser, token);
+}
+
+/**
+ * 演示环境浏览器登录（仅当 PAYMENT_MOCK_MODE 启用时可用）
+ * 前端 Telegram Mock 直接传入用户信息，后端不再依赖 initData 签名校验
+ */
+export async function demoLogin(user) {
+  if (!config.paymentMockMode) {
+    throw new AppError('演示登录未启用', 403, 'DEMO_LOGIN_DISABLED');
+  }
+  if (!user?.id) {
+    throw new AppError('缺少用户信息', 400, 'INVALID_USER');
+  }
+
+  const userData = {
+    telegramId: user.id,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    username: user.username,
+    languageCode: user.language_code || 'km',
+    photoUrl: user.photo_url || null,
+  };
+
+  const { user: dbUser, isNewUser } = await upsertUserFromTelegramData(userData);
+  const token = signToken({
+    userId: dbUser.id,
+    telegramId: dbUser.telegramId,
+    role: 'user',
+  });
+
+  return buildAuthResponse(dbUser, isNewUser, token);
+}
+
+// ---- 公共 helper：根据 Telegram 数据查找/创建用户 ----
+
+async function upsertUserFromTelegramData(userData) {
   let user = await prisma.user.findUnique({
     where: { telegramId: userData.telegramId },
   });
@@ -38,23 +82,18 @@ export async function telegramLogin(initData) {
         avatarUrl: userData.photoUrl || null,
       },
     });
-  } else {
+  } else if (userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
     // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
-    if (userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: { avatarUrl: userData.photoUrl },
-      });
-    }
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { avatarUrl: userData.photoUrl },
+    });
   }
 
-  // 3. 签发 JWT
-  const token = signToken({
-    userId: user.id,
-    telegramId: user.telegramId,
-    role: 'user',
-  });
+  return { user, isNewUser };
+}
 
+function buildAuthResponse(user, isNewUser, token) {
   return {
     token,
     user: {

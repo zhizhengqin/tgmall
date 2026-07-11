@@ -20,8 +20,10 @@ export function installTelegramMock() {
     photo_url: null,
   };
 
-  // hash=demo 让后端在 PAYMENT_MOCK_MODE 模式下免验签登录
-  const initData = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(mockUser))}&auth_date=1717900000&hash=demo`;
+  // Demo 模式不再使用 hash=demo 绕过签名校验，而是走独立的 /auth/demo-login 端点
+  const initData = `query_id=AAHdF6IQAAAAAN0XohAA&user=${encodeURIComponent(JSON.stringify(mockUser))}&auth_date=1717900000`;
+
+  window.__TG_MOCK_INSTALLED__ = true;
 
   window.Telegram = {
     WebApp: {

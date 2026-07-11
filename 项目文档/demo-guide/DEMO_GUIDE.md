@@ -197,7 +197,9 @@ TG Mall 是一个面向柬埔寨市场的 Telegram Mini App 电商平台，采�
 
 ### 3.12 消费者支付全流程（Demo 模式）
 
-TG Mall 支持 KHQR、ABA Pay、Wing Pay、Telegram 支付、货到付款等多种支付方式。在本地开发/演示环境中，可在 URL 后追加 `?demo=1` 进入 Demo 模式，自动注入 Telegram WebApp Mock 并开启支付模拟，完整走通「浏览 → 加购 → 下单 → 支付 → 成功」闭环。
+TG Mall 支持 KHQR、ABA Pay、Wing Pay、Telegram 支付、货到付款等多种支付方式。在本地开发/演示环境中，可在 URL 后追加 `?demo=1` 进入 Demo 模式，自动注入 Telegram WebApp SDK Mock 并开启支付模拟，完整走通「浏览 → 加购 → 下单 → 支付 → 成功」闭环。
+
+> **安全说明**：Demo 模式使用独立的 `/api/v1/auth/demo-login` 端点登录，仅在 `PAYMENT_MOCK_MODE=true` 时启用；生产环境不会注册该路由，真实 Telegram 登录仍通过 `/api/v1/auth/telegram` 进行 HMAC-SHA256 签名校验。
 
 #### 3.12.1 首页浏览与选品
 

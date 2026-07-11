@@ -5,6 +5,18 @@ export const telegramLoginSchema = z.object({
   init_data: z.string().min(1, 'initData 不能为空').max(4096, 'initData 过长'),
 });
 
+// 演示环境浏览器登录：由前端 Telegram Mock 直接传入用户信息，不走 initData 签名校验
+export const demoLoginSchema = z.object({
+  user: z.object({
+    id: z.union([z.number(), z.string(), z.bigint()]),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    username: z.string().optional(),
+    language_code: z.string().optional(),
+    photo_url: z.string().url().optional().nullable(),
+  }),
+});
+
 // 发送短信验证码
 export const sendSmsSchema = z.object({
   phone: z.string().regex(/^\+855[1-9]\d{7,8}$/, '手机号格式错误'),
