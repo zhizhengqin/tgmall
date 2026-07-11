@@ -10,6 +10,15 @@ export async function telegramLogin(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// POST /auth/demo-login — 演示环境浏览器登录（仅在 PAYMENT_MOCK_MODE 启用时注册）
+export async function demoLogin(req, res, next) {
+  try {
+    const { user } = req.validatedBody;
+    const result = await authService.demoLogin(user);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+}
+
 // POST /auth/web-login — Telegram Login Widget (用于管理员 Web 登录)
 export async function webLogin(req, res, next) {
   try {

@@ -8,6 +8,9 @@ import { startNotificationRetryJob } from './jobs/notificationRetry.js';
 import { setMiniAppMenuButton } from './integrations/telegram.js';
 
 if (config.paymentMockMode) {
+  if (config.nodeEnv === 'production') {
+    throw new Error('支付模拟模式（PAYMENT_MOCK_MODE）禁止在生产环境启用，启动已中止');
+  }
   console.warn('⚠️  支付模拟模式已开启：所有支付回调将被放行，仅用于开发/测试环境');
 }
 

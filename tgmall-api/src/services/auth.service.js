@@ -16,45 +16,103 @@ export async function telegramLogin(initData) {
     throw new AppError(err.message, 401, 'INVALID_INIT_DATA');
   }
 
-  // 2. 查找或创建用户
-  let user = await prisma.user.findUnique({
-    where: { telegramId: userData.telegramId },
-  });
-
-  const isNewUser = !user;
-
-  if (isNewUser) {
-    // 根据 Telegram 语言推断偏好语言
-    const langMap = { km: 'km', en: 'en', zh: 'zh' };
-    const inferredLang = langMap[userData.languageCode?.slice(0, 2)] || 'km';
-
-    user = await prisma.user.create({
-      data: {
-        telegramId: userData.telegramId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        username: userData.username,
-        language: inferredLang,
-        avatarUrl: userData.photoUrl || null,
-      },
-    });
-  } else {
-    // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
-    if (userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: { avatarUrl: userData.photoUrl },
-      });
-    }
-  }
-
-  // 3. 签发 JWT
+  // 2. 查找或创建用户并签发 JWT
+  const { user, isNewUser } = await upsertUserFromTelegramData(userData);
   const token = signToken({
     userId: user.id,
     telegramId: user.telegramId,
     role: 'user',
   });
 
+  return buildAuthResponse(user, isNewUser, token);
+}
+
+/**
+ * 演示环境浏览器登录（仅当 PAYMENT_MOCK_MODE 启用时可用）
+ * 前端 Telegram Mock 直接传入用户信息，后端不再依赖 initData 签名校验
+ */
+export async function demoLogin(user) {
+  if (process.env.NODE_ENV === 'production' || config.nodeEnv === 'production') {
+    throw new AppError('演示登录禁止在生产环境使用', 403, 'DEMO_LOGIN_FORBIDDEN');
+  }
+  if (!config.paymentMockMode) {
+    throw new AppError('演示登录未启用', 403, 'DEMO_LOGIN_DISABLED');
+  }
+  if (!user?.id) {
+    throw new AppError('缺少用户信息', 400, 'INVALID_USER');
+  }
+
+  // 演示用户 ID 必须落在真实 Telegram ID 范围（约 2^31）之外，防止与真实账户碰撞
+  const telegramId = BigInt(user.id);
+  if (telegramId <= 2147483647n) {
+    throw new AppError('演示用户 ID 必须超出真实 Telegram ID 范围', 400, 'INVALID_DEMO_ID');
+  }
+
+  const userData = {
+    telegramId,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    username: user.username,
+    languageCode: user.language_code || 'km',
+    photoUrl: user.photo_url || null,
+  };
+
+  const { user: dbUser, isNewUser } = await upsertUserFromTelegramData(userData, { updateAvatar: false });
+  const token = signToken({
+    userId: dbUser.id,
+    telegramId: dbUser.telegramId,
+    role: 'user',
+  });
+
+  return buildAuthResponse(dbUser, isNewUser, token);
+}
+
+// ---- 公共 helper：根据 Telegram 数据查找/创建用户 ----
+
+async function upsertUserFromTelegramData(userData, { updateAvatar = true } = {}) {
+  // 根据 Telegram 语言推断偏好语言
+  const langMap = { km: 'km', en: 'en', zh: 'zh' };
+  const inferredLang = langMap[userData.languageCode?.slice(0, 2)] || 'km';
+
+  const createData = {
+    telegramId: userData.telegramId,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    username: userData.username,
+    language: inferredLang,
+    avatarUrl: userData.photoUrl || null,
+  };
+
+  try {
+    const user = await prisma.user.create({ data: createData });
+    return { user, isNewUser: true };
+  } catch (err) {
+    // P2002 = 唯一键冲突，说明并发登录时已有其他请求创建用户
+    if (err.code !== 'P2002') throw err;
+
+    let user = await prisma.user.findUnique({
+      where: { telegramId: userData.telegramId },
+    });
+    if (!user) {
+      // 极端并发下先 create 后未立即读到，重试一次
+      user = await prisma.user.findUnique({
+        where: { telegramId: userData.telegramId },
+      });
+    }
+
+    if (updateAvatar && userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
+      // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: userData.photoUrl },
+      });
+    }
+
+    return { user, isNewUser: false };
+  }
+}
+
+function buildAuthResponse(user, isNewUser, token) {
   return {
     token,
     user: {

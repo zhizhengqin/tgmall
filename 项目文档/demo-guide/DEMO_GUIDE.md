@@ -1,8 +1,8 @@
 # TG Mall 演示指导文档
 
-> **更新日期**：2026-07-07  
+> **更新日期**：2026-07-10  
 > **截图方式**：Playwright 自动化截图（Chromium · 1440×900 Admin / 390×844 MiniApp）  
-> **环境**：生产环境 `tgmall-production.up.railway.app`
+> **环境**：本地开发环境 + Demo 模式（`?demo=1` 注入 Telegram WebApp Mock），后端 `PAYMENT_MOCK_MODE=true`
 
 ---
 
@@ -195,6 +195,64 @@ TG Mall 是一个面向柬埔寨市场的 Telegram Mini App 电商平台，采�
 
 ![底部导航](screenshots/miniapp/13-bottom-nav.png)
 
+### 3.12 消费者支付全流程（Demo 模式）
+
+TG Mall 支持 KHQR、ABA Pay、Wing Pay、Telegram 支付、货到付款等多种支付方式。在本地开发/演示环境中，可在 URL 后追加 `?demo=1` 进入 Demo 模式，自动注入 Telegram WebApp SDK Mock 并开启支付模拟，完整走通「浏览 → 加购 → 下单 → 支付 → 成功」闭环。
+
+> **安全说明**：Demo 模式使用独立的 `/api/v1/auth/demo-login` 端点登录，仅在 `PAYMENT_MOCK_MODE=true` 时启用；生产环境不会注册该路由，真实 Telegram 登录仍通过 `/api/v1/auth/telegram` 进行 HMAC-SHA256 签名校验。
+
+#### 3.12.1 首页浏览与选品
+
+进入 Mini App 首页，浏览 Banner、品类和商品双列网格。点击任意商品卡片进入商品详情。
+
+![支付演示 - 首页](screenshots/miniapp/payment-01-homepage.png)
+
+#### 3.12.2 商品详情
+
+商品详情页展示商品图片、USD/KHR 双币种价格、规格选择、数量调节和三语切换。选择规格和数量后，点击「加入购物车」。
+
+![支付演示 - 商品详情](screenshots/miniapp/payment-02-product-detail.png)
+
+成功加入购物车后，底部导航购物车图标会出现角标提示。
+
+![支付演示 - 已加购](screenshots/miniapp/payment-03-product-added.png)
+
+#### 3.12.3 购物车
+
+进入购物车，商品默认全选，底部显示合计金额。确认商品后点击「去结算」。
+
+![支付演示 - 购物车](screenshots/miniapp/payment-04-cart.png)
+
+![支付演示 - 购物车已选](screenshots/miniapp/payment-05-cart-selected.png)
+
+#### 3.12.4 确认订单
+
+确认订单页展示收货地址、商品清单、配送费、优惠券和支付方式。本次演示选择 **KHQR** 扫码支付，点击「提交订单」。
+
+![支付演示 - 确认订单](screenshots/miniapp/payment-06-checkout.png)
+
+> 若当前用户还没有收货地址，系统会先引导新增地址（见 `payment-07-checkout-address.png`），保存后返回确认订单页。
+
+#### 3.12.5 KHQR 支付
+
+提交订单后进入 KHQR 支付页，展示订单号、应付金额、支付倒计时和二维码区域。在 Demo 模式下，页面会显示「模拟扫码支付」按钮，点击即可模拟用户完成扫码支付。
+
+![支付演示 - KHQR 支付](screenshots/miniapp/payment-08-payment-khqr.png)
+
+![支付演示 - 模拟支付确认](screenshots/miniapp/payment-09-mock-confirm.png)
+
+#### 3.12.6 支付成功
+
+模拟支付确认后，系统调用支付回调完成订单状态更新，跳转到支付成功页，展示订单号、支付金额和「查看订单」入口。
+
+![支付演示 - 支付成功](screenshots/miniapp/payment-10-success.png)
+
+#### 3.12.7 查看订单
+
+支付完成后进入「我的订单」页，可看到刚支付的订单状态已变为「已付款」，Bot 也会收到对应的订单通知。
+
+![支付演示 - 订单列表](screenshots/miniapp/payment-11-orders.png)
+
 ---
 
 ## 四、核心业务流程演示路径
@@ -203,9 +261,11 @@ TG Mall 是一个面向柬埔寨市场的 Telegram Mini App 电商平台，采�
 
 ```
 首页浏览 → 搜索/品类筛选 → 商品详情 → 选择规格 → 加入购物车
-    → 购物车 → 去结算 → 选择地址 → 选择支付方式
-    → 提交订单 → 支付 → 订单成功 → 查看订单
+    → 购物车（默认全选） → 去结算 → 选择/新增地址 → 选择支付方式
+    → 提交订单 → KHQR/ABA/Wing 支付（Demo 模式可模拟） → 订单成功 → 查看订单
 ```
+
+完整支付链路已使用 `?demo=1` Demo 模式自动化截图，详见 3.12 节。
 
 ### 运营管理全流程
 
@@ -242,14 +302,20 @@ npx playwright test admin-demo.spec.js --config=e2e/demo-guide/demo.config.js
 ### 运行 MiniApp 商城演示截图
 
 ```bash
-# 1. 确保 .env 文件配置了 API 地址
-echo "VITE_API_BASE_URL=https://tgmall-production.up.railway.app/api/v1" > .env
+# 1. 确保 .env 文件配置了 API 地址（本地开发使用 localhost）
+echo "VITE_API_BASE_URL=http://localhost:3000/api/v1" > tgmall-miniapp/.env
 
-# 2. 启动开发服务器
-npx vite --port 5173 &
+# 2. 启动后端 API
+cd tgmall-api && npm run dev &
 
-# 3. 运行演示测试
+# 3. 启动前端开发服务器
+cd tgmall-miniapp && npx vite --port 5173 &
+
+# 4. 运行商城页面演示截图
 npx playwright test miniapp-demo.spec.js --config=e2e/demo-guide/demo.config.js
+
+# 5. 运行支付全流程演示截图（Demo 模式）
+npx playwright test payment-demo.spec.js --config=e2e/demo-guide/payment-demo.config.js
 ```
 
 截图输出目录：`项目文档/demo-guide/screenshots/`
@@ -275,7 +341,9 @@ npx playwright test miniapp-demo.spec.js --config=e2e/demo-guide/demo.config.js
 | 11 | `admin/11-platform.png` | 平台设置 |
 | 12 | `admin/12-inventory.png` | 库存管理 |
 
-### MiniApp 商城（13 张）
+### MiniApp 商城（13 张 + 11 张支付演示）
+
+#### 商城页面
 
 | 序号 | 文件名 | 页面 |
 |------|--------|------|
@@ -291,6 +359,22 @@ npx playwright test miniapp-demo.spec.js --config=e2e/demo-guide/demo.config.js
 | 10 | `miniapp/11-city-select.png` | 城市选择 |
 | 11 | `miniapp/12-coupons-page.png` | 优惠券中心 |
 | 12 | `miniapp/13-bottom-nav.png` | 底部导航 |
+
+#### 消费者支付全流程（Demo 模式）
+
+| 序号 | 文件名 | 页面 |
+|------|--------|------|
+| P01 | `miniapp/payment-01-homepage.png` | 首页浏览 |
+| P02 | `miniapp/payment-02-product-detail.png` | 商品详情 |
+| P03 | `miniapp/payment-03-product-added.png` | 已加入购物车 |
+| P04 | `miniapp/payment-04-cart.png` | 购物车 |
+| P05 | `miniapp/payment-05-cart-selected.png` | 购物车已全选 |
+| P06 | `miniapp/payment-06-checkout.png` | 确认订单 |
+| P07 | `miniapp/payment-07-checkout-address.png` | 新增地址（按需） |
+| P08 | `miniapp/payment-08-payment-khqr.png` | KHQR 支付页 |
+| P09 | `miniapp/payment-09-mock-confirm.png` | 模拟支付确认 |
+| P10 | `miniapp/payment-10-success.png` | 支付成功 |
+| P11 | `miniapp/payment-11-orders.png` | 订单列表 |
 
 ---
 
