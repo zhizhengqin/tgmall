@@ -84,7 +84,7 @@
       </div>
 
       <!-- Mock 模拟支付按钮 -->
-      <div v-if="pageState === 'qr-ready'" class="mock-section">
+      <div v-if="pageState === 'qr-ready' && showMock" class="mock-section">
         <button class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
           {{ $t('payment.mockPayKhqr') }}
         </button>
@@ -119,7 +119,7 @@
         </button>
 
         <!-- Mock 模拟支付按钮 -->
-        <button class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
+        <button v-if="showMock" class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
           {{ $t('payment.mockPay') }}
         </button>
 
@@ -236,6 +236,7 @@ const deepLinkUrl = ref('');
 const invoiceUrl = ref('');
 
 // ── Mock 确认支付 ──
+const showMock = computed(() => import.meta.env.DEV);
 const showMockConfirm = ref(false);
 const mockConfirmLoading = ref(false);
 const mockConfirmError = ref('');
@@ -549,7 +550,11 @@ async function handleMockConfirmSubmit() {
       },
     });
   } catch (err) {
-    mockConfirmError.value = err?.response?.data?.message || err?.message || t('payment.mockFailed');
+    if (err?.response?.status === 404) {
+      mockConfirmError.value = '模拟支付未启用（生产环境已关闭）';
+    } else {
+      mockConfirmError.value = err?.response?.data?.message || err?.message || t('payment.mockFailed');
+    }
   } finally {
     mockConfirmLoading.value = false;
   }
