@@ -112,14 +112,14 @@ onMounted(() => {
       // 异步 API 认证获取 JWT + 持久化用户信息
       const isMockInstalled = window.__TG_MOCK_INSTALLED__ === true;
 
-      if (isMockInstalled && u) {
-        // Demo / 本地开发模式：走独立 demo-login 端点，不依赖 initData 签名
+      async function handleDemoLogin(user) {
         try {
-          const res = await demoLogin(u);
+          const res = await demoLogin(user);
           const data = res?.data || res;
           if (data?.token) {
             const mergedUser = { ...userStore.user, ...(data.user || {}) };
             userStore.setAuth(data.token, mergedUser);
+            return;
           }
         } catch (e) {
           const errDetail = e?.response?.data?.error;
@@ -128,9 +128,13 @@ onMounted(() => {
             : (e?.message || 'unknown');
           debugInfo.storeUser += ' | API_ERR:' + errMsg;
         }
-      } else if (tg.initData) {
+        // Demo 登录失败时清空可能由 Mock 写入的本地用户状态
+        userStore.logout();
+      }
+
+      async function handleTelegramLogin(initData) {
         try {
-          const res = await telegramLogin(tg.initData);
+          const res = await telegramLogin(initData);
           const data = res?.data || res;
           if (data?.token) {
             // 合并 SDK 原始数据（photoUrl）与后端持久化数据（avatarUrl 等）
@@ -144,6 +148,12 @@ onMounted(() => {
             : (e?.message || 'unknown');
           debugInfo.storeUser += ' | API_ERR:' + errMsg;
         }
+      }
+
+      if (isMockInstalled && u) {
+        await handleDemoLogin(u);
+      } else if (tg.initData) {
+        await handleTelegramLogin(tg.initData);
       } else {
         debugInfo.storeUser += ' | SDK_NO_INITDATA: 请通过 Bot 的 Mini App 按钮打开';
       }

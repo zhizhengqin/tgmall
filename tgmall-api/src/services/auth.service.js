@@ -32,6 +32,9 @@ export async function telegramLogin(initData) {
  * 前端 Telegram Mock 直接传入用户信息，后端不再依赖 initData 签名校验
  */
 export async function demoLogin(user) {
+  if (process.env.NODE_ENV === 'production' || config.nodeEnv === 'production') {
+    throw new AppError('演示登录禁止在生产环境使用', 403, 'DEMO_LOGIN_FORBIDDEN');
+  }
   if (!config.paymentMockMode) {
     throw new AppError('演示登录未启用', 403, 'DEMO_LOGIN_DISABLED');
   }
@@ -39,8 +42,14 @@ export async function demoLogin(user) {
     throw new AppError('缺少用户信息', 400, 'INVALID_USER');
   }
 
+  // 演示用户 ID 必须落在真实 Telegram ID 范围（约 2^31）之外，防止与真实账户碰撞
+  const telegramId = BigInt(user.id);
+  if (telegramId <= 2147483647n) {
+    throw new AppError('演示用户 ID 必须超出真实 Telegram ID 范围', 400, 'INVALID_DEMO_ID');
+  }
+
   const userData = {
-    telegramId: user.id,
+    telegramId,
     firstName: user.first_name,
     lastName: user.last_name,
     username: user.username,
@@ -48,7 +57,7 @@ export async function demoLogin(user) {
     photoUrl: user.photo_url || null,
   };
 
-  const { user: dbUser, isNewUser } = await upsertUserFromTelegramData(userData);
+  const { user: dbUser, isNewUser } = await upsertUserFromTelegramData(userData, { updateAvatar: false });
   const token = signToken({
     userId: dbUser.id,
     telegramId: dbUser.telegramId,
@@ -60,37 +69,47 @@ export async function demoLogin(user) {
 
 // ---- 公共 helper：根据 Telegram 数据查找/创建用户 ----
 
-async function upsertUserFromTelegramData(userData) {
-  let user = await prisma.user.findUnique({
-    where: { telegramId: userData.telegramId },
-  });
+async function upsertUserFromTelegramData(userData, { updateAvatar = true } = {}) {
+  // 根据 Telegram 语言推断偏好语言
+  const langMap = { km: 'km', en: 'en', zh: 'zh' };
+  const inferredLang = langMap[userData.languageCode?.slice(0, 2)] || 'km';
 
-  const isNewUser = !user;
+  const createData = {
+    telegramId: userData.telegramId,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    username: userData.username,
+    language: inferredLang,
+    avatarUrl: userData.photoUrl || null,
+  };
 
-  if (isNewUser) {
-    // 根据 Telegram 语言推断偏好语言
-    const langMap = { km: 'km', en: 'en', zh: 'zh' };
-    const inferredLang = langMap[userData.languageCode?.slice(0, 2)] || 'km';
+  try {
+    const user = await prisma.user.create({ data: createData });
+    return { user, isNewUser: true };
+  } catch (err) {
+    // P2002 = 唯一键冲突，说明并发登录时已有其他请求创建用户
+    if (err.code !== 'P2002') throw err;
 
-    user = await prisma.user.create({
-      data: {
-        telegramId: userData.telegramId,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        username: userData.username,
-        language: inferredLang,
-        avatarUrl: userData.photoUrl || null,
-      },
+    let user = await prisma.user.findUnique({
+      where: { telegramId: userData.telegramId },
     });
-  } else if (userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
-    // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: { avatarUrl: userData.photoUrl },
-    });
+    if (!user) {
+      // 极端并发下先 create 后未立即读到，重试一次
+      user = await prisma.user.findUnique({
+        where: { telegramId: userData.telegramId },
+      });
+    }
+
+    if (updateAvatar && userData.photoUrl && userData.photoUrl !== user.avatarUrl) {
+      // 更新已有用户的头像（Telegram 头像 URL 可能会变化）
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl: userData.photoUrl },
+      });
+    }
+
+    return { user, isNewUser: false };
   }
-
-  return { user, isNewUser };
 }
 
 function buildAuthResponse(user, isNewUser, token) {

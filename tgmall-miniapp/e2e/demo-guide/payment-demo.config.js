@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const SYSTEM_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const SYSTEM_CHROME = process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 export default defineConfig({
   testDir: '.',
@@ -13,7 +13,7 @@ export default defineConfig({
     video: 'off',
     headless: true,
     launchOptions: {
-      executablePath: SYSTEM_CHROME,
+      executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH ? SYSTEM_CHROME : undefined,
     },
   },
   projects: [

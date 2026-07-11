@@ -8,12 +8,16 @@ export const telegramLoginSchema = z.object({
 // 演示环境浏览器登录：由前端 Telegram Mock 直接传入用户信息，不走 initData 签名校验
 export const demoLoginSchema = z.object({
   user: z.object({
-    id: z.union([z.number(), z.string(), z.bigint()]),
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    username: z.string().optional(),
-    language_code: z.string().optional(),
-    photo_url: z.string().url().optional().nullable(),
+    id: z.coerce.bigint().positive('用户 ID 必须是正整数'),
+    first_name: z.string().max(64).optional(),
+    last_name: z.string().max(64).optional(),
+    username: z.string().max(32).optional(),
+    language_code: z.string().max(5).optional(),
+    photo_url: z.string()
+      .regex(/^https?:\/\//, '头像 URL 只允许 http/https')
+      .max(2048)
+      .optional()
+      .nullable(),
   }),
 });
 

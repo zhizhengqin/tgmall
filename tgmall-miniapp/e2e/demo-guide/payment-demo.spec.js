@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:5173';
-const OUT_DIR = '../项目文档/demo-guide/screenshots/miniapp';
+const BASE_URL = process.env.BASE_URL || process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api/v1';
+const OUT_DIR = process.env.DEMO_SCREENSHOT_DIR || '../项目文档/demo-guide/screenshots/miniapp';
 
 // 移动端视口 — 模拟 Telegram Mini App
 const MOBILE_VIEWPORT = { width: 390, height: 844 };
@@ -19,23 +20,19 @@ async function setLanguage(page, lang = 'zh') {
   await page.waitForTimeout(800);
 }
 
-function formatDate() {
-  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
-}
-
 async function clearCart(page) {
-  await page.evaluate(async () => {
+  await page.evaluate(async (apiBase) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      await fetch('http://localhost:3000/api/v1/cart', {
+      await fetch(`${apiBase}/cart`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (e) {
       console.error('Clear cart failed:', e);
     }
-  });
+  }, API_BASE_URL);
   await page.waitForTimeout(500);
 }
 

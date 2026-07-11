@@ -13,8 +13,8 @@ const router = Router();
 
 router.post('/telegram', validate(telegramLoginSchema), authController.telegramLogin);
 
-// 演示环境浏览器登录：仅 PAYMENT_MOCK_MODE 启用时注册，生产环境不存在此路由
-if (config.paymentMockMode) {
+// 演示环境浏览器登录：仅 PAYMENT_MOCK_MODE 启用且非生产环境时注册
+if (config.paymentMockMode && process.env.NODE_ENV !== 'production') {
   router.post('/demo-login', validate(demoLoginSchema), authController.demoLogin);
 }
 

@@ -2,6 +2,9 @@
 // 触发条件：
 //   - Vite 开发模式（import.meta.env.DEV）自动注入
 //   - 生产环境 URL 携带 ?demo=1 时注入，方便客户演示
+// 演示用户 ID 必须落在真实 Telegram ID 范围（约 2^31）之外，避免与真实账户冲突
+const DEMO_TELEGRAM_ID = '999999999999999999';
+
 export function installTelegramMock() {
   if (typeof window === 'undefined') return;
 
@@ -12,7 +15,7 @@ export function installTelegramMock() {
   }
 
   const mockUser = {
-    id: 999999999,
+    id: DEMO_TELEGRAM_ID,
     first_name: 'Dev',
     last_name: 'User',
     username: 'dev_user',

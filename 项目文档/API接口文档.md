@@ -240,6 +240,60 @@ POST /auth/telegram
 
 ---
 
+### 接口 1.5：演示环境浏览器登录（Demo 模式）
+
+```
+POST /auth/demo-login
+```
+
+**说明**：仅在 `PAYMENT_MOCK_MODE=true` 且 `NODE_ENV !== 'production'` 时注册。浏览器演示模式（`?demo=1`）下，前端通过 Telegram Mock 直接传入用户信息，后端不再校验 initData 签名。
+
+**请求头**：
+
+| 参数 | 值 | 必填 |
+|------|-----|------|
+| `Content-Type` | `application/json` | 是 |
+
+**请求体**：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `user.id` | `string` / `number` | 是 | 演示用户 Telegram ID，必须大于真实 Telegram ID 范围（`> 2147483647`） |
+| `user.first_name` | `string` | 否 | 名字（最长 64 字符） |
+| `user.last_name` | `string` | 否 | 姓氏（最长 64 字符） |
+| `user.username` | `string` | 否 | 用户名（最长 32 字符） |
+| `user.language_code` | `string` | 否 | 语言代码（最长 5 字符） |
+| `user.photo_url` | `string` | 否 | 头像 URL，仅允许 `http/https`（最长 2048 字符） |
+
+**请求示例**：
+
+```json
+{
+  "user": {
+    "id": "999999999999999999",
+    "first_name": "Demo",
+    "last_name": "User",
+    "username": "demo_user",
+    "language_code": "zh",
+    "photo_url": null
+  }
+}
+```
+
+**成功响应** `200`：同 `/auth/telegram`。
+
+**错误响应**：
+
+| 状态码 | error.code | 说明 |
+|--------|------------|------|
+| `400` | `VALIDATION_ERROR` | 字段校验失败（如 `id` 不是正整数、`photo_url` 非 http/https） |
+| `400` | `INVALID_DEMO_ID` | 演示用户 ID 落在真实 Telegram ID 范围内 |
+| `400` | `INVALID_USER` | 缺少 `user.id` |
+| `403` | `DEMO_LOGIN_DISABLED` | `PAYMENT_MOCK_MODE` 未开启 |
+| `403` | `DEMO_LOGIN_FORBIDDEN` | 生产环境禁止演示登录 |
+
+---
+
 ### 接口 2：刷新 Token
 
 ```

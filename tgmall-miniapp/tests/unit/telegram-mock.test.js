@@ -19,14 +19,14 @@ describe('installTelegramMock', () => {
   it('注入 Telegram WebApp 对象', () => {
     installTelegramMock();
     expect(window.Telegram?.WebApp).toBeDefined();
-    expect(window.Telegram.WebApp.initData).toContain('hash=demo');
+    expect(window.Telegram.WebApp.initData).toContain('user=');
   });
 
   it('initData 包含演示用户信息', () => {
     installTelegramMock();
     const params = new URLSearchParams(window.Telegram.WebApp.initData);
     const user = JSON.parse(params.get('user'));
-    expect(user.id).toBe(999999999);
+    expect(user.id).toBe('999999999999999999');
     expect(user.first_name).toBe('Dev');
   });
 

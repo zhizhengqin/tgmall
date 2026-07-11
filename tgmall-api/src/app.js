@@ -2,7 +2,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import { createRateLimiter } from './utils/rateLimiter.js';
 import { registerBigIntSerializer } from './utils/jsonSerializer.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
@@ -61,18 +61,13 @@ app.use((req, res, next) => {
 
 // 3. 全局速率限制（支付状态轮询在路由层单独放宽，避免前端每 3 秒轮询触发 429）
 // 本地开发/QA 场景放宽到 1000 次/15 分钟，避免自动化测试和快速演示被误伤
-const isDevEnv = process.env.NODE_ENV !== 'production';
-const globalRateLimit = isDevEnv
-  ? (parseInt(process.env.RATE_LIMIT_PER_IP, 10) || 1000)
-  : (parseInt(process.env.RATE_LIMIT_PER_IP, 10) || 100);
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 分钟
-  limit: globalRateLimit,
-  standardHeaders: true,
-  legacyHeaders: false,
+const globalRateLimit = createRateLimiter({
+  limit: process.env.NODE_ENV !== 'production'
+    ? (parseInt(process.env.RATE_LIMIT_PER_IP, 10) || 1000)
+    : (parseInt(process.env.RATE_LIMIT_PER_IP, 10) || 100),
   skip: (req) => req.path.startsWith('/api/v1/payments/status'),
-  message: { success: false, error: { code: 'RATE_LIMIT', message: '请求过于频繁，请稍后再试' } },
-}));
+});
+app.use(globalRateLimit);
 
 // 4. 请求体解析（限制大小防攻击）
 app.use(express.json({ limit: '2mb' }));
