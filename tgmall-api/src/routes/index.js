@@ -18,6 +18,7 @@ import tagRoutes from './tag.routes.js';
 import notificationRoutes from './notification.routes.js';
 import uploadRoutes from './upload.routes.js';
 import proxyRoutes from './proxy.routes.js';
+import * as configCtrl from '../controllers/config.controller.js';
 
 const router = Router();
 
@@ -25,6 +26,9 @@ const router = Router();
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// 运行时配置（公开，前端据此判断演示模式）
+router.get('/config', configCtrl.get);
 
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
