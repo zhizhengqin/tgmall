@@ -151,6 +151,10 @@
         <button class="btn btn-primary redirect-btn" @click="openTelegramInvoice">
           {{ $t('payment.openInvoice') }}
         </button>
+        <!-- Mock 模拟支付按钮 -->
+        <button v-if="showMock" class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
+          {{ $t('payment.mockPay') }}
+        </button>
         <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
           {{ $t('payment.changeMethod') }}
         </button>
@@ -192,6 +196,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { createKHQRPayment, createABAPayPayment, createWingPayPayment, createTelegramInvoicePayment, getPaymentStatus, mockConfirmPayment } from '@/api/payments';
+import { getRuntimeConfig } from '@/api/config';
 import { cancelOrder } from '@/api/orders';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useShopConfig } from '@/composables/useShopConfig.js';
@@ -240,7 +245,8 @@ const isDemoMode = typeof window !== 'undefined' && (
   new URLSearchParams(window.location.search).get('demo') === '1'
   || window.__TG_MOCK_INSTALLED__ === true
 );
-const showMock = computed(() => import.meta.env.DEV || isDemoMode);
+const backendMockEnabled = ref(false);
+const showMock = computed(() => import.meta.env.DEV || isDemoMode || backendMockEnabled.value);
 const showMockConfirm = ref(false);
 const mockConfirmLoading = ref(false);
 const mockConfirmError = ref('');
@@ -258,6 +264,15 @@ const formattedTime = computed(() => {
 
 // ── 初始化 ──
 onMounted(async () => {
+  // 先拉取后端运行时配置，判断演示模式（真实 Telegram 部署无 ?demo=1）
+  try {
+    const cfgRes = await getRuntimeConfig();
+    backendMockEnabled.value = !!cfgRes.data?.paymentMockMode;
+  } catch (err) {
+    console.warn('拉取运行时配置失败:', err);
+    backendMockEnabled.value = false;
+  }
+
   if (!orderId.value) {
     router.replace('/orders');
     return;
