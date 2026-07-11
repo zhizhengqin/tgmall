@@ -236,7 +236,11 @@ const deepLinkUrl = ref('');
 const invoiceUrl = ref('');
 
 // ── Mock 确认支付 ──
-const showMock = computed(() => import.meta.env.DEV);
+const isDemoMode = typeof window !== 'undefined' && (
+  new URLSearchParams(window.location.search).get('demo') === '1'
+  || window.__TG_MOCK_INSTALLED__ === true
+);
+const showMock = computed(() => import.meta.env.DEV || isDemoMode);
 const showMockConfirm = ref(false);
 const mockConfirmLoading = ref(false);
 const mockConfirmError = ref('');
