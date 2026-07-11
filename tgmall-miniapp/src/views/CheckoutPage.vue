@@ -306,8 +306,17 @@ async function submitOrder() {
   if (!selectedAddress.value) return;
   submitting.value = true;
   try {
+    const orderItems = items.value.map((i) => {
+      const payload = {
+        product_id: i.productId,
+        quantity: i.quantity,
+        spec: i.spec || {},
+      };
+      if (i.skuId) payload.sku_id = i.skuId;
+      return payload;
+    });
     const res = await createOrder({
-      items: items.value.map(i => ({ product_id: i.productId, quantity: i.quantity, spec: i.spec, sku_id: i.skuId })),
+      items: orderItems,
       shipping_address_id: selectedAddress.value.id,
       coupon_id: selectedCoupon.value?.coupon?.id,
       payment_method: paymentMethod.value,
