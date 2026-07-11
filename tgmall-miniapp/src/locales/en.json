@@ -59,6 +59,7 @@
     "checkout": "Checkout",
     "selectAll": "Select All",
     "remove": "Remove",
+    "removeFailed": "Remove failed, please try again",
     "checkoutCount": "Checkout ({count})",
     "stockLeft": "Only {count} left",
     "insufficient": "Insufficient stock! Max {count}",

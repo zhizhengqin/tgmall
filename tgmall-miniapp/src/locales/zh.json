@@ -59,6 +59,7 @@
     "checkout": "去结算",
     "selectAll": "全选",
     "remove": "删除",
+    "removeFailed": "删除失败，请重试",
     "checkoutCount": "结算({count})",
     "stockLeft": "仅剩 {count} 件",
     "insufficient": "库存不足!最大 {count} 件",
