@@ -21,10 +21,13 @@
             <p class="item-spec" v-if="item.spec">{{ specStr(item.spec) }}</p>
             <div class="item-price-row">
               <PriceDisplay :priceUsd="item.priceUsd" :priceKhr="item.priceKhr" sm />
-              <div class="qty-spinner">
-                <button @click="decreaseQty(item)">−</button>
-                <span>{{ item.quantity }}</span>
-                <button @click="increaseQty(item)">+</button>
+              <div class="qty-actions">
+                <div class="qty-spinner">
+                  <button @click="decreaseQty(item)" :disabled="item.quantity <= 1">−</button>
+                  <span>{{ item.quantity }}</span>
+                  <button @click="increaseQty(item)" :disabled="item.quantity >= item.maxQuantity">+</button>
+                </div>
+                <button class="delete-btn" @click="deleteItem(item)">{{ $t('cart.remove') }}</button>
               </div>
             </div>
             <p v-if="item.stockStatus === 'low_stock'" class="stock-warn">{{ $t('cart.stockLeft', { count: item.maxQuantity }) }}</p>
@@ -57,7 +60,10 @@ import { useCartStore } from '@/stores/cartStore';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
+import { useI18n } from 'vue-i18n';
+
 const router = useRouter();
+const { t } = useI18n();
 const cartStore = useCartStore();
 const groups = ref([]);
 const loading = ref(true);
@@ -102,21 +108,34 @@ function toggleAll() {
 }
 
 async function decreaseQty(item) {
-  if (item.quantity <= 1) {
-    if (confirm($t('cart.confirmRemove'))) {
-      await removeCartItem(item.id);
-      await loadCart();
-    }
-    return;
+  if (item.quantity <= 1) return;
+  try {
+    await updateCartItem(item.id, { quantity: item.quantity - 1 });
+    await loadCart();
+  } catch {
+    item.quantity = Math.max(1, item.quantity);
   }
-  try { await updateCartItem(item.id, { quantity: item.quantity - 1 }); }
-  catch { item.quantity = Math.max(1, item.quantity); }
 }
 
 async function increaseQty(item) {
   if (item.quantity >= item.maxQuantity) return;
-  try { await updateCartItem(item.id, { quantity: item.quantity + 1 }); }
-  catch { item.quantity = Math.min(item.maxQuantity, item.quantity); }
+  try {
+    await updateCartItem(item.id, { quantity: item.quantity + 1 });
+    await loadCart();
+  } catch {
+    item.quantity = Math.min(item.maxQuantity, item.quantity);
+  }
+}
+
+async function deleteItem(item) {
+  if (!confirm(t('cart.confirmRemove'))) return;
+  try {
+    await removeCartItem(item.id);
+    checkedIds.value = checkedIds.value.filter((id) => id !== item.id);
+    await loadCart();
+  } catch {
+    alert(t('cart.removeFailed'));
+  }
 }
 
 async function loadCart() {
@@ -160,9 +179,16 @@ onMounted(loadCart);
 .item-name { font-size: 13px; font-weight: 600; line-height: 1.6; }
 .item-spec { font-size: 11px; color: var(--muted); margin: 4px 0; }
 .item-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.qty-actions { display: flex; align-items: center; gap: 8px; }
 .qty-spinner { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 4px; }
-.qty-spinner button { min-width: 44px; min-height: 44px; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.qty-spinner button { min-width: 44px; min-height: 44px; font-size: 14px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: none; cursor: pointer; }
+.qty-spinner button:disabled { opacity: 0.35; cursor: not-allowed; }
+.qty-spinner button:hover:not(:disabled) { background: var(--bg); }
+.qty-spinner button:active:not(:disabled) { background: var(--border); }
 .qty-spinner span { min-width: 28px; text-align: center; font-size: 13px; font-weight: 600; }
+.delete-btn { font-size: 12px; color: var(--accent-red); background: transparent; border: none; padding: 6px 8px; cursor: pointer; }
+.delete-btn:hover { opacity: 0.8; }
+.delete-btn:active { opacity: 0.6; }
 .stock-warn { font-size: 11px; color: var(--accent-red); margin-top: 4px; }
 .cart-footer { position: fixed; bottom: var(--nav-height); left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--max-width); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-top: 1px solid var(--border); z-index: 40; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 .select-all { font-size: 13px; display: flex; align-items: center; gap: 6px; }

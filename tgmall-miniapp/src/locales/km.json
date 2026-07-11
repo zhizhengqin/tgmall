@@ -59,6 +59,7 @@
     "checkout": "ទូទាត់",
     "selectAll": "ជ្រើសរើសទាំងអស់",
     "remove": "លុប",
+    "removeFailed": "លុបមិនបានទេ សូមព្យាយាមម្តងទៀត",
     "checkoutCount": "ទូទាត់ ({count})",
     "stockLeft": "សល់ {count} ប៉ុណ្ណោះ",
     "insufficient": "ស្តុកមិនគ្រប់គ្រាន់! អតិបរមា {count}",
