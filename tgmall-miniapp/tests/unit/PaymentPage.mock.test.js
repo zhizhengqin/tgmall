@@ -66,6 +66,10 @@ vi.mock('@/api/orders', () => ({
   cancelOrder: (...args) => mockCancelOrder(...args),
 }));
 
+vi.mock('@/api/config', () => ({
+  getRuntimeConfig: vi.fn().mockResolvedValue({ data: { paymentMockMode: true } }),
+}));
+
 vi.mock('@/stores/languageStore', () => ({
   useLanguageStore: () => ({
     current: ref('zh'),

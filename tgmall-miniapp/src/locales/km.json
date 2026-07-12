@@ -248,7 +248,8 @@
     "mockConfirmBtn": "បញ្ជាក់ការទូទាត់",
     "mockCancelBtn": "បោះបង់",
     "mockProcessing": "កំពុងដំណើរការ...",
-    "mockFailed": "ការទូទាត់ក្លែងធ្វើបានបរាជ័យ"
+    "mockFailed": "ការទូទាត់ក្លែងធ្វើបានបរាជ័យ",
+    "mockNotEnabled": "ការទូទាត់ក្លែងធ្វើមិនត្រូវបានបើទេ"
   },
   "wishlist": {
     "title": "ចំណូលចិត្ត",

@@ -81,10 +81,17 @@ export async function mockConfirmPayment(req, res, next) {
       return res.status(404).json({ success: false, message: '接口不存在' });
     }
 
-    // 查询订单获取必要字段
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    // 查询订单并校验归属：防止横向越权
+    const order = await prisma.order.findFirst({
+      where: { id: orderId, userId: req.user.userId },
+    });
     if (!order) {
       return res.status(404).json({ success: false, message: '订单不存在' });
+    }
+
+    // 校验 provider 必须与订单支付方式一致
+    if (order.paymentMethod !== provider) {
+      return res.status(400).json({ success: false, message: '支付方式与订单不匹配' });
     }
 
     // 映射 provider：khqr → bakong，其余不变

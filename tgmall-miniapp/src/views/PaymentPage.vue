@@ -151,10 +151,6 @@
         <button class="btn btn-primary redirect-btn" @click="openTelegramInvoice">
           {{ $t('payment.openInvoice') }}
         </button>
-        <!-- Mock 模拟支付按钮 -->
-        <button v-if="showMock" class="btn btn-mock" data-test="mock-confirm-btn" @click="handleMockConfirmOpen">
-          {{ $t('payment.mockPay') }}
-        </button>
         <button class="btn btn-outline redirect-btn" @click="switchPaymentMethod">
           {{ $t('payment.changeMethod') }}
         </button>
@@ -241,12 +237,9 @@ const deepLinkUrl = ref('');
 const invoiceUrl = ref('');
 
 // ── Mock 确认支付 ──
-const isDemoMode = typeof window !== 'undefined' && (
-  new URLSearchParams(window.location.search).get('demo') === '1'
-  || window.__TG_MOCK_INSTALLED__ === true
-);
 const backendMockEnabled = ref(false);
-const showMock = computed(() => import.meta.env.DEV || isDemoMode || backendMockEnabled.value);
+// 仅开发环境或后端运行时配置开启时才显示模拟支付控件，避免生产构建被客户端标志覆盖
+const showMock = computed(() => import.meta.env.DEV || backendMockEnabled.value);
 const showMockConfirm = ref(false);
 const mockConfirmLoading = ref(false);
 const mockConfirmError = ref('');
@@ -264,14 +257,15 @@ const formattedTime = computed(() => {
 
 // ── 初始化 ──
 onMounted(async () => {
-  // 先拉取后端运行时配置，判断演示模式（真实 Telegram 部署无 ?demo=1）
-  try {
-    const cfgRes = await getRuntimeConfig();
-    backendMockEnabled.value = !!cfgRes.data?.paymentMockMode;
-  } catch (err) {
-    console.warn('拉取运行时配置失败:', err);
-    backendMockEnabled.value = false;
-  }
+  // 并行拉取后端运行时配置，不阻塞支付主流程
+  getRuntimeConfig()
+    .then((cfgRes) => {
+      backendMockEnabled.value = !!cfgRes.data?.paymentMockMode;
+    })
+    .catch((err) => {
+      console.warn('拉取运行时配置失败:', err);
+      backendMockEnabled.value = false;
+    });
 
   if (!orderId.value) {
     router.replace('/orders');
@@ -570,7 +564,7 @@ async function handleMockConfirmSubmit() {
     });
   } catch (err) {
     if (err?.response?.status === 404) {
-      mockConfirmError.value = '模拟支付未启用（生产环境已关闭）';
+      mockConfirmError.value = t('payment.mockNotEnabled');
     } else {
       mockConfirmError.value = err?.response?.data?.message || err?.message || t('payment.mockFailed');
     }

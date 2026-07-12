@@ -248,7 +248,8 @@
     "mockConfirmBtn": "Confirm Payment",
     "mockCancelBtn": "Cancel",
     "mockProcessing": "Processing...",
-    "mockFailed": "Simulated payment failed"
+    "mockFailed": "Simulated payment failed",
+    "mockNotEnabled": "Simulated payment is not enabled"
   },
   "wishlist": {
     "title": "Wishlist",
