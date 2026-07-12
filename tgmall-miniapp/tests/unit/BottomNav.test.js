@@ -7,14 +7,6 @@ vi.mock('@/stores/cartStore', () => ({
   useCartStore: () => ({ totalItems: 0 }),
 }));
 
-function setScrollY(value) {
-  Object.defineProperty(window, 'scrollY', {
-    value,
-    writable: true,
-    configurable: true,
-  });
-}
-
 function mountBottomNav() {
   const router = createRouter({
     history: createWebHistory(),
@@ -45,7 +37,6 @@ describe('BottomNav', () => {
 
   afterEach(() => {
     wrapper?.unmount();
-    window.scrollY = 0;
   });
 
   it('renders five navigation items', () => {
@@ -57,39 +48,17 @@ describe('BottomNav', () => {
     expect(wrapper.text()).toContain('nav.profile');
   });
 
-  it('hides when scrolling down and shows when scrolling up', async () => {
+  it('is always visible', async () => {
     wrapper = mountBottomNav();
-
-    setScrollY(100);
-    window.dispatchEvent(new Event('scroll'));
-    await flushPromises();
-    expect(wrapper.find('.bottom-nav').classes()).toContain('is-hidden');
-
-    setScrollY(50);
-    window.dispatchEvent(new Event('scroll'));
-    await flushPromises();
     expect(wrapper.find('.bottom-nav').classes()).not.toContain('is-hidden');
-  });
 
-  it('stays visible at the top of the page', async () => {
-    wrapper = mountBottomNav();
-
-    setScrollY(0);
+    // 模拟滚动不应隐藏底部导航
+    Object.defineProperty(window, 'scrollY', {
+      value: 100,
+      writable: true,
+      configurable: true,
+    });
     window.dispatchEvent(new Event('scroll'));
-    await flushPromises();
-    expect(wrapper.find('.bottom-nav').classes()).not.toContain('is-hidden');
-  });
-
-  it('resets to visible after route change', async () => {
-    wrapper = mountBottomNav();
-
-    setScrollY(200);
-    window.dispatchEvent(new Event('scroll'));
-    await flushPromises();
-    expect(wrapper.find('.bottom-nav').classes()).toContain('is-hidden');
-
-    const router = wrapper.vm.$router;
-    await router.push('/?category=fashion');
     await flushPromises();
     expect(wrapper.find('.bottom-nav').classes()).not.toContain('is-hidden');
   });

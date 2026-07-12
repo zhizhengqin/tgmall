@@ -1,6 +1,6 @@
 <!-- 底部导航栏 -->
 <template>
-  <nav class="bottom-nav" :class="{ 'is-hidden': isHidden }">
+  <nav class="bottom-nav">
     <router-link
       v-for="item in items"
       :key="item.to"
@@ -16,50 +16,12 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 
 const cartStore = useCartStore();
 const route = useRoute();
-const isHidden = ref(false);
-
-const SCROLL_HIDE_THRESHOLD = 5;
-
-let lastScrollY = 0;
-
-function updateNavVisibility() {
-  const currentScrollY = window.scrollY;
-  const delta = currentScrollY - lastScrollY;
-
-  if (currentScrollY <= 0) {
-    isHidden.value = false;
-  } else if (delta > SCROLL_HIDE_THRESHOLD) {
-    isHidden.value = true;
-  } else if (delta < -SCROLL_HIDE_THRESHOLD) {
-    isHidden.value = false;
-  }
-
-  lastScrollY = currentScrollY;
-}
-
-onMounted(() => {
-  lastScrollY = window.scrollY;
-  window.addEventListener('scroll', updateNavVisibility, { passive: true });
-});
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', updateNavVisibility);
-});
-
-// 切页后恢复显示
-watch(
-  () => route.fullPath,
-  () => {
-    isHidden.value = false;
-    lastScrollY = window.scrollY;
-  }
-);
 
 // SVG 线条图标（匹配设计稿风格）
 const icons = {
@@ -98,10 +60,6 @@ const items = computed(() => [
   box-shadow: var(--shadow-float);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   will-change: transform;
-}
-.bottom-nav.is-hidden {
-  transform: translate(-50%, calc(100% + env(safe-area-inset-bottom)));
-  box-shadow: none;
 }
 .nav-item {
   display: flex;
