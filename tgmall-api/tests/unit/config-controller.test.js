@@ -8,7 +8,6 @@ describe('config.controller', () => {
   beforeAll(async () => {
     configMock = {
       paymentMockMode: true,
-      telegramPaymentsMockMode: false,
     };
 
     jest.unstable_mockModule('../../src/config/index.js', () => ({
@@ -18,19 +17,22 @@ describe('config.controller', () => {
     ctrl = await import('../../src/controllers/config.controller.js');
   });
 
-  const makeRes = () => ({ json: jest.fn() });
+  const makeRes = () => ({ set: jest.fn(), json: jest.fn() });
 
-  it('TC-CONFIG-CTRL-001: 返回演示模式开关', () => {
+  it('TC-CONFIG-CTRL-001: 返回演示模式开关与缓存头', () => {
     const req = {};
     const res = makeRes();
 
     ctrl.get(req, res);
 
+    expect(res.set).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, private'
+    );
     expect(res.json).toHaveBeenCalledWith({
       success: true,
       data: {
         paymentMockMode: true,
-        telegramPaymentsMockMode: false,
       },
     });
   });

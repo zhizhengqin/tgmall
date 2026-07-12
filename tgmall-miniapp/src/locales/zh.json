@@ -248,7 +248,8 @@
     "mockConfirmBtn": "确认支付",
     "mockCancelBtn": "取消",
     "mockProcessing": "处理中...",
-    "mockFailed": "模拟支付失败"
+    "mockFailed": "模拟支付失败",
+    "mockNotEnabled": "模拟支付未启用（生产环境已关闭）"
   },
   "wishlist": {
     "title": "我的收藏",

@@ -248,6 +248,7 @@ describe('payment.routes', () => {
 describe('mockConfirmPayment — provider 映射 (T3)', () => {
   let ctrl;
   let mocks;
+  let prisma;
 
   beforeAll(async () => {
     // 清除模块缓存：前面 controller 测试已 import 过 controller，
@@ -270,25 +271,27 @@ describe('mockConfirmPayment — provider 映射 (T3)', () => {
     jest.unstable_mockModule('../../src/config/database.js', () => ({
       default: {
         order: {
-          findUnique: jest.fn().mockResolvedValue({
+          findFirst: jest.fn().mockResolvedValue({
             id: 'order-test-1',
             orderNumber: 'TG202607100001',
             totalUsd: 12.5,
             totalKhr: 52000,
             status: 'pending_payment',
             paymentStatus: 'pending',
+            paymentMethod: 'khqr',
             userId: 'user-1',
           }),
         },
         $transaction: jest.fn((fn) => fn({
           order: {
-            findUnique: jest.fn().mockResolvedValue({
+            findFirst: jest.fn().mockResolvedValue({
               id: 'order-test-1',
               orderNumber: 'TG202607100001',
               totalUsd: 12.5,
               totalKhr: 52000,
               status: 'pending_payment',
               paymentStatus: 'pending',
+              paymentMethod: 'khqr',
               userId: 'user-1',
             }),
             update: jest.fn().mockResolvedValue({}),
@@ -308,13 +311,18 @@ describe('mockConfirmPayment — provider 映射 (T3)', () => {
     }));
 
     ctrl = await import('../../src/controllers/payment.controller.js');
+    prisma = (await import('../../src/config/database.js')).default;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  const makeRes = () => ({ json: jest.fn() });
+  const makeRes = () => {
+    const res = { json: jest.fn() };
+    res.status = jest.fn(() => res);
+    return res;
+  };
   const makeNext = () => jest.fn();
 
   it('TC-PAY-CTRL-011: provider=khqr 时，传给 handlePaymentCallback 的 provider 应该是 bakong', async () => {
@@ -334,6 +342,16 @@ describe('mockConfirmPayment — provider 映射 (T3)', () => {
   });
 
   it('TC-PAY-CTRL-012: provider=aba_pay 时，保持 aba_pay 不变', async () => {
+    prisma.order.findFirst.mockResolvedValueOnce({
+      id: 'order-test-1',
+      orderNumber: 'TG202607100001',
+      totalUsd: 12.5,
+      totalKhr: 52000,
+      status: 'pending_payment',
+      paymentStatus: 'pending',
+      paymentMethod: 'aba_pay',
+      userId: 'user-1',
+    });
     const req = {
       user: { userId: 'user-1' },
       validatedBody: { orderId: 'order-test-1', provider: 'aba_pay' },
@@ -348,6 +366,16 @@ describe('mockConfirmPayment — provider 映射 (T3)', () => {
   });
 
   it('TC-PAY-CTRL-013: provider=wing_pay 时，保持 wing_pay 不变', async () => {
+    prisma.order.findFirst.mockResolvedValueOnce({
+      id: 'order-test-1',
+      orderNumber: 'TG202607100001',
+      totalUsd: 12.5,
+      totalKhr: 52000,
+      status: 'pending_payment',
+      paymentStatus: 'pending',
+      paymentMethod: 'wing_pay',
+      userId: 'user-1',
+    });
     const req = {
       user: { userId: 'user-1' },
       validatedBody: { orderId: 'order-test-1', provider: 'wing_pay' },
@@ -376,6 +404,37 @@ describe('mockConfirmPayment — provider 映射 (T3)', () => {
       success: true,
       data: { status: 'processed', isMock: true },
     });
+  });
+
+  it('TC-PAY-CTRL-015: 订单不属于当前用户时返回 404', async () => {
+    const { default: prisma } = await import('../../src/config/database.js');
+    prisma.order.findFirst.mockResolvedValueOnce(null);
+
+    const req = {
+      user: { userId: 'user-2' },
+      validatedBody: { orderId: 'order-test-1', provider: 'khqr' },
+    };
+    const res = makeRes();
+    const next = makeNext();
+
+    await ctrl.mockConfirmPayment(req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith({ success: false, message: '订单不存在' });
+    expect(mocks.handlePaymentCallback).not.toHaveBeenCalled();
+  });
+
+  it('TC-PAY-CTRL-016: provider 与订单支付方式不匹配时返回 400', async () => {
+    const req = {
+      user: { userId: 'user-1' },
+      validatedBody: { orderId: 'order-test-1', provider: 'aba_pay' },
+    };
+    const res = makeRes();
+    const next = makeNext();
+
+    await ctrl.mockConfirmPayment(req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith({ success: false, message: '支付方式与订单不匹配' });
+    expect(mocks.handlePaymentCallback).not.toHaveBeenCalled();
   });
 });
 
