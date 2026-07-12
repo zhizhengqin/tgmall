@@ -1,13 +1,14 @@
 <!-- 首页 — 商品浏览主入口 -->
 <template>
-  <div
-    class="home-page"
-    :class="{ 'is-refreshing': isRefreshing }"
-    :style="ptrStyle"
-    @touchstart="onPtrStart"
-    @touchmove="onPtrMove"
-    @touchend="onPtrEnd"
-  >
+  <div class="home-page">
+    <div
+      class="home-page__content"
+      :class="{ 'is-refreshing': isRefreshing }"
+      :style="ptrStyle"
+      @touchstart="onPtrStart"
+      @touchmove="onPtrMove"
+      @touchend="onPtrEnd"
+    >
     <div class="ptr-indicator" :style="{ opacity: pullProgress }">
       <span v-if="isRefreshing">{{ $t('home.refreshing') }}</span>
       <span v-else-if="willRefresh">{{ $t('home.releaseToRefresh') }}</span>
@@ -150,13 +151,14 @@
         {{ $t('common.noMore') }}
       </div>
     </section>
-
-    <!-- 底部购物车条 -->
-    <MiniCartBar />
-
-    <!-- 底部导航 -->
-    <BottomNav />
   </div>
+
+  <!-- 底部购物车条 -->
+  <MiniCartBar />
+
+  <!-- 底部导航 -->
+  <BottomNav />
+</div>
 </template>
 
 <script setup>
@@ -489,6 +491,11 @@ onUnmounted(() => {
   position: relative;
   min-height: 100vh;
   background: var(--bg);
+}
+
+.home-page__content {
+  position: relative;
+  min-height: 100vh;
 }
 
 .ptr-indicator {
