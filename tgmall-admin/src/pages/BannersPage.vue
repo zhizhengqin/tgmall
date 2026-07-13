@@ -1,5 +1,5 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
       <div class="page-header">
         <h1>{{ $t('settings.banners') }}</h1>
@@ -67,8 +67,6 @@
 import { ref, onMounted, inject } from 'vue';
 import { ElMessage } from 'element-plus';
 import { getBanners, createBanner, updateBanner, toggleBanner } from '@/api';
-import Sidebar from '@/components/layout/Sidebar.vue';
-import TopBar from '@/components/layout/TopBar.vue';
 
 const { t } = inject('i18n');
 const items = ref([]);
@@ -148,7 +146,7 @@ onMounted(load);
 </script>
 <style scoped>
 .page{min-height:100vh;background:#f5f5f5}
-.main{margin-left:220px;padding:20px}
+
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .banner-thumb{width:80px;height:48px;object-fit:cover;border-radius:4px}
 </style>

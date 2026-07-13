@@ -1,9 +1,9 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main" v-if="order">
       <el-page-header @back="$router.back()"><template #content>{{ $t('orders.orderNumber') }} {{ order.orderNumber }}</template></el-page-header>
       <el-row :gutter="20" style="margin-top:20px">
-        <el-col :span="12">
+        <el-col :xs="24" :sm="12">
           <el-card :header="$t('orders.items')">
             <el-table :data="order.items" size="small">
               <el-table-column prop="productName" :label="$t('products.name')" />
@@ -13,7 +13,7 @@
             <p style="margin-top:12px;font-weight:700">{{ $t('orders.total') }}: ${{ order.totalUsd }} / {{ order.totalKhr }}៛</p>
           </el-card>
         </el-col>
-        <el-col :span="12">
+        <el-col :xs="24" :sm="12">
           <el-card :header="$t('orders.shippingAddress')">
             <p>{{ order.customer?.name }}</p><p>{{ order.customer?.phone }}</p>
             <p>{{ order.shippingAddress?.detail }}</p>
@@ -35,9 +35,9 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRoute } from 'vue-router'; import { getOrderDetail, shipOrder } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+import { ref, reactive, onMounted } from 'vue'; import { useRoute } from 'vue-router'; import { getOrderDetail, shipOrder } from '@/api';
 const route = useRoute(); const order = ref(null); const shipping = ref(false); const s = reactive({ logistics_company:'', tracking_number:'' });
 onMounted(async () => { order.value = (await getOrderDetail(route.params.id)).data; });
 async function doShip() { shipping.value = true; await shipOrder(route.params.id, s); order.value = (await getOrderDetail(route.params.id)).data; shipping.value = false; }
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; } </style>

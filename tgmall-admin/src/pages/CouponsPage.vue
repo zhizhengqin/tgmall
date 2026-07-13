@@ -1,5 +1,5 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
       <div class="header">
         <h1>{{ $t('nav.coupons') }}</h1>
@@ -58,8 +58,6 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api';
-import Sidebar from '@/components/layout/Sidebar.vue';
-import TopBar from '@/components/layout/TopBar.vue';
 
 const { t } = useI18n();
 const items = ref([]);
@@ -113,4 +111,4 @@ async function toggle(row) {
 function onPage(p) { page.value = p; load(); }
 onMounted(() => load());
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .center { text-align: center; padding: 20px; color: #999; } .pagination { margin-top: 16px; justify-content: flex-end; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; }  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .center { text-align: center; padding: 20px; color: #999; } .pagination { margin-top: 16px; justify-content: flex-end; }</style>

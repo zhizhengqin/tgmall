@@ -1,23 +1,83 @@
 # TODOS
 
-> 最后更新: 2026-07-10 | 新增：演示环境支付全链路模拟改造
+> 最后更新: 2026-07-13 | 演示环境支付全链路模拟 T1–T7 全部完成；tgmall-admin 移动端适配 T14 代码审查完成，T15 QA 验收完成
 
 ---
 
-## 🔄 演示环境改造 — 支付全链路模拟（进行中）
+## 🔄 后台管理移动端适配（工程计划已锁定，待实现）
+
+> 目标：让 `tgmall-admin` 在手机浏览器可用。所有页面先做响应式打底，再对 **Dashboard / Orders / Inventory / Feedback** 做专门的移动端卡片化 UI。
+> 方案：**Approach C**（响应式打底 + 高频页面专用移动 UX）
+> 设计文档：`~/.gstack/projects/zhizhengqin-tgmall/qinzz-main-design-20260712-174220.md`
+> 任务清单（JSONL，供 `/autoplan` 使用）：`~/.gstack/projects/zhizhengqin-tgmall/tasks-eng-review-20260712-232630.jsonl`
+> QA 测试计划：`~/.gstack/projects/zhizhengqin-tgmall/qinzz-main-eng-review-test-plan-20260712-232630.md`
+> 评审结论：**Design CLEARED + Eng Review ISSUES_OPEN** — 需先完成 P1 任务（T1-T8、T11）再进入实现分支。
+
+### 整体进度
+
+| 阶段 | 状态 |
+|------|------|
+| `/office-hours` 方向锁定（Approach C） | ✅ 已完成 |
+| 设计文档编写 + 对抗式评审 | ✅ 已完成 |
+| `/plan-eng-review` 工程评审 | ✅ 已完成 |
+| P1 核心任务实现 | ✅ 已完成 |
+| P2/P3 响应式打底与专项优化 | ✅ 已完成 |
+| QA 验收（`/qa-only`） | ✅ 已完成 |
+
+### P1 阻塞任务（必须先完成）
+
+| 编号 | 任务 | 目标文件 | 状态 | 阻塞项 |
+|------|------|----------|------|--------|
+| T1 | `LayoutWrapper` 集中式布局 | `tgmall-admin/src/components/layout/LayoutWrapper.vue` | ✅ 已完成 | 无 |
+| T2 | 共享断点 `useBreakpoint` + `el-config-provider` 全局配置 | `tgmall-admin/src/composables/useBreakpoint.js` | ✅ 已完成 | T1 |
+| T3 | `SidebarMenu` + 移动端 drawer | `tgmall-admin/src/components/layout/SidebarMenu.vue` | ✅ 已完成 | T1、T2 |
+| T4 | `TopBar` 移动端汉堡布局 | `tgmall-admin/src/components/layout/TopBar.vue` | ✅ 已完成 | T1、T2 |
+| T5 | Dashboard 移动端指标卡片 + 图表隐藏 | `tgmall-admin/src/pages/DashboardPage.vue` | ✅ 已完成 | T1、T2 |
+| T6 | Orders 移动端卡片列表 + 详情抽屉 | `tgmall-admin/src/pages/OrdersPage.vue` | ✅ 已完成 | T1、T2 |
+| T7 | Inventory 移动端低库存卡片 + 调整抽屉 | `tgmall-admin/src/pages/InventoryPage.vue` | ✅ 已完成 | T1、T2 |
+| T8 | Feedback 移动端反馈卡片 + 图片预览 | `tgmall-admin/src/pages/FeedbackPage.vue` | ✅ 已完成 | T1、T2 |
+| T11 | 引入 Vitest + 渲染测试 | `tgmall-admin/package.json`、`tests/unit/...` | ✅ 已完成 | 无，已与 T1 并行完成 |
+
+### P2/P3 后续任务
+
+| 编号 | 任务 | 目标文件 | 状态 |
+|------|------|----------|------|
+| T9 | Products / Users / Settings 等页面响应式打底 | 多个 `tgmall-admin/src/pages/*.vue` | ✅ 已完成 |
+| T10 | ProductForm 长表单单列化 + 底部固定操作 | `tgmall-admin/src/pages/ProductFormPage.vue` | ✅ 已完成 |
+| T12 | iOS Safari 专项（输入缩放、安全区、44×44 触摸目标） | `tgmall-admin/index.html`、全局样式 | ✅ 已完成 |
+| T13 | 弱网/错误提示/加载状态统一 | `tgmall-admin/src/api/index.js`、各页面 | ✅ 已完成 |
+| T14 | 代码审查与清理 | PR diff | ✅ 已完成 |
+| T15 | QA 验收与回归测试 | `/qa-only` | ✅ 已完成 |
+
+### P1 验证结果
+
+- 单元测试：14 个测试通过（`useBreakpoint`、`LayoutWrapper`、`DashboardPage`、`OrdersPage`、`InventoryPage`、`FeedbackPage`）。
+- 生产构建：`npx vite build` 成功，无编译错误。
+- 运行命令：`cd tgmall-admin && npx vitest run --config vitest.config.js`
+
+### 关键风险
+
+- `Sidebar.vue` 当前使用 `position: fixed`，不能直接放进 `el-drawer`（transform 祖先会改变 fixed 基准）。必须拆成无 fixed 的 `SidebarMenu.vue`。
+- `TopBar.vue` 硬编码 `margin-left: 220px`，需要由 `LayoutWrapper` 统一控制侧边栏占位。
+- `tgmall-admin` 目前无测试框架，P1 必须先引入 `vitest + jsdom + @vue/test-utils`。
+- 当前自定义 i18n 通过 `app.config.globalProperties.$t` 实现，测试里需要 mock；本次不迁移 `vue-i18n`。
+
+---
+
+## ✅ 演示环境改造 — 支付全链路模拟（已完成）
 
 > 目标：补齐 mock 模式下的支付回调链路，使全流程（浏览→下单→支付→订单完成→通知）在演示中流畅可跑。
 > 设计文档：`~/.gstack/projects/telegrammall/qinzz-main-design-20260710-160811.md`
 > 测试计划：`~/.gstack/projects/telegrammall/qinzz-main-eng-review-test-plan-20260710-163038.md`
 
-### T1 (P1) 🔴 统一 provider 命名
+### ✅ T1 (P1) 统一 provider 命名
 
 - **做什么**：把 `payment.service.js` 里 `handlePaymentCallback` 的 `verifyFns.bakong` 改成 `verifyFns.khqr`，同时保留 `bakong` 兼容键（防止真实回调受影响）
 - **文件**：`tgmall-api/src/services/payment.service.js`（约第 315 行）
 - **为什么**：前端和订单用的都是 `khqr`，只有这个内部字典用 `bakong`，不统一容易搞混导致 bug
 - **验证**：跑 `npm test -- --testPathPattern=payment`，现有测试全部通过
 
-### T2 (P1) 🔴 新增 mock-confirm 接口
+### ✅ T2 (P1) 新增 mock-confirm 接口
 
 - **做什么**：新建一个 `POST /api/v1/payments/mock-confirm` 接口。只在演示模式下存在（生产环境连路由都不注册）。收到请求后构造一个假的支付回调，调用现有的 `handlePaymentCallback` 完成支付
 - **文件**：
@@ -27,14 +87,14 @@
 - **注意**：控制器里要把前端传来的 `provider: 'khqr'` 转成 `'bakong'` 再传给 `handlePaymentCallback`（等 T1 做完之后就不需要了）
 - **验证**：写单元测试覆盖：正常支付 ✅、订单不存在 ❌、已支付 ❌、已取消 ❌
 
-### T3 (P0) 🔴🔴 映射单元测试（最高优先级）
+### ✅ T3 (P0) 映射单元测试（最高优先级）
 
 - **做什么**：写一个测试，模拟调用 mock-confirm 传 `provider: 'khqr'`，确认内部正确映射为 `bakong`
 - **文件**：`tgmall-api/tests/unit/payment-service-uncovered.test.js`
 - **为什么**：如果映射错了，演示时点"确认支付"会报错"未知支付渠道"，直接翻车
 - **验证**：这个测试必须先写，先看到它失败，再写 T1/T2 的代码让它通过
 
-### T4 (P2) 🟡 前端 — 支付页加"模拟支付"按钮
+### ✅ T4 (P2) 前端 — 支付页加"模拟支付"按钮
 
 - **做什么**：在 `PaymentPage.vue` 里，每种支付方式（KHQR / ABA Pay / Wing Pay）旁边加一个"模拟支付"按钮。点击后弹出一个确认卡片（三种支付方式共用同一个卡片样式，只换名字和图标）
 - **卡片功能**：
@@ -45,24 +105,24 @@
 - **文件**：`tgmall-miniapp/src/views/PaymentPage.vue`
 - **验证**：浏览器里手动走一遍完整流程
 
-### T5 (P2) 🟡 前端 — 新增 API 函数
+### ✅ T5 (P2) 前端 — 新增 API 函数
 
 - **做什么**：在已有的 `payments.js` 文件里加一个 `mockConfirmPayment` 函数，调用后端的 mock-confirm 接口
 - **文件**：`tgmall-miniapp/src/api/payments.js`（已存在，加函数即可）
 - **验证**：和 T4 联调
 
-### T6 (P3) 🟢 三语翻译
+### ✅ T6 (P3) 三语翻译
 
 - **做什么**：给模拟支付卡片上的文字（"模拟支付"、"确认支付"、"取消"、"这是模拟支付，用于演示"等）加到三个语言文件里
 - **文件**：`tgmall-miniapp/src/locales/km.json`、`en.json`、`zh.json`
 - **数量**：每个语言约 10 个 key
 - **验证**：切换三种语言，确认卡片文字正确显示
 
-### T7 (P2) 🟡 后端 — API 响应加 isMock 字段
+### ✅ T7 (P2) 后端 — API 响应加 isMock 字段
 
 - **做什么**：在 `createKHQRPayment`、`createABAPayPayment`、`createWingPayPayment` 三个函数的返回值里加一个 `isMock: true/false` 字段，前端根据这个字段决定要不要显示"模拟支付"按钮
 - **文件**：`tgmall-api/src/services/payment.service.js`
-- **验证**：调支付接口，确认返回的 JSON 里有 `isMock` 字段
+- **验证**：`payment-service-uncovered.test.js` 新增 `isMock` 断言（`npm test -- --testPathPattern=payment-service-uncovered` 50/50 通过）
 
 ---
 

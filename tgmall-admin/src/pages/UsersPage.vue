@@ -1,7 +1,7 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main"><h1>{{ $t('users.title') }}</h1>
-      <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable style="width:300px;margin-bottom:10px" />
+      <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable style="width:100%;max-width:300px;margin-bottom:10px" />
       <el-table :data="items" v-loading="loading">
         <el-table-column prop="firstName" :label="$t('users.name')" />
         <el-table-column prop="lastName" :label="$t('users.name')" />
@@ -28,7 +28,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'; import { getAdminUsers, toggleUserStatus } from '@/api'; import { ElMessage } from 'element-plus'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+import { ref, onMounted } from 'vue'; import { getAdminUsers, toggleUserStatus } from '@/api'; import { ElMessage } from 'element-plus';
 const items = ref([]); const loading = ref(false); const page = ref(1); const total = ref(0); const search = ref('');
 async function load() {
   loading.value = true;
@@ -50,4 +50,4 @@ async function toggle(row) {
 }
 onMounted(load);
 </script>
-<style scoped>.page{min-height:100vh;background:#f5f5f5}.main{margin-left:220px;padding:20px}</style>
+<style scoped>.page{min-height:100vh;background:#f5f5f5}</style>

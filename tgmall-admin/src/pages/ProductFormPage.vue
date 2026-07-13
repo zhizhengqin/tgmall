@@ -1,7 +1,7 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main"><h1>{{ isEdit ? $t('products.editTitle') : $t('products.createTitle') }}</h1>
-      <el-form :model="f" label-width="120px" style="max-width:600px">
+      <el-form :model="f" label-width="120px" class="product-form" style="max-width:600px">
         <el-form-item :label="$t('products.nameKm')"><el-input v-model="f.nameKm" /></el-form-item>
         <el-form-item :label="$t('products.nameEn')"><el-input v-model="f.nameEn" /></el-form-item>
         <el-form-item :label="$t('products.nameZh')"><el-input v-model="f.nameZh" /></el-form-item>
@@ -63,17 +63,22 @@
             <el-button size="small" @click="addSpec" :disabled="f.specs.length >= 6">+ {{ $t('products.addSpec') }}</el-button>
           </div>
         </el-form-item>
-        <el-form-item style="margin-top:20px">
+        <el-form-item style="margin-top:20px" v-if="!isMobile">
           <el-button type="primary" @click="save" :loading="saving">{{ $t('common.save') }}</el-button>
           <el-button @click="$router.back()">{{ $t('common.cancel') }}</el-button>
         </el-form-item>
       </el-form>
+
+      <div v-if="isMobile" class="mobile-actions bottom-fixed">
+        <el-button @click="$router.back()">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="save" :loading="saving">{{ $t('common.save') }}</el-button>
+      </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue'; import ImageUploader from '@/components/common/ImageUploader.vue';
-const router = useRouter(); const route = useRoute(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
+import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { useBreakpoint } from '@/composables/useBreakpoint'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import ImageUploader from '@/components/common/ImageUploader.vue';
+const router = useRouter(); const route = useRoute(); const { isMobile } = useBreakpoint(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
 const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[], descriptionKm:'', descriptionEn:'', descriptionZh:'' });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }
 function onUploadImage(url) { if (url) f.images.push({ url }); }
@@ -125,4 +130,10 @@ onMounted(async () => {
   allTags.value = Array.isArray(tagRes.data) ? tagRes.data : [];
 });
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; } .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; } .spec-editor { display: flex; flex-direction: column; gap: 12px; } .spec-group { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; background: #fafafa; } .spec-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; } .spec-values { display: flex; flex-direction: column; gap: 8px; } .spec-value-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .img-tag { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 4px; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; }  .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; } .spec-editor { display: flex; flex-direction: column; gap: 12px; } .spec-group { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; background: #fafafa; } .spec-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; } .spec-values { display: flex; flex-direction: column; gap: 8px; } .spec-value-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .img-tag { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 4px; }
+
+.mobile-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2000; background: #fff; border-top: 1px solid #eee; padding: 12px 16px; display: flex; justify-content: flex-end; gap: 12px; box-shadow: 0 -2px 8px rgba(0,0,0,0.05); }
+
+@media (max-width: 767px) {
+  .product-form { padding-bottom: 80px; }
+}</style>

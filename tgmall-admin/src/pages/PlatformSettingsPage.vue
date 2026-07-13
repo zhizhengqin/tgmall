@@ -1,5 +1,5 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
       <h1>平台设置</h1>
 
@@ -55,8 +55,6 @@
 import { ref, reactive, onMounted } from 'vue';
 import { getPlatformSettings, updatePlatformSettings } from '@/api';
 import { ElMessage } from 'element-plus';
-import Sidebar from '@/components/layout/Sidebar.vue';
-import TopBar from '@/components/layout/TopBar.vue';
 
 const form = reactive({
   storeName: '', storeLogo: '', contactPhone: '', contactEmail: '',
@@ -94,5 +92,5 @@ async function save() {
 
 <style scoped>
 .page { min-height: 100vh; background: #f5f5f5; }
-.main { margin-left: 220px; padding: 20px; }
+
 </style>

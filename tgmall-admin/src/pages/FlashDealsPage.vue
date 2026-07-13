@@ -1,5 +1,5 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
       <div class="page-header">
         <h1>限时专区</h1>
@@ -108,8 +108,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import Sidebar from '@/components/layout/Sidebar.vue';
-import TopBar from '@/components/layout/TopBar.vue';
 import { getFlashDeals, createFlashDeal, updateFlashDeal, toggleFlashDeal, getProducts } from '@/api';
 
 const items = ref([]);
@@ -234,7 +232,7 @@ onMounted(load);
 
 <style scoped>
 .page{min-height:100vh;background:#f5f5f5}
-.main{margin-left:220px;padding:20px}
+
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .page-header h1{font-size:20px;font-weight:600;margin:0}
 .product-cell{display:flex;align-items:center;gap:8px}

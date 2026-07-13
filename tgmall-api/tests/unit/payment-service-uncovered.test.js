@@ -94,6 +94,10 @@ const mockNotificationService = {
   notifyUserOrder: jest.fn(),
 };
 
+// ── 模拟运行时配置，用于测试 isMock 字段 ──
+let mockConfig = { paymentMockMode: false };
+jest.unstable_mockModule('../../src/config/index.js', () => ({ config: mockConfig }));
+
 jest.unstable_mockModule('../../src/config/database.js', () => ({ default: mockPrisma }));
 jest.unstable_mockModule('../../src/config/redis.js', () => ({ default: mockRedis }));
 jest.unstable_mockModule('../../src/integrations/bakong.js', () => mockBakong);
@@ -147,6 +151,8 @@ function resetMocks() {
   mockNotificationService.notifyUserOrder.mockReset();
 
   mockNotificationService.notifyUserOrder.mockResolvedValue({ ok: true });
+  mockConfig = { paymentMockMode: false };
+
   mockBakong.generateKHQR.mockResolvedValue({
     transactionId: 'txn-khqr',
     qrImageUrl: 'https://cdn.test/qr.png',
@@ -266,6 +272,7 @@ describe('支付服务未覆盖路径测试 (payment.service)', () => {
       expect(result.amountUsd).toBe(order.totalUsd);
       expect(result.amountKhr).toBe(order.totalKhr);
       expect(result.supportedBanks).toHaveLength(3);
+      expect(result.isMock).toBe(false);
 
       const call = mockRedis.set.mock.calls.find((c) => c[0] === `payment:${order.id}`);
       expect(call).toBeDefined();
@@ -273,6 +280,15 @@ describe('支付服务未覆盖路径测试 (payment.service)', () => {
       expect(cached.transactionId).toBe('txn-khqr');
       expect(cached.amountUsd).toBe(order.totalUsd);
       expect(call.slice(2)).toEqual(['EX', 1800]);
+    });
+
+    it('演示模式开启时返回 isMock: true', async () => {
+      const order = makeOrder();
+      mockPrisma.order._set(order.id, order);
+      mockConfig.paymentMockMode = true;
+      const service = await loadService();
+      const result = await service.createKHQRPayment(order.userId, order.id);
+      expect(result.isMock).toBe(true);
     });
   });
 
@@ -333,6 +349,7 @@ describe('支付服务未覆盖路径测试 (payment.service)', () => {
       expect(result.deepLink).toBe('aba://pay');
       expect(result.universalLink).toBe('https://aba.test/pay');
       expect(result.transactionId).toBe('txn-aba');
+      expect(result.isMock).toBe(false);
 
       const call = mockRedis.set.mock.calls.find((c) => c[0] === `payment:${order.id}`);
       expect(call).toBeDefined();
@@ -397,6 +414,7 @@ describe('支付服务未覆盖路径测试 (payment.service)', () => {
       expect(result.deepLink).toBe('wingbank://pay');
       expect(result.universalLink).toBe('https://wing.test/pay');
       expect(result.transactionId).toBe('txn-wing');
+      expect(result.isMock).toBe(false);
 
       const call = mockRedis.set.mock.calls.find((c) => c[0] === `payment:${order.id}`);
       expect(call).toBeDefined();

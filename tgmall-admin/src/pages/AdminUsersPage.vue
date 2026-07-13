@@ -1,5 +1,5 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
       <div class="page-header">
         <h1>管理员账号</h1>
@@ -70,8 +70,6 @@
 import { ref, reactive, onMounted } from 'vue';
 import { getSysAdmins, createSysAdmin, resetSysAdminPassword, toggleSysAdminStatus, deleteSysAdmin } from '@/api';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import Sidebar from '@/components/layout/Sidebar.vue';
-import TopBar from '@/components/layout/TopBar.vue';
 
 const users = ref([]);
 const dialogVisible = ref(false);
@@ -153,7 +151,7 @@ async function remove(row) {
 
 <style scoped>
 .page { min-height: 100vh; background: #f5f5f5; }
-.main { margin-left: 220px; padding: 20px; }
+
 .page-header { display: flex; justify-content: space-between; align-items: center; }
 .page-header h1 { margin: 0; font-size: 20px; }
 </style>

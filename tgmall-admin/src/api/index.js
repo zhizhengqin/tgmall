@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ElMessage } from 'element-plus';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api/v1',
@@ -13,10 +14,32 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res) => res.data,
-  (err) => {
+  async (err) => {
+    const config = err.config;
+    if (!config) return Promise.reject(err);
+
+    // 弱网/超时重试一次：仅对幂等的 GET 请求
+    const isRetryable = config.method === 'get' && !config.__retry;
+    const isNetworkError = !err.response || err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+    if (isRetryable && isNetworkError) {
+      config.__retry = true;
+      return api(config);
+    }
+
     if (err.response?.status === 401) {
       sessionStorage.removeItem('admin_token');
       window.location.href = '/login';
+    } else {
+      const status = err.response?.status;
+      let msg;
+      if (status >= 500) {
+        msg = '服务器繁忙，请稍后重试';
+        // eslint-disable-next-line no-console
+        console.error('API server error:', err.response?.data);
+      } else {
+        msg = err.response?.data?.message || err.message || '请求失败，请检查网络';
+      }
+      ElMessage.error(msg);
     }
     return Promise.reject(err);
   },

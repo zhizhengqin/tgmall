@@ -1,6 +1,7 @@
 // 支付服务 — KHQR / ABA Pay / Wing Pay / Telegram Invoice 统一入口 + 回调处理
 import prisma from '../config/database.js';
 import redis from '../config/redis.js';
+import { config } from '../config/index.js';
 import { AppError } from '../utils/AppError.js';
 import * as bakong from '../integrations/bakong.js';
 import * as abaPay from '../integrations/aba_pay.js';
@@ -86,6 +87,7 @@ export async function createKHQRPayment(userId, orderId) {
     amountUsd: Number(order.totalUsd),
     amountKhr: order.totalKhr,
     expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+    isMock: config.paymentMockMode ?? false,
     supportedBanks: [
       { name: 'ABA Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/aba.png' },
       { name: 'ACLEDA Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/acleda.png' },
@@ -144,6 +146,7 @@ export async function createABAPayPayment(userId, orderId) {
     amountUsd: Number(order.totalUsd),
     amountKhr: order.totalKhr,
     expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+    isMock: config.paymentMockMode ?? false,
   };
 }
 
@@ -194,6 +197,7 @@ export async function createWingPayPayment(userId, orderId) {
     amountUsd: Number(order.totalUsd),
     amountKhr: order.totalKhr,
     expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
+    isMock: config.paymentMockMode ?? false,
   };
 }
 

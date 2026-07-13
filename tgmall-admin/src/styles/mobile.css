@@ -1,0 +1,95 @@
+/* TG Mall Admin — 移动端响应式兜底样式 */
+
+/* 底部固定元素避开 iPhone Home Indicator */
+.bottom-fixed {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 弹窗在窄屏自适应宽度，不影响桌面尺寸 */
+.el-dialog {
+  max-width: calc(100vw - 32px) !important;
+}
+
+@media (max-width: 767px) {
+  /* iOS Safari：防止聚焦输入框时自动放大 */
+  input,
+  textarea,
+  select,
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-input-number__decrease,
+  .el-input-number__increase {
+    font-size: 16px !important;
+  }
+
+  /* 页面头部按钮换行 */
+  .layout-content .page-header,
+  .layout-content .header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* 主内容区允许横向滚动，避免表格撑破页面 */
+  .layout-content .main {
+    overflow-x: auto;
+  }
+
+  /* 卡片限制宽度 */
+  .layout-content .el-card {
+    max-width: 100% !important;
+  }
+
+  .layout-content .main h1 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  /* 分页在窄屏居中 */
+  .layout-content .pagination {
+    justify-content: center !important;
+  }
+
+  /* 表单默认单列 */
+  .layout-content .el-form .el-form-item {
+    display: block;
+  }
+
+  .layout-content .el-form .el-form-item__label {
+    float: none;
+    text-align: left;
+    padding: 0 0 4px;
+    line-height: 1.4;
+  }
+
+  .layout-content .el-form .el-form-item__content {
+    margin-left: 0 !important;
+  }
+
+  /* 输入框在移动端尽量撑满 */
+  .layout-content .el-input,
+  .layout-content .el-select,
+  .layout-content .el-date-picker,
+  .layout-content .el-input-number {
+    width: 100% !important;
+  }
+
+  /* 表格字号与内边距压缩，允许横向滚动 */
+  .layout-content .el-table {
+    font-size: 12px;
+  }
+
+  .layout-content .el-table th,
+  .layout-content .el-table td {
+    padding: 6px 0;
+  }
+
+  /* 标签页在窄屏允许横向滚动 */
+  .layout-content .el-tabs__nav {
+    white-space: nowrap;
+  }
+
+  /* 卡片内图片预览按钮最小触摸目标 */
+  .layout-content .el-button {
+    min-height: 32px;
+  }
+}

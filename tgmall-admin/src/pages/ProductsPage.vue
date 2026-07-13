@@ -1,7 +1,7 @@
 <template>
-  <div class="page"><TopBar /><Sidebar />
+  <div class="page">
     <div class="main">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
         <h1>{{ $t('products.title') }}</h1><el-button type="primary" @click="$router.push('/products/new')">{{ $t('products.add') }}</el-button>
       </div>
       <el-table :data="items" v-loading="loading" stripe>
@@ -20,10 +20,10 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'; import { getProducts, toggleProduct } from '@/api'; import Sidebar from '@/components/layout/Sidebar.vue'; import TopBar from '@/components/layout/TopBar.vue';
+import { ref, onMounted } from 'vue'; import { getProducts, toggleProduct } from '@/api';
 const items = ref([]); const loading = ref(false); const page = ref(1); const total = ref(0);
 async function load() { loading.value = true; const r = await getProducts({ page: page.value }); items.value = r.data; total.value = r.meta?.total || 0; loading.value = false; }
 async function toggle(id) { await toggleProduct(id); load(); }
 onMounted(load);
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } .main { margin-left: 220px; padding: 20px; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; } </style>

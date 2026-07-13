@@ -165,7 +165,7 @@ async function doOtpLogin() {
 .tab.active { color: #c4932a; border-bottom-color: #c4932a; font-weight: 600; }
 .otp-field { position: relative; }
 .otp-field .input { padding-right: 100px; }
-.send-btn { position: absolute; right: 4px; top: 26px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; color: #666; cursor: pointer; }
+.send-btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; color: #666; cursor: pointer; }
 .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .login { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 20px; }
 .card { width: 400px; max-width: 100%; background: #fff; border-radius: 12px; padding: 32px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }

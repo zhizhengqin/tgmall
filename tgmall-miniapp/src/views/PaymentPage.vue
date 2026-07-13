@@ -238,8 +238,9 @@ const invoiceUrl = ref('');
 
 // ── Mock 确认支付 ──
 const backendMockEnabled = ref(false);
-// 仅开发环境或后端运行时配置开启时才显示模拟支付控件，避免生产构建被客户端标志覆盖
-const showMock = computed(() => import.meta.env.DEV || backendMockEnabled.value);
+const paymentIsMock = ref(false);
+// 仅开发环境、后端运行时配置开启或当前支付响应标记 isMock 时才显示模拟支付控件
+const showMock = computed(() => import.meta.env.DEV || backendMockEnabled.value || paymentIsMock.value);
 const showMockConfirm = ref(false);
 const mockConfirmLoading = ref(false);
 const mockConfirmError = ref('');
@@ -312,6 +313,7 @@ async function generateQR() {
     qrData.value = data.qrData || '';
     supportedBanks.value = data.supportedBanks || [];
     expiresAt.value = data.expiresAt ? new Date(data.expiresAt) : null;
+    paymentIsMock.value = data.isMock || false;
 
     if (expiresAt.value) {
       const remaining = Math.floor((expiresAt.value - Date.now()) / 1000);
@@ -422,6 +424,7 @@ async function fetchDeepLink() {
     const res = await apiFn(orderId.value);
     const data = res.data;
     deepLinkUrl.value = data.deepLink || data.universalLink || '';
+    paymentIsMock.value = data.isMock || false;
     pageState.value = 'deep-link-ready';
     // 自动打开银行 App
     setTimeout(() => openPaymentApp(deepLinkUrl.value), 1000);
