@@ -6,10 +6,10 @@
         <el-table-column prop="firstName" :label="$t('users.name')" />
         <el-table-column prop="lastName" :label="$t('users.name')" />
         <el-table-column prop="phone" :label="$t('users.phone')" width="120" />
-        <el-table-column prop="telegramId" label="Telegram ID" width="120" />
+        <el-table-column prop="telegramId" :label="$t('users.telegramId')" width="120" />
         <el-table-column prop="status" :label="$t('users.status')" width="80">
           <template #default="{row}">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">{{ row.status }}</el-tag>
+            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">{{ $t(`users.${row.status === 'active' ? 'active' : 'banned'}`) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column :label="$t('orders.date')" width="100">
@@ -18,7 +18,7 @@
         <el-table-column label="" width="80">
           <template #default="{row}">
             <el-button size="small" :type="row.status === 'active' ? 'danger' : 'success'" @click="toggle(row)">
-              {{ row.status === 'active' ? '禁用' : '启用' }}
+              {{ row.status === 'active' ? $t('users.ban') : $t('users.unban') }}
             </el-button>
           </template>
         </el-table-column>
