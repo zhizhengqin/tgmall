@@ -23,7 +23,7 @@
           <template #default="{ row }">
             <div style="display: flex; align-items: center; gap: 8px">
               <img v-if="safeImageUrl(row.images?.[0])" :src="safeImageUrl(row.images[0])" width="40" height="40" style="object-fit: cover; border-radius: 4px" />
-              <span>{{ row.nameKm || row.nameEn }}</span>
+              <ProductName :name-km="row.nameKm" :name-en="row.nameEn" :name-zh="row.nameZh" />
             </div>
           </template>
         </el-table-column>
@@ -72,7 +72,7 @@
         >
           <div class="inventory-card-header">
             <img v-if="safeImageUrl(row.images?.[0])" :src="safeImageUrl(row.images[0])" class="inventory-card-thumb" />
-            <div class="inventory-card-title">{{ row.nameKm || row.nameEn }}</div>
+            <ProductName :name-km="row.nameKm" :name-en="row.nameEn" :name-zh="row.nameZh" />
           </div>
 
           <div class="inventory-card-row">
@@ -168,6 +168,7 @@ import { ref, onMounted } from 'vue';
 import { getInventory, adjustStock, getStockLogs, checkInventory, setAlertThreshold, getProducts } from '@/api';
 import { useBreakpoint } from '@/composables/useBreakpoint';
 import { safeImageUrl } from '@/utils/imageUrl';
+import ProductName from '@/components/ProductName.vue';
 
 const { isMobile } = useBreakpoint();
 
@@ -256,7 +257,6 @@ onMounted(load);
 .inventory-card { }
 .inventory-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .inventory-card-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; }
-.inventory-card-title { font-weight: 600; font-size: 15px; }
 .inventory-card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
 .inventory-card-row:last-of-type { border-bottom: none; }
 .inventory-card-label { font-size: 13px; color: #999; }

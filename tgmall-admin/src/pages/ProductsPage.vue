@@ -7,12 +7,7 @@
       <el-table :data="items" v-loading="loading" stripe>
         <el-table-column :label="$t('products.name')" min-width="180">
           <template #default="{ row }">
-            <div data-testid="product-name">
-              <div class="product-name-km">{{ row.nameKm }}</div>
-              <div v-if="row.nameEn || row.nameZh" class="product-name-sub">
-                {{ row.nameEn }}<span v-if="row.nameEn && row.nameZh"> · </span>{{ row.nameZh }}
-              </div>
-            </div>
+            <ProductName :name-km="row.nameKm" :name-en="row.nameEn" :name-zh="row.nameZh" />
           </template>
         </el-table-column>
         <el-table-column :label="$t('products.priceUsd')" width="100"><template #default="{row}">${{row.priceUsd}}</template></el-table-column>
@@ -29,7 +24,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'; import { getProducts, toggleProduct } from '@/api';
+import { ref, onMounted } from 'vue'; import { getProducts, toggleProduct } from '@/api'; import ProductName from '@/components/ProductName.vue';
 const items = ref([]); const loading = ref(false); const page = ref(1); const total = ref(0);
 async function load() { loading.value = true; const r = await getProducts({ page: page.value }); items.value = r.data; total.value = r.meta?.total || 0; loading.value = false; }
 async function toggle(id) { await toggleProduct(id); load(); }
@@ -37,13 +32,4 @@ onMounted(load);
 </script>
 <style scoped>
 .page { min-height: 100vh; background: #f5f5f5; }
-.product-name-km {
-  line-height: 1.4;
-}
-.product-name-sub {
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.4;
-  margin-top: 2px;
-}
 </style>
