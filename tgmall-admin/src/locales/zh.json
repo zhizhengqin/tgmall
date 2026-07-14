@@ -196,7 +196,9 @@
     "actions": "操作",
     "all": "全部",
     "enable": "启用",
-    "disable": "停用"
+    "disable": "停用",
+    "serverError": "服务器繁忙，请稍后重试",
+    "requestFailed": "请求失败，请检查网络"
   },
   "language": "语言",
   "inventory": {

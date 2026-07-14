@@ -194,7 +194,9 @@
     "actions": "Actions",
     "all": "All",
     "enable": "Enable",
-    "disable": "Disable"
+    "disable": "Disable",
+    "serverError": "Server is busy, please try again later",
+    "requestFailed": "Request failed, please check your network"
   },
   "language": "Language",
   "inventory": {

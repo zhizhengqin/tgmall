@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import { t } from '@/utils/i18n';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api/v1',
@@ -33,11 +34,11 @@ api.interceptors.response.use(
       const status = err.response?.status;
       let msg;
       if (status >= 500) {
-        msg = '服务器繁忙，请稍后重试';
+        msg = t('common.serverError');
         // eslint-disable-next-line no-console
         console.error('API server error:', err.response?.data);
       } else {
-        msg = err.response?.data?.message || err.message || '请求失败，请检查网络';
+        msg = err.response?.data?.message || err.message || t('common.requestFailed');
       }
       ElMessage.error(msg);
     }
