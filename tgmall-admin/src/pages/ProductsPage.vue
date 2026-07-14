@@ -5,7 +5,16 @@
         <h1>{{ $t('products.title') }}</h1><el-button type="primary" @click="$router.push('/products/new')">{{ $t('products.add') }}</el-button>
       </div>
       <el-table :data="items" v-loading="loading" stripe>
-        <el-table-column prop="nameKm" :label="$t('products.name')" min-width="150" />
+        <el-table-column :label="$t('products.name')" min-width="180">
+          <template #default="{ row }">
+            <div data-testid="product-name">
+              <div class="product-name-km">{{ row.nameKm }}</div>
+              <div v-if="row.nameEn || row.nameZh" class="product-name-sub">
+                {{ row.nameEn }}<span v-if="row.nameEn && row.nameZh"> · </span>{{ row.nameZh }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('products.priceUsd')" width="100"><template #default="{row}">${{row.priceUsd}}</template></el-table-column>
         <el-table-column prop="stock" :label="$t('products.stock')" width="80" />
         <el-table-column :label="$t('products.status')" width="80">
@@ -26,4 +35,15 @@ async function load() { loading.value = true; const r = await getProducts({ page
 async function toggle(id) { await toggleProduct(id); load(); }
 onMounted(load);
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; } </style>
+<style scoped>
+.page { min-height: 100vh; background: #f5f5f5; }
+.product-name-km {
+  line-height: 1.4;
+}
+.product-name-sub {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+</style>
