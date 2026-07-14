@@ -11,7 +11,7 @@
         <el-form-item :label="$t('inventory.alertThreshold')"><el-input-number v-model="f.alertThreshold" :min="0" :placeholder="$t('products.alertThresholdPlaceholder')" /></el-form-item>
         <el-form-item :label="$t('products.category')"><el-input v-model="f.category" /></el-form-item>
         <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button><ImageUploader @update:modelValue="onUploadImage" style="margin-left:8px" /></el-form-item>
-        <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)"><img :src="im.url" class="img-tag" /> {{im.url}}</el-tag></div>
+        <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)"><img :src="safeImageUrl(im.url)" class="img-tag" /> {{im.url}}</el-tag></div>
         <el-form-item :label="$t('products.tags')">
           <div class="tag-editor">
             <div v-if="allTags.length" class="tag-library">
@@ -77,7 +77,7 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { useBreakpoint } from '@/composables/useBreakpoint'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import ImageUploader from '@/components/common/ImageUploader.vue';
+import { ref, reactive, onMounted } from 'vue'; import { useRouter, useRoute } from 'vue-router'; import { useBreakpoint } from '@/composables/useBreakpoint'; import { getProductById, createProduct, updateProduct, getTags } from '@/api'; import ImageUploader from '@/components/common/ImageUploader.vue'; import { safeImageUrl } from '@/utils/imageUrl';
 const router = useRouter(); const route = useRoute(); const { isMobile } = useBreakpoint(); const isEdit = !!route.params.id; const saving = ref(false); const img = ref(''); const allTags = ref([]);
 const f = reactive({ nameKm:'', nameEn:'', nameZh:'', priceUsd:0, priceKhr:0, stock:0, alertThreshold:null, category:'', images:[], specs:[], tags:[], descriptionKm:'', descriptionEn:'', descriptionZh:'' });
 function addImg() { if (img.value) { f.images.push({ url: img.value }); img.value = ''; } }

@@ -3,7 +3,7 @@
     <input ref="fileInput" type="file" accept="image/*" class="file-input" @change="onFileChange" />
     <el-button size="small" :loading="uploading" @click="fileInput?.click()">{{ uploading ? $t('common.loading') : $t('products.uploadImage') }}</el-button>
     <span v-if="modelValue" class="preview">
-      <img :src="modelValue" class="thumb" />
+      <img :src="safeImageUrl(modelValue)" class="thumb" />
       <el-button size="small" type="danger" circle @click="clear">X</el-button>
     </span>
   </div>
@@ -12,6 +12,7 @@
 <script setup>
 import { ref } from 'vue';
 import { uploadImage } from '@/api';
+import { safeImageUrl } from '@/utils/imageUrl';
 
 const props = defineProps({ modelValue: { type: String, default: '' } });
 const emit = defineEmits(['update:modelValue']);

@@ -22,7 +22,7 @@
         <el-table-column :label="$t('inventory.search')" min-width="180">
           <template #default="{ row }">
             <div style="display: flex; align-items: center; gap: 8px">
-              <img v-if="imageUrl(row.images?.[0])" :src="imageUrl(row.images[0])" width="40" height="40" style="object-fit: cover; border-radius: 4px" />
+              <img v-if="safeImageUrl(row.images?.[0])" :src="safeImageUrl(row.images[0])" width="40" height="40" style="object-fit: cover; border-radius: 4px" />
               <span>{{ row.nameKm || row.nameEn }}</span>
             </div>
           </template>
@@ -71,7 +71,7 @@
           data-testid="inventory-card"
         >
           <div class="inventory-card-header">
-            <img v-if="imageUrl(row.images?.[0])" :src="imageUrl(row.images[0])" class="inventory-card-thumb" />
+            <img v-if="safeImageUrl(row.images?.[0])" :src="safeImageUrl(row.images[0])" class="inventory-card-thumb" />
             <div class="inventory-card-title">{{ row.nameKm || row.nameEn }}</div>
           </div>
 
@@ -167,6 +167,7 @@
 import { ref, onMounted } from 'vue';
 import { getInventory, adjustStock, getStockLogs, checkInventory, setAlertThreshold, getProducts } from '@/api';
 import { useBreakpoint } from '@/composables/useBreakpoint';
+import { safeImageUrl } from '@/utils/imageUrl';
 
 const { isMobile } = useBreakpoint();
 
@@ -228,19 +229,6 @@ async function doCheck() {
   await checkInventory({ productId: checkProductId.value, actualQty: checkActualQty.value, note: checkNote.value || undefined });
   showCheckDialog.value = false;
   load();
-}
-
-function imageUrl(img) {
-  if (!img) return '';
-  const url = typeof img === 'string' ? img : img.thumb_url || img.url || '';
-  if (!url) return '';
-  try {
-    const u = new URL(url, window.location.href);
-    if (u.protocol === 'http:' || u.protocol === 'https:') return url;
-  } catch {
-    // ignore malformed URLs
-  }
-  return '';
 }
 
 function reasonLabel(r) {
