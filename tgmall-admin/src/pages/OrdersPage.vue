@@ -16,6 +16,7 @@
           :end-placeholder="$t('orders.endDate') || '结束日期'"
           clearable
           @change="onDateChange"
+          style="width: 100%"
         />
       </div>
 
@@ -29,7 +30,7 @@
       </el-tabs>
 
       <!-- Desktop table -->
-      <el-table v-if="!isMobile" :data="items" v-loading="loading" data-testid="orders-table">
+      <el-table v-if="!isMobile" :data="items" v-loading="loading" :empty-text="$t('common.noData')" data-testid="orders-table">
         <el-table-column prop="orderNumber" :label="$t('orders.orderNumber')" width="180" />
         <el-table-column :label="$t('orders.amount')" width="100">
           <template #default="{ row }">${{ row.totalUsd }}</template>
@@ -116,10 +117,18 @@ function buildParams() {
 
 async function load() {
   loading.value = true;
-  const r = await getOrders(buildParams());
-  items.value = r.data;
-  total.value = r.meta?.total || 0;
-  loading.value = false;
+  try {
+    const r = await getOrders(buildParams());
+    items.value = r.data;
+    total.value = r.meta?.total || 0;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load orders:', e);
+    items.value = [];
+    total.value = 0;
+  } finally {
+    loading.value = false;
+  }
 }
 
 function onDateChange() {
