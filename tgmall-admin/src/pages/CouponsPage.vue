@@ -56,10 +56,8 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
 import api from '@/api';
 
-const { t } = useI18n();
 const items = ref([]);
 const page = ref(1);
 const total = ref(0);
