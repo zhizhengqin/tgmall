@@ -197,6 +197,7 @@
     "all": "全部",
     "enable": "启用",
     "disable": "停用",
+    "noData": "暂无数据",
     "serverError": "服务器繁忙，请稍后重试",
     "requestFailed": "请求失败，请检查网络"
   },

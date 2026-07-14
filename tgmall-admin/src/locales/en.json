@@ -195,6 +195,7 @@
     "all": "All",
     "enable": "Enable",
     "disable": "Disable",
+    "noData": "No data yet",
     "serverError": "Server is busy, please try again later",
     "requestFailed": "Request failed, please check your network"
   },
