@@ -7,9 +7,10 @@ vi.mock('@/api', () => ({
   getInventory: vi.fn(() => Promise.resolve({
     data: [
       { id: 'p1', nameKm: 'Product A', nameEn: 'A', stock: 5, alertThreshold: 10, status: 'active', lowStock: true, images: [] },
-      { id: 'p2', nameKm: 'Product B', nameEn: 'B', stock: 50, alertThreshold: 5, status: 'active', lowStock: false, images: [] },
+      { id: 'p2', nameKm: 'Product B', nameEn: 'B', stock: 50, alertThreshold: 5, status: 'active', lowStock: false, images: [{ url: 'https://example.com/img.jpg', thumb_url: 'https://example.com/thumb.jpg' }] },
+      { id: 'p3', nameKm: 'Product C', nameEn: 'C', stock: 8, alertThreshold: 5, status: 'active', lowStock: false, images: ['https://example.com/legacy.jpg'] },
     ],
-    meta: { total: 2 },
+    meta: { total: 3 },
   })),
   adjustStock: vi.fn(),
   getStockLogs: vi.fn(() => Promise.resolve({ data: [] })),
@@ -63,6 +64,16 @@ describe('InventoryPage', () => {
 
     expect(wrapper.find('[data-testid="inventory-table"]').exists()).toBe(false);
     expect(wrapper.find('[data-testid="inventory-cards"]').exists()).toBe(true);
-    expect(wrapper.findAll('[data-testid="inventory-card"]').length).toBe(2);
+    expect(wrapper.findAll('[data-testid="inventory-card"]').length).toBe(3);
+  });
+
+  it('renders product images from object or string', async () => {
+    wrapper = await mountInventory(375);
+    await flushPromises();
+
+    const imgs = wrapper.findAll('.inventory-card-thumb');
+    expect(imgs.length).toBe(2);
+    expect(imgs[0].attributes('src')).toBe('https://example.com/thumb.jpg');
+    expect(imgs[1].attributes('src')).toBe('https://example.com/legacy.jpg');
   });
 });

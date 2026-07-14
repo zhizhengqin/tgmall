@@ -22,7 +22,7 @@
         <el-table-column :label="$t('inventory.search')" min-width="180">
           <template #default="{ row }">
             <div style="display: flex; align-items: center; gap: 8px">
-              <img v-if="row.images?.[0]" :src="row.images[0]" width="40" height="40" style="object-fit: cover; border-radius: 4px" />
+              <img v-if="imageUrl(row.images?.[0])" :src="imageUrl(row.images[0])" width="40" height="40" style="object-fit: cover; border-radius: 4px" />
               <span>{{ row.nameKm || row.nameEn }}</span>
             </div>
           </template>
@@ -71,7 +71,7 @@
           data-testid="inventory-card"
         >
           <div class="inventory-card-header">
-            <img v-if="row.images?.[0]" :src="row.images[0]" class="inventory-card-thumb" />
+            <img v-if="imageUrl(row.images?.[0])" :src="imageUrl(row.images[0])" class="inventory-card-thumb" />
             <div class="inventory-card-title">{{ row.nameKm || row.nameEn }}</div>
           </div>
 
@@ -228,6 +228,12 @@ async function doCheck() {
   await checkInventory({ productId: checkProductId.value, actualQty: checkActualQty.value, note: checkNote.value || undefined });
   showCheckDialog.value = false;
   load();
+}
+
+function imageUrl(img) {
+  if (!img) return '';
+  if (typeof img === 'string') return img;
+  return img.thumb_url || img.url || '';
 }
 
 function reasonLabel(r) {
