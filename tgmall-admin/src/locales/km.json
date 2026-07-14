@@ -56,6 +56,7 @@
     "search": "ស្វែងរក",
     "name": "ឈ្មោះ",
     "phone": "ទូរស័ព្ទ",
+    "telegramId": "Telegram ID",
     "orders": "កម្មង",
     "totalSpent": "ចំណាយសរុប",
     "status": "ស្ថានភាព",
@@ -197,6 +198,7 @@
     "cancelled": "លុប",
     "orderNumber": "លេខកម្មង",
     "amount": "ចំនួន",
+    "status": "ស្ថានភាព",
     "customer": "អតិថិជន",
     "date": "កាលបរិច្ឆេទ",
     "detail": "លម្អិត",
@@ -236,6 +238,11 @@
     "requestFailed": "ស្នើមិនបានជោគជ័យ សូមពិនិត្យមើលបណ្តាញ"
   },
   "language": "ភាសា",
+  "product": {
+    "name": "ឈ្មោះ",
+    "price": "តម្លៃ",
+    "sales": "លក់"
+  },
   "inventory": {
     "title": "គ្រប់គ្រងស្តុក",
     "search": "ស្វែងរកផលិតផល",

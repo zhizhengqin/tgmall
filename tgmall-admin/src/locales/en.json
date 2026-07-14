@@ -50,6 +50,7 @@
     "search": "Search",
     "name": "Name",
     "phone": "Phone",
+    "telegramId": "Telegram ID",
     "orders": "Orders",
     "totalSpent": "Total Spent",
     "status": "Status",
@@ -171,7 +172,7 @@
     "title": "Orders", "all": "All",
     "pending_payment": "Pending", "confirmed": "Confirmed",
     "paid": "Paid", "shipped": "Shipped", "completed": "Completed", "cancelled": "Cancelled",
-    "orderNumber": "Order No.", "amount": "Amount", "customer": "Customer",
+    "orderNumber": "Order No.", "amount": "Amount", "status": "Status", "customer": "Customer",
     "date": "Date", "detail": "Detail", "items": "Items",
     "shippingAddress": "Address", "total": "Total", "ship": "Ship",
     "logisticsCompany": "Logistics", "trackingNumber": "Tracking", "confirmShip": "Confirm",
@@ -201,6 +202,11 @@
     "requestFailed": "Request failed, please check your network"
   },
   "language": "Language",
+  "product": {
+    "name": "Name",
+    "price": "Price",
+    "sales": "Sales"
+  },
   "inventory": {
     "title": "Inventory",
     "search": "Search products",
