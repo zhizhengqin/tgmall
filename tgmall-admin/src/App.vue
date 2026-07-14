@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider :z-index="3000" :message="{ max: 3 }">
+  <el-config-provider :z-index="3000" :message="{ max: 3, grouping: true }">
     <LayoutWrapper>
       <router-view />
     </LayoutWrapper>
