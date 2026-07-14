@@ -1,8 +1,8 @@
 <template>
   <div class="page">
     <div class="main"><h1>{{ $t('users.title') }}</h1>
-      <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable style="width:100%;max-width:300px;margin-bottom:10px" />
-      <el-table :data="items" v-loading="loading">
+      <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable class="users-search" />
+      <el-table :data="items" v-loading="loading" :empty-text="$t('common.noData')">
         <el-table-column prop="firstName" :label="$t('users.name')" />
         <el-table-column prop="lastName" :label="$t('users.name')" />
         <el-table-column prop="phone" :label="$t('users.phone')" width="120" />
@@ -50,4 +50,9 @@ async function toggle(row) {
 }
 onMounted(load);
 </script>
-<style scoped>.page{min-height:100vh;background:#f5f5f5}</style>
+<style scoped>.page{min-height:100vh;background:#f5f5f5}
+.users-search { width: 100%; max-width: 300px; margin-bottom: 10px; }
+@media (max-width: 767px) {
+  .users-search { max-width: 100%; }
+}
+</style>
