@@ -117,7 +117,13 @@ const pieOpt = computed(() => ({
 function fmt(v) { return (Number(v) || 0).toFixed(0); }
 
 onMounted(async () => {
-  data.value = (await getAdminDashboard()).data;
+  try {
+    data.value = (await getAdminDashboard()).data;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load dashboard:', e);
+    data.value = {};
+  }
 });
 </script>
 

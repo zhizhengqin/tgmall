@@ -125,9 +125,18 @@ async function save() {
   }
 }
 onMounted(async () => {
-  if (isEdit) { const r = await getProductById(route.params.id); if(r.data) Object.assign(f, r.data); }
-  const tagRes = await getTags({ page: 1, limit: 100 });
-  allTags.value = Array.isArray(tagRes.data) ? tagRes.data : [];
+  try {
+    if (isEdit) {
+      const r = await getProductById(route.params.id);
+      if (r.data) Object.assign(f, r.data);
+    }
+    const tagRes = await getTags({ page: 1, limit: 100 });
+    allTags.value = Array.isArray(tagRes.data) ? tagRes.data : [];
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load product form data:', e);
+    allTags.value = [];
+  }
 });
 </script>
 <style scoped>.page { min-height: 100vh; background: #f5f5f5; }  .tag-editor { display: flex; flex-direction: column; gap: 6px; } .tag-item { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .tag-library { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; } .tag-label { font-size: 13px; color: var(--text-secondary, #666); } .library-tag { cursor: pointer; user-select: none; } .spec-editor { display: flex; flex-direction: column; gap: 12px; } .spec-group { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; background: #fafafa; } .spec-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; } .spec-values { display: flex; flex-direction: column; gap: 8px; } .spec-value-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } .img-tag { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 4px; }

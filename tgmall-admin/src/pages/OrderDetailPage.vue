@@ -37,7 +37,15 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'; import { useRoute } from 'vue-router'; import { getOrderDetail, shipOrder } from '@/api';
 const route = useRoute(); const order = ref(null); const shipping = ref(false); const s = reactive({ logistics_company:'', tracking_number:'' });
-onMounted(async () => { order.value = (await getOrderDetail(route.params.id)).data; });
+onMounted(async () => {
+  try {
+    order.value = (await getOrderDetail(route.params.id)).data;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load order detail:', e);
+    order.value = null;
+  }
+});
 async function doShip() { shipping.value = true; await shipOrder(route.params.id, s); order.value = (await getOrderDetail(route.params.id)).data; shipping.value = false; }
 </script>
 <style scoped>.page { min-height: 100vh; background: #f5f5f5; } </style>
