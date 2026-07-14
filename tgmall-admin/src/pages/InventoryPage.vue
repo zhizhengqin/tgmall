@@ -232,8 +232,15 @@ async function doCheck() {
 
 function imageUrl(img) {
   if (!img) return '';
-  if (typeof img === 'string') return img;
-  return img.thumb_url || img.url || '';
+  const url = typeof img === 'string' ? img : img.thumb_url || img.url || '';
+  if (!url) return '';
+  try {
+    const u = new URL(url, window.location.href);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return url;
+  } catch {
+    // ignore malformed URLs
+  }
+  return '';
 }
 
 function reasonLabel(r) {
