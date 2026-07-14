@@ -1,6 +1,6 @@
 # TODOS
 
-> 最后更新: 2026-07-13 | 演示环境支付全链路模拟 T1–T7 全部完成；tgmall-admin 移动端适配 T14 代码审查完成，T15 QA 验收完成
+> 最后更新: 2026-07-14 | admin 移动端适配 /qa 回归完成，8 个历史 issue + 4 个新发现本地化/路径问题已修复，健康评分 96/100
 
 ---
 
@@ -11,6 +11,7 @@
 > 设计文档：`~/.gstack/projects/zhizhengqin-tgmall/qinzz-main-design-20260712-174220.md`
 > 任务清单（JSONL，供 `/autoplan` 使用）：`~/.gstack/projects/zhizhengqin-tgmall/tasks-eng-review-20260712-232630.jsonl`
 > QA 测试计划：`~/.gstack/projects/zhizhengqin-tgmall/qinzz-main-eng-review-test-plan-20260712-232630.md`
+> 最新 QA 报告：`.gstack/qa-reports/qa-report-admin-mobile-2026-07-14.md`
 > 评审结论：**Design CLEARED + Eng Review ISSUES_OPEN** — 需先完成 P1 任务（T1-T8、T11）再进入实现分支。
 
 ### 整体进度
@@ -48,6 +49,21 @@
 | T13 | 弱网/错误提示/加载状态统一 | `tgmall-admin/src/api/index.js`、各页面 | ✅ 已完成 |
 | T14 | 代码审查与清理 | PR diff | ✅ 已完成 |
 | T15 | QA 验收与回归测试 | `/qa-only` | ✅ 已完成 |
+
+### 2026-07-14 /qa 回归修复
+
+在 `/qa` 浏览器回归中额外发现并修复了 4 个问题：
+
+| 编号 | 问题 | 修复 |
+|------|------|------|
+| NEW-1 | `orders.status` 表头显示 key | 增加三语 locale key |
+| NEW-2 | Dashboard TOP10 表头显示 `product.name/price/sales` key | 增加 `product` 命名空间三语 key |
+| NEW-3 | UsersPage 切换按钮硬编码中文“禁用/启用” | 改用 `users.ban/unban` 与 `users.active/banned` |
+| NEW-4 | API 拦截器 401 重定向到 `/login` 丢失 Vite `/admin/` base | 改为 `/admin/login` |
+
+- 单元测试：8 files / 20 tests 全部通过
+- 浏览器回归：Desktop + Mobile 主要页面无 console error
+- 健康评分：96/100
 
 ### P1 验证结果
 
