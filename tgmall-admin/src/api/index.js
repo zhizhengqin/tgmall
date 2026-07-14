@@ -29,7 +29,7 @@ api.interceptors.response.use(
 
     if (err.response?.status === 401) {
       sessionStorage.removeItem('admin_token');
-      window.location.href = '/login';
+      window.location.href = '/admin/login';
     } else {
       const status = err.response?.status;
       let msg;
