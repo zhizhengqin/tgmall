@@ -183,7 +183,8 @@
     "specValueEn": "តម្លៃ (EN)",
     "specValueKm": "តម្លៃ (KM)",
     "specValueZh": "តម្លៃ (ZH)",
-    "uploadImage": "ផ្ទុករូបភាព"
+    "uploadImage": "ផ្ទុករូបភាព",
+    "alertThresholdPlaceholder": "ទុកចេញ មិនជូនដំណឹង"
   },
   "orders": {
     "title": "កម្មង",

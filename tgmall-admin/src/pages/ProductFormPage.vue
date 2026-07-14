@@ -8,7 +8,7 @@
         <el-form-item :label="$t('products.priceUsd')"><el-input-number v-model="f.priceUsd" :min="0.01" :precision="2" /></el-form-item>
         <el-form-item :label="$t('products.priceKhr')"><el-input-number v-model="f.priceKhr" :min="0" :step="100" /></el-form-item>
         <el-form-item :label="$t('products.stock')"><el-input-number v-model="f.stock" :min="0" /></el-form-item>
-        <el-form-item :label="$t('inventory.alertThreshold')"><el-input-number v-model="f.alertThreshold" :min="0" placeholder="留空表示不预警" /></el-form-item>
+        <el-form-item :label="$t('inventory.alertThreshold')"><el-input-number v-model="f.alertThreshold" :min="0" :placeholder="$t('products.alertThresholdPlaceholder')" /></el-form-item>
         <el-form-item :label="$t('products.category')"><el-input v-model="f.category" /></el-form-item>
         <el-form-item :label="$t('products.images')"><el-input v-model="img" placeholder="URL" /><el-button @click="addImg" size="small" style="margin-left:8px">+</el-button><ImageUploader @update:modelValue="onUploadImage" style="margin-left:8px" /></el-form-item>
         <div v-for="(im,i) in f.images" :key="i"><el-tag closable @close="f.images.splice(i,1)"><img :src="im.url" class="img-tag" /> {{im.url}}</el-tag></div>

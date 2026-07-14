@@ -164,7 +164,8 @@
     "specValueEn": "Value (EN)",
     "specValueKm": "Value (KM)",
     "specValueZh": "Value (ZH)",
-    "uploadImage": "Upload Image"
+    "uploadImage": "Upload Image",
+    "alertThresholdPlaceholder": "Leave empty for no alert"
   },
   "orders": {
     "title": "Orders", "all": "All",
