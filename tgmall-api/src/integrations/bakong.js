@@ -1,5 +1,6 @@
 // Bakong KHQR API 封装 — 支持模拟模式和真实 API
 import crypto from 'crypto';
+import QRCode from 'qrcode';
 import { config } from '../config/index.js';
 
 /**
@@ -70,7 +71,7 @@ async function generateRealKHQR({ orderNumber, amountUsd, amountKhr }) {
 /**
  * 模拟模式 — 生成 KHQR 数据（开发和 Staging 使用）
  */
-function generateMockKHQR({ orderNumber, amountUsd, amountKhr, expiresAt }) {
+async function generateMockKHQR({ orderNumber, amountUsd, amountKhr, expiresAt }) {
   // 构造符合 KHQR 标准格式的模拟数据
   // KHQR 格式: 00 + 01 + 商户信息 + 金额 + 订单号
   const mockMD5 = crypto.createHash('md5').update(`${orderNumber}-${Date.now()}`).digest('hex');
@@ -84,9 +85,15 @@ function generateMockKHQR({ orderNumber, amountUsd, amountKhr, expiresAt }) {
 
   const transactionId = `MOCK-BAKONG-${Date.now()}-${mockMD5.slice(0, 8)}`;
 
-  // 生成一个模拟的二维码图片 URL — 使用本地静态资源或 placeholder
-  // 实际场景中可以使用 qrcode 包动态生成，这里返回一个带参数的占位 URL
-  const qrImageUrl = `${config.cdnBaseUrl}/qr/mock-khqr.png?order=${orderNumber}&amount=${amountUsd}&expires=${expiresAt.toISOString()}`;
+  // 使用 qrcode 包动态生成二维码图片（base64 data URL）
+  const qrImageUrl = await QRCode.toDataURL(qrData, {
+    width: 400,
+    margin: 2,
+    color: {
+      dark: '#2d2b28',
+      light: '#ffffff',
+    },
+  });
 
   return {
     qrImageUrl,

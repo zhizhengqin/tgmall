@@ -89,9 +89,9 @@ export async function createKHQRPayment(userId, orderId) {
     expiresAt: order.paymentTimeout || new Date(Date.now() + 15 * 60 * 1000),
     isMock: config.paymentMockMode ?? false,
     supportedBanks: [
-      { name: 'ABA Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/aba.png' },
-      { name: 'ACLEDA Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/acleda.png' },
-      { name: 'Wing Bank', icon: 'https://cdn.shop.xinhua-tech.kh/banks/wing.png' },
+      { name: 'ABA Bank', icon: '/banks/aba.svg' },
+      { name: 'ACLEDA Bank', icon: '/banks/acleda.svg' },
+      { name: 'Wing Bank', icon: '/banks/wing.svg' },
     ],
   };
 }
