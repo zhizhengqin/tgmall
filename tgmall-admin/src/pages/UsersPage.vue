@@ -3,8 +3,8 @@
     <div class="main"><h1>{{ $t('users.title') }}</h1>
       <el-input v-model="search" :placeholder="$t('users.search')" @input="load" clearable class="users-search" />
       <el-table :data="items" v-loading="loading" :empty-text="$t('common.noData')">
-        <el-table-column prop="firstName" :label="$t('users.name')" />
-        <el-table-column prop="lastName" :label="$t('users.name')" />
+        <el-table-column prop="firstName" :label="$t('users.firstName')" />
+        <el-table-column prop="lastName" :label="$t('users.lastName')" />
         <el-table-column prop="phone" :label="$t('users.phone')" width="120" />
         <el-table-column prop="telegramId" :label="$t('users.telegramId')" width="120" />
         <el-table-column prop="status" :label="$t('users.status')" width="80">

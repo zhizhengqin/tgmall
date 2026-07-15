@@ -14,7 +14,7 @@
         <el-table-column prop="value" :label="$t('coupons.value')" width="80" />
         <el-table-column :label="$t('coupons.status')" width="90">
           <template #default="s">
-            <el-tag :type="s.row.status === 'active' ? 'success' : 'info'" size="small">{{ s.row.status }}</el-tag>
+            <el-tag :type="s.row.status === 'active' ? 'success' : 'info'" size="small">{{ $t(`coupons.${s.row.status}`) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column :label="$t('coupons.used')" width="80">

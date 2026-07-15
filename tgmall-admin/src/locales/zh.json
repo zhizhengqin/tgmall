@@ -51,7 +51,8 @@
     "title": "用户管理",
     "search": "搜索",
     "name": "姓名",
-    "phone": "手机号",
+    "firstName": "名",
+    "lastName": "姓",
     "telegramId": "Telegram ID",
     "orders": "订单数",
     "totalSpent": "消费总额",
@@ -246,6 +247,8 @@
     "startDate": "开始日期",
     "endDate": "结束日期",
     "status": "状态",
+    "active": "启用",
+    "inactive": "停用",
     "used": "已领/总数"
   },
   "feedback": {

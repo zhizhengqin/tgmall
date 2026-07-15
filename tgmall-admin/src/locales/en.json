@@ -49,7 +49,8 @@
     "title": "User Management",
     "search": "Search",
     "name": "Name",
-    "phone": "Phone",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "telegramId": "Telegram ID",
     "orders": "Orders",
     "totalSpent": "Total Spent",
@@ -244,6 +245,8 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
     "used": "Used"
   },
   "feedback": {

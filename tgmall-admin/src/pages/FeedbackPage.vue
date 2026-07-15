@@ -20,7 +20,7 @@
         <el-table-column prop="content" :label="$t('feedback.content')" min-width="200" show-overflow-tooltip />
         <el-table-column :label="$t('feedback.status')" width="100">
           <template #default="s">
-            <el-tag :type="s.row.status === 'resolved' ? 'success' : 'warning'" size="small">{{ s.row.status }}</el-tag>
+            <el-tag :type="s.row.status === 'resolved' ? 'success' : 'warning'" size="small">{{ $t(`feedback.${s.row.status}`) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column :label="$t('feedback.date')" width="160">
@@ -52,7 +52,7 @@
           </div>
           <div class="feedback-card-row">
             <span class="feedback-card-label">{{ $t('feedback.status') }}</span>
-            <el-tag :type="item.status === 'resolved' ? 'success' : 'warning'" size="small">{{ item.status }}</el-tag>
+            <el-tag :type="item.status === 'resolved' ? 'success' : 'warning'" size="small">{{ $t(`feedback.${item.status}`) }}</el-tag>
           </div>
           <div class="feedback-card-row">
             <span class="feedback-card-label">{{ $t('feedback.date') }}</span>

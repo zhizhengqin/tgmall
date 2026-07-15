@@ -55,7 +55,8 @@
     "title": "គ្រប់គ្រងអ្នកប្រើ",
     "search": "ស្វែងរក",
     "name": "ឈ្មោះ",
-    "phone": "ទូរស័ព្ទ",
+    "firstName": "ឈ្មោះ",
+    "lastName": "នាមត្រកូល",
     "telegramId": "Telegram ID",
     "orders": "កម្មង",
     "totalSpent": "ចំណាយសរុប",
@@ -280,6 +281,8 @@
     "startDate": "ថ្ងៃចាប់ផ្តើម",
     "endDate": "ថ្ងៃបញ្ចប់",
     "status": "ស្ថានភាព",
+    "active": "ដំណើរការ",
+    "inactive": "ផ្អាក",
     "used": "ប្រើប្រាស់"
   },
   "feedback": {

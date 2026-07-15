@@ -65,4 +65,13 @@ describe('FeedbackPage', () => {
     expect(wrapper.find('[data-testid="feedback-cards"]').exists()).toBe(true);
     expect(wrapper.findAll('[data-testid="feedback-card"]').length).toBe(2);
   });
+
+  it('renders localized status tags instead of raw status', async () => {
+    wrapper = await mountFeedback(1280);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('feedback.pending');
+    expect(wrapper.text()).toContain('feedback.resolved');
+    expect(wrapper.text()).not.toContain('pendingpending');
+  });
 });

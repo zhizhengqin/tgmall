@@ -51,4 +51,13 @@ describe('CouponsPage', () => {
     expect(wrapper.text()).toContain('ចុះ 10%');
     expect(wrapper.text()).toContain('ចុះ $2');
   });
+
+  it('renders localized status tags instead of raw status', async () => {
+    wrapper = await mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('coupons.active');
+    expect(wrapper.text()).toContain('coupons.inactive');
+    expect(wrapper.text()).not.toContain('activeactive');
+  });
 });
