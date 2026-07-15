@@ -90,11 +90,13 @@ import { useI18n } from 'vue-i18n';
 import { getProductById } from '@/api/products';
 import { addToCart } from '@/api/cart';
 import { toggleWishlist } from '@/api/wishlist';
+import { useCartStore } from '@/stores/cartStore';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
 const router = useRouter();
 const { locale, t } = useI18n();
+const cartStore = useCartStore();
 
 const product = ref(null);
 const loading = ref(true);
@@ -214,6 +216,9 @@ async function handleAddToCart() {
     const payload = { product_id: product.value.id, quantity: quantity.value, spec };
     if (matchedSku.value?.id) payload.sku_id = matchedSku.value.id;
     await addToCart(payload);
+    // 同步更新本地购物车状态，使底部导航徽标立即刷新
+    const thumb = product.value.images?.[0]?.thumb_url || product.value.images?.[0]?.url || '';
+    cartStore.addItem(product.value.id, quantity.value, spec, currentPriceUsd.value, displayName.value, thumb);
     alert(t('cart.added'));
   } catch (e) {
     alert(t('cart.addFailed') + ': ' + (e?.response?.data?.error?.message || t('checkout.networkError')));

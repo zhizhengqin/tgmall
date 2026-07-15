@@ -47,10 +47,12 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { addToCart } from '@/api/cart';
+import { useCartStore } from '@/stores/cartStore';
 import PriceDisplay from './PriceDisplay.vue';
 
 const router = useRouter();
 const { locale, t } = useI18n();
+const cartStore = useCartStore();
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -85,6 +87,8 @@ async function quickAdd() {
   adding.value = true;
   try {
     await addToCart({ product_id: props.id, quantity: 1 });
+    // 同步更新本地购物车状态，使底部导航徽标立即刷新
+    cartStore.addItem(props.id, 1, {}, props.priceUsd, props.name, props.thumbnail);
     addAnimating.value = true;
     emit('cart-updated');
     setTimeout(() => { addAnimating.value = false; }, 800);
