@@ -13,8 +13,21 @@ async function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
+async function waitForImages(page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager'; });
+  });
+  await page.waitForFunction(() => {
+    return Array.from(document.querySelectorAll('img')).every((img) => {
+      if (!img.src || img.src === window.location.href) return true;
+      return img.complete;
+    });
+  }, { timeout: 10000 }).catch(() => {});
+}
+
 async function capture(page, filePath, fullPage = true) {
   await page.waitForLoadState('networkidle').catch(() => {});
+  await waitForImages(page);
   await page.waitForTimeout(800);
   await page.screenshot({ path: filePath, fullPage });
   console.log('saved', filePath);
@@ -89,12 +102,16 @@ async function miniappScreenshots(browser) {
   }
   await capture(page, path.join(MINIAPP_OUT, '02-homepage-category-switched.png'));
 
-  // 03 product detail - use demo mode and click first visible product card
-  await page.goto(`${MINIAPP_URL}/?demo=1`);
-  await page.waitForSelector('.home-page', { timeout: 15000 }).catch(() => {});
-  const cards = page.locator('.product-card, [data-testid="product-card"]');
-  if (await cards.count() > 0) {
-    await cards.first().click();
+  // 03 product detail - 直接导航到第一个有效商品，避免卡片点击受事件委托/定位影响
+  const productId = await page.evaluate(async () => {
+    try {
+      const res = await fetch('/api/v1/products?limit=1');
+      const data = await res.json();
+      return data.data?.[0]?.id || '';
+    } catch { return ''; }
+  });
+  if (productId) {
+    await page.goto(`${MINIAPP_URL}/product/${productId}?demo=1`);
     await page.waitForTimeout(1500);
   } else {
     await page.goto(`${MINIAPP_URL}/product/1`);
@@ -115,15 +132,11 @@ async function miniappScreenshots(browser) {
   await page.waitForTimeout(1200);
   await capture(page, path.join(MINIAPP_OUT, '05-category-page.png'));
 
-  // 06 cart page - demo mode add first product to cart
-  await page.goto(`${MINIAPP_URL}/?demo=1`);
-  await page.waitForSelector('.home-page', { timeout: 15000 }).catch(() => {});
-  const homeCards = page.locator('.product-card, [data-testid="product-card"]');
-  if (await homeCards.count() > 0) {
-    await homeCards.first().click();
+  // 06 cart page - 从商品详情直接加购，确保购物车有图可截
+  if (productId) {
+    await page.goto(`${MINIAPP_URL}/product/${productId}?demo=1`);
     await page.waitForTimeout(1200);
-    // Try multiple possible add-to-cart selectors
-    const addBtn = page.locator('.btn-cart, .add-to-cart, .btn-primary, button:has-text("加入购物车"), button:has-text("Add to Cart")');
+    const addBtn = page.locator('.btn-cart');
     if (await addBtn.count() > 0) {
       await addBtn.first().click();
       await page.waitForTimeout(1500);

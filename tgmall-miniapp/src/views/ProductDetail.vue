@@ -4,9 +4,9 @@
     <!-- 图片轮播 -->
     <div class="image-gallery">
       <div class="gallery-track" ref="galleryRef" @scroll="onGalleryScroll">
-        <img v-for="(img, i) in product.images" :key="i" :src="img.url" :alt="product.nameKm" class="gallery-img" loading="lazy" decoding="async" @click="openLightbox(i)" />
+        <img v-for="(url, i) in galleryImages" :key="i" :src="url" :alt="product.nameKm" class="gallery-img" :loading="i === 0 ? 'eager' : 'lazy'" decoding="async" @error="onImageError" @click="openLightbox(i)" />
       </div>
-      <div class="gallery-dots" v-if="product.images.length > 1">
+      <div class="gallery-dots" v-if="galleryImages.length > 1">
         <span v-for="(_, i) in product.images" :key="i" :class="{ active: currentImage === i }" />
       </div>
     </div>
@@ -91,6 +91,7 @@ import { getProductById } from '@/api/products';
 import { addToCart } from '@/api/cart';
 import { toggleWishlist } from '@/api/wishlist';
 import { useCartStore } from '@/stores/cartStore';
+import { imageUrl } from '@/utils/imageUrl.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 
 const route = useRoute();
@@ -105,6 +106,13 @@ const selectedSpecs = ref({});
 const quantity = ref(1);
 const currentImage = ref(0);
 const descLang = ref('km');
+
+const placeholder = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="%23e8e6e2"><rect width="400" height="400"/><text x="200" y="210" text-anchor="middle" fill="%237a7670" font-size="14">No Image</text></svg>';
+
+const galleryImages = computed(() => {
+  const list = (product.value?.images || []).map(imageUrl).filter(Boolean);
+  return list.length ? list : [placeholder];
+});
 
 const descLangs = [
   { code: 'km', label: 'ភាសាខ្មែរ' },
@@ -202,6 +210,8 @@ function onGalleryScroll() {
   if (!el) return;
   currentImage.value = Math.round(el.scrollLeft / el.clientWidth);
 }
+
+function onImageError(e) { e.target.src = placeholder; }
 
 function openLightbox(i) { currentImage.value = i; }
 

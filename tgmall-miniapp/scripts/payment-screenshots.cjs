@@ -10,8 +10,21 @@ async function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
+async function waitForImages(page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager'; });
+  });
+  await page.waitForFunction(() => {
+    return Array.from(document.querySelectorAll('img')).every((img) => {
+      if (!img.src || img.src === window.location.href) return true;
+      return img.complete;
+    });
+  }, { timeout: 10000 }).catch(() => {});
+}
+
 async function capture(page, name, fullPage = true) {
   await page.waitForLoadState('networkidle').catch(() => {});
+  await waitForImages(page);
   await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(OUT_DIR, name), fullPage });
   console.log('saved', path.join(OUT_DIR, name));
@@ -29,6 +42,11 @@ async function clearCart(page) {
     } catch (e) { console.error('Clear cart failed:', e); }
   }, API_BASE_URL);
   await page.waitForTimeout(500);
+}
+
+function generateMockQRDataUrl() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="#fff"><rect width="200" height="200"/><g fill="#2d2b28"><rect x="20" y="20" width="50" height="50" rx="4"/><rect x="130" y="20" width="50" height="50" rx="4"/><rect x="20" y="130" width="50" height="50" rx="4"/><rect x="80" y="80" width="10" height="10" rx="2"/><rect x="100" y="80" width="10" height="10" rx="2"/><rect x="120" y="80" width="10" height="10" rx="2"/><rect x="80" y="100" width="10" height="10" rx="2"/><rect x="110" y="100" width="10" height="10" rx="2"/><rect x="80" y="120" width="10" height="10" rx="2"/><rect x="100" y="120" width="10" height="10" rx="2"/><rect x="120" y="120" width="10" height="10" rx="2"/><rect x="130" y="130" width="10" height="10" rx="2"/><rect x="150" y="130" width="10" height="10" rx="2"/><rect x="170" y="130" width="10" height="10" rx="2"/><rect x="130" y="150" width="10" height="10" rx="2"/><rect x="150" y="150" width="10" height="10" rx="2"/><rect x="170" y="150" width="10" height="10" rx="2"/><rect x="130" y="170" width="10" height="10" rx="2"/><rect x="150" y="170" width="10" height="10" rx="2"/><rect x="170" y="170" width="10" height="10" rx="2"/></g></svg>`;
+  return 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
 }
 
 async function ensureDemoAuthAndAddress(context) {
@@ -102,6 +120,60 @@ async function run() {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   await ensureDemoAuthAndAddress(context);
   const page = await context.newPage();
+  page.on('request', (req) => { if (req.url().includes('payment')) console.log('REQ', req.method(), req.url()); });
+
+  // Mock：让生产环境也显示「模拟扫码支付」按钮，并拦截 mock-confirm 返回成功
+  await page.route('**/api/v1/payments/khqr', async (route, request) => {
+    if (request.method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    const body = {
+      success: true,
+      data: {
+        qrImageUrl: generateMockQRDataUrl(),
+        qrData: 'MOCK-KHQR-DATA-' + Date.now(),
+        transactionId: 'MOCK-' + Date.now(),
+        isMock: true,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        supportedBanks: [
+          { name: 'ABA Bank', icon: `${BASE_URL}/banks/aba.svg` },
+          { name: 'ACLEDA Bank', icon: `${BASE_URL}/banks/acleda.svg` },
+          { name: 'Wing Bank', icon: `${BASE_URL}/banks/wing.svg` },
+        ],
+      },
+    };
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    });
+  });
+  await page.route('**/api/v1/payments/mock-confirm', async (route, request) => {
+    if (request.method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    try {
+      const post = JSON.parse(request.postData() || '{}');
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            orderId: post.orderId,
+            orderNumber: 'DEMO-' + Date.now(),
+            status: 'success',
+            paidAt: new Date().toISOString(),
+          },
+        }),
+      });
+    } catch (e) {
+      console.error('[intercept] mock-confirm error:', e.message);
+      await route.continue();
+    }
+  });
 
   // Demo mode + Chinese
   await page.goto(`${BASE_URL}/?demo=1`);
@@ -116,16 +188,33 @@ async function run() {
   await page.waitForSelector('.home-page', { timeout: 15000 }).catch(() => {});
   await capture(page, 'payment-01-homepage.png');
 
-  // P2 product detail
-  const cards = page.locator('.product-card, [data-testid="product-card"]');
-  const count = await cards.count();
-  if (count > 1) await cards.nth(1).click();
-  else if (count > 0) await cards.first().click();
+  // P2 product detail - 直接导航到第一个有效商品，避免卡片点击不稳定
+  const productId = await page.evaluate(async () => {
+    try {
+      const res = await fetch('/api/v1/products?limit=1');
+      const data = await res.json();
+      return data.data?.[0]?.id || '';
+    } catch { return ''; }
+  });
+  if (productId) {
+    await page.goto(`${BASE_URL}/product/${productId}?demo=1`);
+  } else {
+    const cards = page.locator('.product-card, [data-testid="product-card"]');
+    const count = await cards.count();
+    if (count > 1) await cards.nth(1).click();
+    else if (count > 0) await cards.first().click();
+  }
   await page.waitForTimeout(1500);
   await capture(page, 'payment-02-product-detail.png');
 
   // P3 added to cart
-  const addBtn = page.locator('.btn-cart, .add-to-cart, button:has-text("加入购物车")');
+  // 先增加数量到 2，确保商品小计满足起送金额，能进入支付页
+  const qtyPlus = page.locator('.quantity-spinner .qty-btn').nth(1);
+  if (await qtyPlus.count() > 0) {
+    await qtyPlus.click();
+    await page.waitForTimeout(300);
+  }
+  const addBtn = page.locator('.btn-cart');
   if (await addBtn.count() > 0) {
     await addBtn.first().click();
     await page.waitForTimeout(1200);

@@ -15,7 +15,7 @@
         <p class="merchant-name">{{ group.merchantName }}</p>
         <div v-for="item in group.items" :key="item.id" class="cart-item">
           <label class="item-check"><input type="checkbox" :checked="isChecked(item.id)" @change="toggleCheck(item.id)" /></label>
-          <img :src="item.thumbnail" class="item-thumb" loading="lazy" decoding="async" />
+          <img :src="thumbUrl(item.thumbnail)" class="item-thumb" loading="lazy" decoding="async" @error="onThumbError" />
           <div class="item-body">
             <p class="item-name">{{ item.productName }}</p>
             <p class="item-spec" v-if="item.spec">{{ specStr(item.spec) }}</p>
@@ -57,6 +57,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getCart, updateCartItem, removeCartItem } from '@/api/cart';
 import { useCartStore } from '@/stores/cartStore';
+import { imageUrl } from '@/utils/imageUrl.js';
 import PriceDisplay from '@/components/common/PriceDisplay.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 
@@ -68,6 +69,16 @@ const cartStore = useCartStore();
 const groups = ref([]);
 const loading = ref(true);
 const checkedIds = ref([]);
+
+const placeholder = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="%23e8e6e2"><rect width="80" height="80"/><text x="40" y="44" text-anchor="middle" fill="%237a7670" font-size="10">No Image</text></svg>';
+
+function thumbUrl(thumbnail) {
+  return imageUrl(thumbnail) || placeholder;
+}
+
+function onThumbError(e) {
+  e.target.src = placeholder;
+}
 
 const allChecked = computed(() => {
   const totalItems = groups.value.reduce((s, g) => s + g.items.length, 0);

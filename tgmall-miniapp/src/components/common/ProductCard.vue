@@ -4,7 +4,7 @@
     <router-link :to="`/product/${id}`" class="card-link">
       <div class="card-image">
         <img
-          :src="thumbnail || placeholder"
+          :src="imageUrl(thumbnail) || placeholder"
           :alt="name"
           loading="lazy"
           @error="onImageError"
@@ -48,6 +48,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { addToCart } from '@/api/cart';
 import { useCartStore } from '@/stores/cartStore';
+import { imageUrl } from '@/utils/imageUrl.js';
 import PriceDisplay from './PriceDisplay.vue';
 
 const router = useRouter();
