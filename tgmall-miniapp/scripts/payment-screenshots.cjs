@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const BASE_URL = 'https://tgmall-production.up.railway.app';
+const API_BASE_URL = BASE_URL + '/api/v1';
 const OUT_DIR = path.resolve(__dirname, '../../项目文档/demo-guide/screenshots/miniapp');
 
 async function ensureDir(dir) {
@@ -17,17 +18,79 @@ async function capture(page, name, fullPage = true) {
 }
 
 async function clearCart(page) {
-  await page.evaluate(async () => {
+  await page.evaluate(async (apiBase) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      await fetch(`${window.location.origin}/api/v1/cart`, {
+      await fetch(`${apiBase}/cart`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (e) { console.error('Clear cart failed:', e); }
-  });
+  }, API_BASE_URL);
   await page.waitForTimeout(500);
+}
+
+async function ensureDemoAuthAndAddress(context) {
+  const mockUser = {
+    id: '999999999999999999',
+    first_name: 'Dev',
+    last_name: 'User',
+    username: 'dev_user',
+    language_code: 'km',
+    photo_url: null,
+  };
+
+  try {
+    // 1. Demo login via API
+    const loginRes = await fetch(`${API_BASE_URL}/auth/demo-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: mockUser }),
+    });
+    const loginData = await loginRes.json();
+    const token = loginData.data?.token;
+    if (!token) {
+      console.log('Demo login failed:', loginData);
+      return false;
+    }
+
+    // 2. Check existing addresses
+    const listRes = await fetch(`${API_BASE_URL}/users/me/addresses`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const listData = await listRes.json();
+    if (!listData.data?.length) {
+      const createRes = await fetch(`${API_BASE_URL}/users/me/addresses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          recipient_name: 'Demo User',
+          phone: '+85512345678',
+          city_code: 'phnom_penh',
+          province: '金边',
+          district: 'Demo District',
+          detail: 'Demo address detail',
+          is_default: true,
+        }),
+      });
+      const createData = await createRes.json();
+      if (!createData.data?.id) {
+        console.log('Create address failed:', createData);
+        return false;
+      }
+    }
+
+    // 3. Inject token into page localStorage
+    await context.addInitScript((t) => {
+      localStorage.setItem('token', t);
+    }, token);
+
+    return true;
+  } catch (e) {
+    console.error('ensureDemoAuthAndAddress error:', e);
+    return false;
+  }
 }
 
 async function run() {
@@ -37,6 +100,7 @@ async function run() {
     executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await ensureDemoAuthAndAddress(context);
   const page = await context.newPage();
 
   // Demo mode + Chinese
@@ -73,56 +137,76 @@ async function run() {
   await page.waitForTimeout(1200);
   await capture(page, 'payment-04-cart.png');
 
-  // P5 select all
-  const selectAll = page.locator('.select-all input[type="checkbox"]');
-  if (await selectAll.count() > 0) {
-    await selectAll.check();
-    await page.waitForTimeout(500);
-    await capture(page, 'payment-05-cart-selected.png');
+  // P5 select all (CartPage auto-selects on load; ensure at least one item is checked)
+  const itemChecks = page.locator('.item-check input[type="checkbox"]');
+  const checkCount = await itemChecks.count();
+  for (let i = 0; i < checkCount; i++) {
+    const cb = itemChecks.nth(i);
+    const checked = await cb.isChecked().catch(() => false);
+    if (!checked) await cb.check();
   }
+  await page.waitForTimeout(500);
+  await capture(page, 'payment-05-cart-selected.png');
 
   // P6 checkout
   const checkoutBtn = page.locator('.checkout-btn');
   if (await checkoutBtn.count() > 0) {
     await checkoutBtn.click();
+    await page.waitForURL(/\/checkout/, { timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(1500);
   }
 
-  // P7 address if needed: handle both inline "+ 添加收货地址" and sheet "+ 新增地址"
-  let addAddr = page.locator('.add-addr, .btn-add-addr, [class*="add-address"]').first();
-  let addAddrVisible = await addAddr.isVisible().catch(() => false);
-  if (!addAddrVisible) {
-    // maybe inside address sheet
-    addAddr = page.locator('.van-popup .add-addr, .van-popup [class*="add"]').first();
-    addAddrVisible = await addAddr.isVisible().catch(() => false);
-  }
-  if (addAddrVisible) {
-    await addAddr.click();
-    await page.waitForTimeout(600);
+  // P7 address if needed: open address picker and add a new address
+  const addAddrText = page.locator('.add-addr').first();
+  if (await addAddrText.isVisible().catch(() => false)) {
+    await addAddrText.click();
+    await page.waitForTimeout(800);
+
+    // Click "+ 新增地址" inside modal
+    const addNewBtn = page.locator('.add-new').first();
+    if (await addNewBtn.isVisible().catch(() => false)) {
+      await addNewBtn.click();
+      await page.waitForTimeout(500);
+    }
+
     const inputs = page.locator('input');
     if (await inputs.count() > 0) await inputs.nth(0).fill('Demo User');
     if (await inputs.count() > 1) await inputs.nth(1).fill('+85512345678');
-    const cityTrigger = page.locator('.city-picker-trigger, .city-picker, select').first();
-    if (await cityTrigger.count() > 0) {
-      await cityTrigger.click();
-      await page.waitForTimeout(300);
-      const firstCity = page.locator('.city-option, .city-item, option').first();
-      if (await firstCity.count() > 0) await firstCity.click();
+
+    // CityPicker: open and wait for options to load
+    const cityInput = page.locator('.city-picker .city-input').first();
+    await cityInput.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await cityInput.isVisible().catch(() => false)) {
+      await cityInput.click({ force: true });
+      await page.waitForTimeout(1500);
+      const firstCity = page.locator('.city-option').first();
+      const cityVisible = await firstCity.isVisible().catch(() => false);
+      if (cityVisible) {
+        await firstCity.click();
+        await page.waitForTimeout(500);
+      } else {
+        // Close picker if cities failed to load
+        const closeBtn = page.locator('.close-btn').filter({ hasText: /取消|Cancel|បោះបង់/ }).first();
+        if (await closeBtn.isVisible().catch(() => false)) await closeBtn.click();
+      }
     }
-    if (await inputs.count() > 3) await inputs.nth(3).fill('Demo District');
+
+    if (await inputs.count() > 2) await inputs.nth(2).fill('Demo District');
     const textarea = page.locator('textarea');
     if (await textarea.count() > 0) await textarea.fill('Demo address detail');
+
     const saveBtn = page.locator('button').filter({ hasText: /保存|Save|រក្សាទុក/ });
     if (await saveBtn.count() > 0) await saveBtn.click();
-    await page.waitForTimeout(1500);
+    // Wait for save and modal close
+    await page.waitForTimeout(2000);
   }
 
-  // If address sheet is open, capture it, then select the first available address
-  const addrSheet = page.locator('.address-sheet, .address-popup, .van-popup, .sheet, .address-list');
-  if (await addrSheet.isVisible().catch(() => false)) {
+  // Capture address picker if still open, then select the first listed address
+  const addrModal = page.locator('.modal-mask').filter({ has: page.locator('.addr-option, .address-item, .addr-item') }).first();
+  if (await addrModal.isVisible().catch(() => false)) {
     await capture(page, 'payment-07-checkout-address.png');
-    const addrSelector = page.locator('.address-item, .addr-item, .address-card').first();
-    if (await addrSelector.count() > 0) {
+    const addrSelector = page.locator('.addr-option, .address-item, .addr-item').first();
+    if (await addrSelector.isVisible().catch(() => false)) {
       await addrSelector.click();
       await page.waitForTimeout(500);
     }
@@ -134,25 +218,29 @@ async function run() {
   // P8 payment KHQR
   const submitBtn = page.locator('.submit-btn');
   if (await submitBtn.count() > 0) {
-    await submitBtn.click({ timeout: 15000 });
-    await page.waitForURL(/payment/, { timeout: 15000 }).catch(() => {});
+    await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await submitBtn.click({ timeout: 15000, force: true });
+    await page.waitForURL(/\/payment/, { timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(1500);
     await capture(page, 'payment-08-payment-khqr.png');
   }
 
   // P9 mock confirm
-  const mockBtn = page.locator('[data-test="mock-confirm-btn"], .btn-mock');
-  if (await mockBtn.count() > 0) {
+  const mockBtn = page.locator('[data-test="mock-confirm-btn"], .btn-mock').first();
+  try {
+    await mockBtn.waitFor({ state: 'visible', timeout: 10000 });
     await mockBtn.click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
     await capture(page, 'payment-09-mock-confirm.png');
+  } catch (e) {
+    console.log('mock confirm button not visible, skipping P9/P10');
   }
 
   // P10 success
-  const confirmBtn = page.locator('[data-test="mock-confirm-submit"], .mock-card-actions .btn-primary');
-  if (await confirmBtn.count() > 0) {
+  const confirmBtn = page.locator('[data-test="mock-confirm-submit"], .mock-card-actions .btn-primary').first();
+  if (await confirmBtn.isVisible().catch(() => false)) {
     await confirmBtn.click();
-    await page.waitForURL(/payment\/result|result/, { timeout: 15000 }).catch(() => {});
+    await page.waitForURL(/result/, { timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(1500);
     await capture(page, 'payment-10-success.png');
   }
