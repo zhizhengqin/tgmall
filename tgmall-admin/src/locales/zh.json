@@ -53,6 +53,7 @@
     "name": "姓名",
     "firstName": "名",
     "lastName": "姓",
+    "phone": "手机号",
     "telegramId": "Telegram ID",
     "orders": "订单数",
     "totalSpent": "消费总额",
