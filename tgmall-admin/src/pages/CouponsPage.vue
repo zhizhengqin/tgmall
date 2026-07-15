@@ -6,7 +6,7 @@
         <el-button type="primary" @click="openCreate">{{ $t('common.create') }}</el-button>
       </div>
 
-      <el-table :data="items" stripe>
+      <el-table v-if="!isMobile" :data="items" stripe>
         <el-table-column prop="titleKm" :label="$t('coupons.titleKm')" min-width="140" />
         <el-table-column :label="$t('coupons.type')" width="80">
           <template #default="s">{{ s.row.type === 'percent' ? '%' : '$' }}</template>
@@ -29,6 +29,38 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- Mobile cards -->
+      <div v-else class="coupon-cards">
+        <el-card v-for="row in items" :key="row.id" shadow="hover" class="coupon-card" data-testid="coupon-card">
+          <div class="coupon-card-row">
+            <span class="coupon-card-label">{{ $t('coupons.titleKm') }}</span>
+            <span class="coupon-card-value">{{ row.titleKm }}</span>
+          </div>
+          <div class="coupon-card-row">
+            <span class="coupon-card-label">{{ $t('coupons.type') }}</span>
+            <span class="coupon-card-value">{{ row.type === 'percent' ? '%' : '$' }}</span>
+          </div>
+          <div class="coupon-card-row">
+            <span class="coupon-card-label">{{ $t('coupons.value') }}</span>
+            <span class="coupon-card-value">{{ row.value }}</span>
+          </div>
+          <div class="coupon-card-row">
+            <span class="coupon-card-label">{{ $t('coupons.status') }}</span>
+            <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">{{ $t(`coupons.${row.status}`) }}</el-tag>
+          </div>
+          <div class="coupon-card-row">
+            <span class="coupon-card-label">{{ $t('coupons.used') }}</span>
+            <span class="coupon-card-value">{{ row.usedCount }}/{{ row.totalQty }}</span>
+          </div>
+          <div class="coupon-card-actions">
+            <el-button size="small" @click="openEdit(row)">{{ $t('common.edit') }}</el-button>
+            <el-button size="small" :type="row.status === 'active' ? 'warning' : 'success'" @click="toggle(row)">
+              {{ row.status === 'active' ? $t('common.disable') : $t('common.enable') }}
+            </el-button>
+          </div>
+        </el-card>
+      </div>
 
       <!-- 分页 -->
       <el-pagination v-if="total > limit" class="pagination" :total="total" :page-size="limit" :current-page="page" layout="prev, pager, next" @current-change="onPage" />
@@ -57,6 +89,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import api from '@/api';
+import { useBreakpoint } from '@/composables/useBreakpoint';
+
+const { isMobile } = useBreakpoint();
 
 const items = ref([]);
 const page = ref(1);
@@ -109,4 +144,15 @@ async function toggle(row) {
 function onPage(p) { page.value = p; load(); }
 onMounted(() => load());
 </script>
-<style scoped>.page { min-height: 100vh; background: #f5f5f5; }  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .center { text-align: center; padding: 20px; color: #999; } .pagination { margin-top: 16px; justify-content: flex-end; }</style>
+<style scoped>.page { min-height: 100vh; background: #f5f5f5; }  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; } .center { text-align: center; padding: 20px; color: #999; } .pagination { margin-top: 16px; justify-content: flex-end; }
+.coupon-cards { display: flex; flex-direction: column; gap: 12px; }
+.coupon-card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+.coupon-card-row:last-of-type { border-bottom: none; }
+.coupon-card-label { font-size: 13px; color: #999; }
+.coupon-card-value { font-size: 14px; font-weight: 500; }
+.coupon-card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+@media (max-width: 767px) {
+  .header { margin-bottom: 12px; }
+  .header h1 { font-size: 18px; }
+}
+</style>

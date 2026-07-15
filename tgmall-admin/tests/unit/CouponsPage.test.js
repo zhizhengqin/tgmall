@@ -3,6 +3,11 @@ import { mount, flushPromises } from '@vue/test-utils';
 import CouponsPage from '@/pages/CouponsPage.vue';
 import { getMock } from '@/api';
 
+function setWidth(width) {
+  window.innerWidth = width;
+  window.dispatchEvent(new Event('resize'));
+}
+
 vi.mock('@/api', () => {
   const getMock = vi.fn(() =>
     Promise.resolve({
@@ -24,7 +29,8 @@ vi.mock('@/api', () => {
   };
 });
 
-async function mountPage() {
+async function mountPage(width = 1280) {
+  setWidth(width);
   return mount(CouponsPage, {
     global: {
       mocks: { $t: (key) => key },
@@ -39,6 +45,7 @@ describe('CouponsPage', () => {
   afterEach(() => {
     wrapper?.unmount();
     vi.clearAllMocks();
+    setWidth(1280);
   });
 
   it('renders coupon list without i18n plugin crash', async () => {
@@ -59,5 +66,15 @@ describe('CouponsPage', () => {
     expect(wrapper.text()).toContain('coupons.active');
     expect(wrapper.text()).toContain('coupons.inactive');
     expect(wrapper.text()).not.toContain('activeactive');
+  });
+
+  it('renders cards on mobile', async () => {
+    wrapper = await mountPage(375);
+    await flushPromises();
+
+    expect(wrapper.find('.el-table').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="coupon-card"]').length).toBe(2);
+    expect(wrapper.text()).toContain('ចុះ 10%');
+    expect(wrapper.text()).toContain('coupons.active');
   });
 });

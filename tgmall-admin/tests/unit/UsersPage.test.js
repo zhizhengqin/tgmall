@@ -2,6 +2,11 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
 import UsersPage from '@/pages/UsersPage.vue';
 
+function setWidth(width) {
+  window.innerWidth = width;
+  window.dispatchEvent(new Event('resize'));
+}
+
 const mockUsers = [
   { id: 'u1', firstName: 'Sreyneang', lastName: 'Phan', phone: '+85512345003', telegramId: '10000003', status: 'active', createdAt: '2026-07-06T00:00:00Z' },
   { id: 'u2', firstName: '李华', lastName: '', phone: '+85512345002', telegramId: '10000002', status: 'banned', createdAt: '2026-07-06T00:00:00Z' },
@@ -28,7 +33,8 @@ vi.mock('@/api', () => ({
   toggleUserStatus: vi.fn(() => Promise.resolve()),
 }));
 
-async function mountUsers() {
+async function mountUsers(width = 1280) {
+  setWidth(width);
   return mount(UsersPage, {
     global: {
       mocks: { $t: (key) => messages[key] || key },
@@ -42,6 +48,7 @@ describe('UsersPage', () => {
 
   afterEach(() => {
     wrapper?.unmount();
+    setWidth(1280);
   });
 
   it('renders distinct firstName and lastName column headers', async () => {
@@ -69,5 +76,15 @@ describe('UsersPage', () => {
 
     expect(wrapper.text()).toContain('正常');
     expect(wrapper.text()).toContain('已禁用');
+  });
+
+  it('renders cards on mobile', async () => {
+    wrapper = await mountUsers(375);
+    await flushPromises();
+
+    expect(wrapper.find('.el-table').exists()).toBe(false);
+    expect(wrapper.findAll('[data-testid="user-card"]').length).toBe(2);
+    expect(wrapper.text()).toContain('Sreyneang');
+    expect(wrapper.text()).toContain('+85512345003');
   });
 });
